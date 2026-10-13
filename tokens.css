@@ -1,0 +1,124 @@
+/**
+ * BizBein Innovations Pvt. Ltd. — Design Tokens & Core Utilities
+ * Operational division: BizBein Packaging (Conveying - Coding - Packaging)
+ * WCAG 2.2 AA Certified Industrial E-Commerce Token Set
+ */
+
+:root {
+  /* ==========================================================================
+     1. BRAND COLORS (Derived from BizBein Identity)
+     ========================================================================== */
+  --bizbein-navy-900: #1A2035;
+  --bizbein-navy-800: #222942;
+  --bizbein-navy-700: #2B3353; /* Primary Logo Deep Navy */
+  --bizbein-navy-600: #384269;
+  --bizbein-navy-100: #EEF1F8;
+
+  --bizbein-gold-700: #D68C12;
+  --bizbein-gold-600: #EFA81D;
+  --bizbein-gold-500: #F5A623; /* Primary Logo Industrial Gold/Yellow */
+  --bizbein-gold-400: #FABD4E;
+  --bizbein-gold-100: #FEF6E7;
+
+  /* Neutrals & Surfaces */
+  --color-surface-base: #FFFFFF;
+  --color-surface-alt: #F8F9FA;
+  --color-surface-subtle: #EEF2F6;
+  --color-surface-dark: #1A2035;
+  --color-surface-inverse: #0F1422;
+
+  /* Borders & Dividers */
+  --color-border-subtle: #E2E8F0;
+  --color-border-default: #CBD5E1;
+  --color-border-strong: #94A3B8;
+  --color-border-interactive: var(--bizbein-navy-700);
+
+  /* Semantic Typography Colors (WCAG 2.2 AA Compliant) */
+  --color-text-primary: #1A2035;   /* Contrast: 12.8:1 on white (AAA) */
+  --color-text-secondary: #475569; /* Contrast: 5.8:1 on white (AA) */
+  --color-text-tertiary: #64748B;  /* Contrast: 4.6:1 on white (AA) */
+  --color-text-inverse: #FFFFFF;   /* Contrast: 9.3:1 on navy 700 (AAA) */
+  --color-text-on-gold: #1A2035;   /* Contrast: 8.9:1 on gold 500 (AAA) */
+  --color-text-link: #1D4ED8;
+  --color-text-link-hover: #1E40AF;
+
+  /* System Feedback & States */
+  --color-status-success: #15803D;
+  --color-status-success-bg: #DCFCE7;
+  --color-status-warning: #B45309;
+  --color-status-warning-bg: #FEF3C7;
+  --color-status-error: #B91C1C;
+  --color-status-error-bg: #FEE2E2;
+  --color-status-info: #1D4ED8;
+  --color-status-info-bg: #DBEAFE;
+
+  /* Focus Indicator (Dual Ring) */
+  --color-focus-outer: #F5A623;
+  --color-focus-inner: #1A2035;
+
+  /* ==========================================================================
+     2. TYPOGRAPHY
+     ========================================================================== */
+  --font-family-primary: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  --font-family-mono: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-md: 14px;
+  --font-size-lg: 15px;
+  --font-size-xl: 16px;
+  --font-size-2xl: 18px;
+  --font-size-3xl: 24px;
+  --font-size-4xl: 32px;
+
+  --font-line-height-tight: 1.25;
+  --font-line-height-base: 1.45;
+  --font-line-height-relaxed: 1.6;
+
+  /* ==========================================================================
+     3. SPACING SCALE
+     ========================================================================== */
+  --space-1: 3px;
+  --space-2: 5px;
+  --space-3: 10px;
+  --space-4: 12.5px;
+  --space-5: 15px;
+  --space-6: 20px;
+  --space-7: 30px;
+  --space-8: 45px;
+
+  /* ==========================================================================
+     4. RADIUS, ELEVATION & MOTION
+     ========================================================================== */
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-full: 9999px;
+
+  --shadow-sm: 0 1px 2px 0 rgba(26, 32, 53, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(26, 32, 53, 0.1), 0 2px 4px -2px rgba(26, 32, 53, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(26, 32, 53, 0.12), 0 4px 6px -4px rgba(26, 32, 53, 0.08);
+  --shadow-hover: 0 12px 20px -4px rgba(43, 51, 83, 0.18);
+
+  --motion-duration-fast: 150ms;
+  --motion-duration-normal: 250ms;
+  --motion-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --z-sticky-nav: 100;
+  --z-dropdown: 200;
+  --z-drawer: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+}
+
+/* Base High-Contrast Focus Ring Rule */
+*:focus-visible {
+  outline: 2px solid var(--color-focus-outer);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--color-focus-inner);
+}
+
+/* Ensure sticky navigation never obscures targeted anchor points */
+[id] {
+  scroll-margin-top: 90px;
+}

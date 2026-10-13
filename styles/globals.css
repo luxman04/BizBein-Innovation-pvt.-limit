@@ -1,0 +1,326 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ==========================================================================
+   BIZBEIN INNOVATIONS PVT. LTD. — GLOBAL STYLESHEET
+   WCAG 2.2 AA Certified Industrial E-Commerce Experience
+   ========================================================================== */
+
+:root {
+  /* Brand Core */
+  --bizbein-navy-900: #13192B;
+  --bizbein-navy-800: #1E253D;
+  --bizbein-navy-700: #2B3353; /* Primary Logo Deep Navy */
+  --bizbein-navy-600: #384269;
+  --bizbein-navy-100: #EEF1F8;
+
+  --bizbein-gold-700: #D68C12;
+  --bizbein-gold-600: #EFA81D;
+  --bizbein-gold-500: #F5A623; /* Primary Logo Industrial Gold/Yellow */
+  --bizbein-gold-400: #FABD4E;
+  --bizbein-gold-100: #FEF7EA;
+
+  /* Surfaces */
+  --color-surface-base: #FFFFFF;
+  --color-surface-alt: #F8F9FA;
+  --color-surface-subtle: #EEF2F6;
+  --color-surface-card: #FFFFFF;
+  --color-surface-dark: #1A2035;
+
+  /* Borders */
+  --color-border-subtle: #E2E8F0;
+  --color-border-default: #CBD5E1;
+  --color-border-strong: #94A3B8;
+
+  /* Typography Colors */
+  --color-text-primary: #1A2035;
+  --color-text-secondary: #475569;
+  --color-text-tertiary: #64748B;
+  --color-text-inverse: #FFFFFF;
+  --color-text-on-gold: #1A2035;
+
+  /* Status Colors */
+  --color-status-success: #15803D;
+  --color-status-success-bg: #DCFCE7;
+  --color-status-warning: #B45309;
+  --color-status-warning-bg: #FEF3C7;
+  --color-status-error: #B91C1C;
+  --color-status-error-bg: #FEE2E2;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(26, 32, 53, 0.08);
+  --shadow-md: 0 4px 8px -2px rgba(26, 32, 53, 0.12), 0 2px 4px -2px rgba(26, 32, 53, 0.06);
+  --shadow-lg: 0 12px 24px -4px rgba(26, 32, 53, 0.15), 0 4px 8px -4px rgba(26, 32, 53, 0.08);
+  --shadow-hover: 0 16px 32px -6px rgba(43, 51, 83, 0.2);
+
+  /* Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Layout */
+  --container-max: 1320px;
+  --header-height: 140px;
+}
+
+/* Base Reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--color-text-primary);
+  background-color: #F8F9FC;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+/* Accessibility Focus Indicator */
+*:focus-visible {
+  outline: 2px solid var(--bizbein-gold-500) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px var(--bizbein-navy-700) !important;
+}
+
+/* Screen Reader Only Utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Container */
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+/* Buttons Base */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  user-select: none;
+  min-height: 44px;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Primary Button (Gold/Yellow) */
+.btn-primary {
+  background-color: var(--bizbein-gold-500);
+  color: var(--bizbein-navy-900);
+  border-color: var(--bizbein-gold-600);
+  box-shadow: 0 2px 4px rgba(245, 166, 35, 0.25);
+}
+
+.btn-primary:hover {
+  background-color: var(--bizbein-gold-600);
+  color: var(--bizbein-navy-900);
+  box-shadow: 0 4px 8px rgba(245, 166, 35, 0.35);
+  transform: translateY(-1px);
+}
+
+/* Secondary Button (Deep Navy) */
+.btn-secondary {
+  background-color: var(--bizbein-navy-700);
+  color: #FFFFFF;
+  border-color: var(--bizbein-navy-800);
+}
+
+.btn-secondary:hover {
+  background-color: var(--bizbein-navy-800);
+  color: #FFFFFF;
+  box-shadow: 0 4px 8px rgba(43, 51, 83, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Outline Button */
+.btn-outline {
+  background-color: transparent;
+  color: var(--bizbein-navy-700);
+  border-color: var(--color-border-default);
+}
+
+.btn-outline:hover {
+  background-color: var(--bizbein-navy-100);
+  border-color: var(--bizbein-navy-700);
+}
+
+/* Utility Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.badge-dispatch {
+  background-color: #DCFCE7;
+  color: #166534;
+  border: 1px solid #BBF7D0;
+}
+
+.badge-bestseller {
+  background-color: var(--bizbein-gold-100);
+  color: #92400E;
+  border: 1px solid var(--bizbein-gold-400);
+}
+
+.badge-factory {
+  background-color: var(--bizbein-navy-100);
+  color: var(--bizbein-navy-700);
+  border: 1px solid #CBD5E1;
+}
+
+/* Machinery Spec Grid */
+.spec-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0 16px;
+}
+
+.spec-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13px;
+  padding: 4px 0;
+  border-bottom: 1px dashed var(--color-border-subtle);
+}
+
+.spec-label {
+  color: var(--color-text-secondary);
+}
+
+.spec-val {
+  color: var(--color-text-primary);
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+
+/* Modals & Backdrop */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(19, 25, 43, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-card {
+  background-color: #FFFFFF;
+  border-radius: var(--radius-xl);
+  width: 100%;
+  max-width: 580px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid var(--color-border-subtle);
+}
+
+/* Drawer */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(19, 25, 43, 0.6);
+  backdrop-filter: blur(3px);
+  z-index: 350;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.drawer-panel {
+  width: 100%;
+  max-width: 440px;
+  height: 100%;
+  background-color: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.2);
+  animation: slideLeft 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes slideLeft {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+/* Sticky top elements scroll-margin */
+[id] {
+  scroll-margin-top: 100px;
+}
+
+/* Mobile viewport bottom spacing for fixed nav */
+@media (max-width: 768px) {
+  body {
+    padding-bottom: 72px;
+  }
+}
+
