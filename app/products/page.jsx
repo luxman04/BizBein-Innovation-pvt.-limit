@@ -1128,24 +1128,99 @@ function ProductsContent() {
         @media (max-width: 1200px) {
           .products-grid {
             grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
           }
         }
 
         @media (max-width: 900px) {
           .products-grid {
             grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+          }
+          .catalog-toolbar {
+            padding: 14px 16px;
           }
         }
 
-        @media (max-width: 600px) {
-          .products-grid {
-            grid-template-columns: 1fr;
+        @media (max-width: 768px) {
+          .category-scroll-btn {
+            display: none !important;
+          }
+          .category-scroll-bar {
+            padding: 4px 10px 4px 2px;
+            scroll-snap-type: x proximity;
+            -webkit-overflow-scrolling: touch;
+          }
+          .cat-pill {
+            scroll-snap-align: start;
+            padding: 7px 14px;
+            font-size: 13px;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .catalog-hero {
+            padding: 22px 0 24px;
           }
           .page-title {
-            font-size: 22px;
+            font-size: 21px;
+            line-height: 1.25;
+          }
+          .page-desc {
+            font-size: 13px;
+            line-height: 1.45;
           }
           .catalog-total-badge {
             display: none;
+          }
+          .catalog-toolbar {
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-top: 16px;
+            margin-bottom: 16px;
+          }
+          .controls-row {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+          }
+          .search-filter-box {
+            width: 100%;
+            min-width: 0;
+          }
+          .search-filter-box input {
+            font-size: 13px;
+            padding: 10px 36px 10px 38px;
+          }
+          .sort-box {
+            width: 100%;
+          }
+          .sort-box select {
+            width: 100%;
+            font-size: 13px;
+            padding: 10px 14px 10px 34px;
+          }
+          .products-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+          }
+          .results-summary-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+            margin: 14px 0 12px;
+            font-size: 12.5px;
+          }
+          .card-actions {
+            gap: 8px;
+          }
+          .btn-add-cart, .btn-details {
+            min-height: 42px;
+            font-size: 13px;
+          }
+          .btn-wishlist {
+            min-height: 42px;
+            min-width: 42px;
           }
         }
       `}</style>
