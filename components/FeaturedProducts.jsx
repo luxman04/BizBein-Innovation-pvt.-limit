@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ShoppingCart, Heart, ArrowRight, Check } from 'lucide-react';
-import { featuredProducts } from '../data/products';
+import Link from 'next/link';
+import { ShoppingCart, Heart, ArrowRight, Check, Eye } from 'lucide-react';
+import { products } from '../data/products';
 
 export default function FeaturedProducts({
   onAddToCart,
@@ -44,7 +45,7 @@ export default function FeaturedProducts({
   // Filter products based on active tab and search query
   const effectiveFilter = selectedCategory !== 'all' ? selectedCategory : activeTab;
 
-  const filteredProducts = featuredProducts.filter((item) => {
+  const filteredProducts = products.filter((item) => {
     const matchesCategory =
       effectiveFilter === 'all' ||
       item.categoryId === effectiveFilter ||
@@ -53,7 +54,8 @@ export default function FeaturedProducts({
     const matchesSearch =
       !searchQuery ||
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchQuery.toLowerCase());
+      item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.brand && item.brand.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return matchesCategory && matchesSearch;
   });
@@ -83,20 +85,19 @@ export default function FeaturedProducts({
           </div>
 
           {/* View All Link */}
-          <button
-            type="button"
+          <Link
+            href="/products"
             className="view-all-link"
-            onClick={() => handleTabClick('all')}
           >
             <span>View All Products</span>
             <ArrowRight size={14} />
-          </button>
+          </Link>
         </div>
 
-        {/* 6 Product Cards Grid */}
+        {/* Product Cards Grid */}
         <div className="products-grid">
           {filteredProducts.length > 0 ? (
-            filteredProducts.map((product) => {
+            filteredProducts.slice(0, 12).map((product) => {
               const isWishlisted = !!wishlist[product.id];
               const isAdded = !!addedAnimation[product.id];
 
@@ -110,19 +111,27 @@ export default function FeaturedProducts({
                   )}
 
                   {/* Product Image */}
-                  <div className="product-img-box">
+                  <Link href={`/products/${product.categoryId}/${product.id}`} className="product-img-box">
                     <img
                       src={product.image}
                       alt={product.name}
                       className="product-img"
                       loading="lazy"
                     />
-                  </div>
+                  </Link>
 
                   {/* Product Details */}
                   <div className="product-body">
-                    <h3 className="product-title">{product.name}</h3>
-                    <div className="product-category-name">{product.category}</div>
+                    <div className="product-meta-row">
+                      <span className="product-brand-tag">{product.brand || 'BizBein'}</span>
+                      <span className="product-category-name">{product.category}</span>
+                    </div>
+
+                    <h3 className="product-title">
+                      <Link href={`/products/${product.categoryId}/${product.id}`} className="product-title-link">
+                        {product.name}
+                      </Link>
+                    </h3>
 
                     <div className="product-price-row">
                       <span className="price-tag">{product.priceDisplay}</span>
@@ -148,6 +157,15 @@ export default function FeaturedProducts({
                         )}
                       </button>
 
+                      <Link
+                        href={`/products/${product.categoryId}/${product.id}`}
+                        className="details-icon-btn"
+                        title="View Details"
+                        aria-label="View Details"
+                      >
+                        <Eye size={16} />
+                      </Link>
+
                       <button
                         type="button"
                         className={`wishlist-icon-btn ${isWishlisted ? 'wishlisted' : ''}`}
@@ -155,7 +173,7 @@ export default function FeaturedProducts({
                         aria-label="Add to Wishlist"
                       >
                         <Heart
-                          size={18}
+                          size={16}
                           fill={isWishlisted ? '#ef4444' : 'none'}
                           stroke={isWishlisted ? '#ef4444' : '#64748b'}
                         />
@@ -418,6 +436,53 @@ export default function FeaturedProducts({
         .add-to-cart-btn.btn-success {
           background-color: #16a34a;
           color: #ffffff;
+        }
+
+        .product-meta-row {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .product-brand-tag {
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          background: #eff6ff;
+          color: #1e40af;
+          padding: 2px 6px;
+          border-radius: 4px;
+        }
+
+        .product-title-link {
+          color: #1e293b;
+          text-decoration: none;
+          transition: color 0.15s ease;
+        }
+
+        .product-title-link:hover {
+          color: #F8B50E;
+        }
+
+        .details-icon-btn {
+          background: #f1f5f9;
+          border: 1px solid #e2e8f0;
+          color: #334155;
+          border-radius: 6px;
+          width: 34px;
+          height: 34px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          text-decoration: none;
+        }
+
+        .details-icon-btn:hover {
+          background: #0f172a;
+          color: #ffffff;
+          border-color: #0f172a;
         }
 
         .wishlist-icon-btn {

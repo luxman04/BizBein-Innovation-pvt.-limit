@@ -1,4 +1,6 @@
 import '../styles/globals.css';
+import { StoreProvider } from '../context/StoreContext';
+import StoreLayout from '../components/StoreLayout';
 
 export const metadata = {
   title: 'BizBein Innovations Pvt. Ltd. | Industrial Conveying, Coding & Packaging Equipment',
@@ -40,7 +42,11 @@ export default function RootLayout({ children }) {
       <head>
         <link rel="icon" href="/bizbein-innovations-logo.png" />
       </head>
-      <body>{children}</body>
+      <body>
+        <StoreProvider>
+          <StoreLayout>{children}</StoreLayout>
+        </StoreProvider>
+      </body>
     </html>
   );
 }

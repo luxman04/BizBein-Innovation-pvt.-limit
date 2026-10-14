@@ -1,18 +1,11 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { categories } from '../data/products';
 
-export default function PopularCategories({ onSelectCategory }) {
-  const handleCardClick = (catId) => {
-    if (onSelectCategory) onSelectCategory(catId);
-    const target = document.getElementById('featured-products');
-    if (target) {
-      target.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
+export default function PopularCategories() {
   return (
     <section className="categories-section" id="machinery-catalog" aria-label="Popular Categories">
       <div className="section-container">
@@ -23,28 +16,22 @@ export default function PopularCategories({ onSelectCategory }) {
             <div className="yellow-underline"></div>
           </div>
 
-          <button
-            type="button"
+          <Link
+            href="/products"
             className="view-all-link"
-            onClick={() => handleCardClick('all')}
           >
             <span>View All Categories</span>
             <ArrowRight size={15} />
-          </button>
+          </Link>
         </div>
 
         {/* 8 Categories Grid */}
         <div className="categories-grid">
           {categories.map((cat) => (
-            <div
+            <Link
               key={cat.id}
+              href={`/products/${cat.id}`}
               className="category-card"
-              onClick={() => handleCardClick(cat.id)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleCardClick(cat.id);
-              }}
             >
               <div className="cat-img-box">
                 <img
@@ -62,7 +49,7 @@ export default function PopularCategories({ onSelectCategory }) {
                 <span className="cat-name">{cat.name}</span>
                 <ArrowRight size={13} className="cat-arrow" />
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

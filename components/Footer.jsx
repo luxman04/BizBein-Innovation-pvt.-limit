@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import {
   MapPin,
   ExternalLink,
@@ -89,22 +90,22 @@ export default function Footer({ onOpenContact }) {
 
             <ul className="links-list">
               <li>
-                <a href="#featured-products" className="footer-text-link">Shop</a>
+                <Link href="/products" className="footer-text-link">Shop</Link>
               </li>
               <li>
-                <a href="#about-us" className="footer-text-link">About-Us</a>
+                <Link href="/#about-us" className="footer-text-link">About-Us</Link>
               </li>
               <li>
-                <a href="#contact-info" onClick={onOpenContact} className="footer-text-link">Contact-Us</a>
+                <button type="button" onClick={onOpenContact} className="footer-text-link footer-btn-link">Contact-Us</button>
               </li>
               <li>
-                <a href="#machinery-catalog" className="footer-text-link">Conveyor Systems</a>
+                <Link href="/products/conveyor-systems" className="footer-text-link">Conveyor Systems</Link>
               </li>
               <li>
-                <a href="#machinery-catalog" className="footer-text-link">Packaging Machinery</a>
+                <Link href="/products/packaging-machinery" className="footer-text-link">Packaging Machinery</Link>
               </li>
               <li>
-                <a href="#machinery-catalog" className="footer-text-link">CIJ Coding Printers</a>
+                <Link href="/products/coding-printing" className="footer-text-link">CIJ Coding Printers</Link>
               </li>
             </ul>
           </div>
@@ -425,6 +426,15 @@ export default function Footer({ onOpenContact }) {
         .footer-text-link:hover {
           color: #dc2626;
           transform: translateX(3px);
+        }
+
+        .footer-btn-link {
+          background: none;
+          border: none;
+          padding: 0;
+          font-family: inherit;
+          cursor: pointer;
+          text-align: left;
         }
 
         /* 2. Copyright Tier */

@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Mail,
   Phone,
@@ -30,6 +32,7 @@ export default function Header({
   setSelectedCategory,
   onSelectCategory
 }) {
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
 
@@ -38,6 +41,20 @@ export default function Header({
     if (onSelectCategory) onSelectCategory(catId);
     setCategoryDropdownOpen(false);
     setMobileMenuOpen(false);
+    if (catId === 'all') {
+      router.push('/products');
+    } else {
+      router.push(`/products/${catId}`);
+    }
+  };
+
+  const handleSearchSubmit = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (searchQuery && searchQuery.trim()) {
+      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      router.push('/products');
+    }
   };
 
   return (
@@ -82,7 +99,7 @@ export default function Header({
         <div className="main-header-container">
           {/* Logo */}
           <div className="logo-wrapper">
-            <a href="#" className="logo-link" aria-label="BizBein Innovations Pvt. Ltd.">
+            <Link href="/" className="logo-link" aria-label="BizBein Innovations Pvt. Ltd.">
               <img
                 src="/bizbein-innovations-logo.png"
                 alt="BIZ BEIN INNOVATIONS PVT. LTD."
@@ -97,7 +114,7 @@ export default function Header({
                 <span className="fallback-top">BIZ BEIN</span>
                 <span className="fallback-sub">INNOVATIONS PVT. LTD.</span>
               </div>
-            </a>
+            </Link>
           </div>
 
           {/* Search Bar */}
@@ -107,6 +124,9 @@ export default function Header({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSearchSubmit(e);
+                }}
                 placeholder="Search for products, categories, brands..."
                 aria-label="Search for products, categories, brands"
               />
@@ -132,10 +152,7 @@ export default function Header({
               type="button"
               className="search-submit-btn"
               aria-label="Search"
-              onClick={() => {
-                const el = document.getElementById('featured-products');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-              }}
+              onClick={handleSearchSubmit}
             >
               <Search size={18} />
             </button>
@@ -217,9 +234,17 @@ export default function Header({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleSearchSubmit(e);
+              }}
               placeholder="Search products, machinery, parts..."
             />
-            <button type="button" className="mobile-search-submit" aria-label="Search">
+            <button
+              type="button"
+              className="mobile-search-submit"
+              aria-label="Search"
+              onClick={handleSearchSubmit}
+            >
               <Search size={16} />
             </button>
           </div>
@@ -270,47 +295,49 @@ export default function Header({
           {/* Links */}
           <ul className="nav-links-list">
             <li>
-              <a href="#" className="nav-link active">Home</a>
+              <Link href="/" className="nav-link">Home</Link>
             </li>
             <li>
-              <a href="#featured-products" className="nav-link">Shop</a>
+              <Link href="/products" className="nav-link">Shop</Link>
             </li>
             <li className="nav-dropdown-parent">
-              <a href="#machinery-catalog" className="nav-link">
+              <Link href="/products" className="nav-link">
                 Products <ChevronDown size={13} className="inline-chevron" />
-              </a>
+              </Link>
               <div className="nav-simple-dropdown">
                 {categories.map((cat) => (
-                  <a
+                  <Link
                     key={cat.id}
-                    href="#featured-products"
-                    onClick={() => handleCategoryClick(cat.id)}
+                    href={`/products/${cat.id}`}
+                    onClick={() => {
+                      setSelectedCategory(cat.id);
+                    }}
                     className="dropdown-link"
                   >
                     {cat.name}
-                  </a>
+                  </Link>
                 ))}
               </div>
             </li>
             <li className="nav-dropdown-parent">
-              <a href="#machinery-catalog" className="nav-link">
+              <Link href="/products" className="nav-link">
                 Solutions <ChevronDown size={13} className="inline-chevron" />
-              </a>
+              </Link>
               <div className="nav-simple-dropdown">
-                <a href="#machinery-catalog" className="dropdown-link">Material Handling Lines</a>
-                <a href="#machinery-catalog" className="dropdown-link">Continuous Inkjet Coding</a>
-                <a href="#machinery-catalog" className="dropdown-link">Carton Sealing Automation</a>
-                <a href="#machinery-catalog" className="dropdown-link">Cleanroom Air Curtains</a>
+                <Link href="/products/material-handling" className="dropdown-link">Material Handling Lines</Link>
+                <Link href="/products/coding-printing" className="dropdown-link">Continuous Inkjet Coding</Link>
+                <Link href="/products/packaging-machinery" className="dropdown-link">Carton Sealing Automation</Link>
+                <Link href="/products/air-curtains" className="dropdown-link">Cleanroom Air Curtains</Link>
               </div>
             </li>
             <li>
-              <a href="#about-us" className="nav-link">About Us</a>
+              <Link href="/#about-us" className="nav-link">About Us</Link>
             </li>
             <li>
-              <a href="#contact-info" className="nav-link">Contact</a>
+              <Link href="/#contact-info" className="nav-link">Contact</Link>
             </li>
             <li>
-              <a href="#blog-updates" className="nav-link">Blog</a>
+              <Link href="/#blog-updates" className="nav-link">Blog</Link>
             </li>
           </ul>
         </div>
@@ -850,7 +877,7 @@ export default function Header({
           display: flex;
           align-items: center;
           list-style: none;
-          gap: 2px;
+          gap: 6px;
           margin: 0;
           padding: 0;
         }
@@ -861,21 +888,22 @@ export default function Header({
           gap: 4px;
           color: #cbd5e1;
           font-size: 13.5px;
-          font-weight: 500;
+          font-weight: 600;
           text-decoration: none;
-          padding: 11px 15px;
+          padding: 8px 14px;
+          border-radius: 6px;
           transition: all 0.15s ease;
         }
 
         .nav-link:hover,
         .nav-link.active {
           color: #ffffff;
-          background-color: rgba(255, 255, 255, 0.08);
+          background-color: rgba(255, 255, 255, 0.1);
         }
 
         .nav-link.active {
           color: #F8B50E;
-          font-weight: 600;
+          background-color: rgba(248, 181, 14, 0.12);
         }
 
         .inline-chevron {
