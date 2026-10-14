@@ -59,7 +59,7 @@ export default function Footer({ onOpenContact }) {
               <div className="map-frame-wrapper">
                 <iframe
                   title="BizBein Plant Works Location Map"
-                  src="https://maps.app.goo.gl/BsdE1nEEePFjxjHVA"
+                  src={companyDetails.googleMapsEmbedUrl}
                   className="map-iframe"
                   loading="lazy"
                   allowFullScreen
@@ -67,7 +67,7 @@ export default function Footer({ onOpenContact }) {
               </div>
 
               <div className="map-footer-row">
-                <span className="map-address-snip">Third Floor, Mohali City Square, Sco 32, Patiala Rd, Zirakpur, Nabha, Punjab 140603, India</span>
+                <span className="map-address-snip">{companyDetails.address}</span>
                 <a
                   href={companyDetails.googleMapsUrl}
                   target="_blank"

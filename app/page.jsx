@@ -25,13 +25,18 @@ export default function StorefrontHomePage() {
     email: companyDetails.salesEmail,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: 'Plot 5, NK Sharma Rd, Badal Colony',
-      addressLocality: 'Zirakpur',
+      streetAddress: companyDetails.streetAddress || 'Third Floor, Mohali City Square, SCO 32, Patiala Rd',
+      addressLocality: 'Zirakpur, Nabha',
       addressRegion: 'Punjab',
       postalCode: '140603',
       addressCountry: 'IN'
     },
-    hasMap: companyDetails.mapUrl || companyDetails.googleMapsUrl
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: companyDetails.coordinates?.lat || 30.6395577,
+      longitude: companyDetails.coordinates?.lng || 76.8024899
+    },
+    hasMap: companyDetails.googleMapsUrl || companyDetails.mapUrl
   };
 
   return (

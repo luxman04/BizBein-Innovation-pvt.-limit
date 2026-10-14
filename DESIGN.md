@@ -20,8 +20,8 @@ The BizBein digital storefront operates under heavy information and navigation d
   - Direct Lines / Phone: `+91 99158-56540`, `+91 93153-94908`
   - Sales & Orders: `sales@bizbein.com`
   - General Enquiries: `info@bizbein.com`
-- **Headquarters & Works**: `Plot 5, NK Sharma Rd, Badal Colony, Zirakpur, Punjab 140603`
-- **Geo-Location Link**: [Google Maps Location](https://maps.app.goo.gl/o5exHzMpAHkD4rFY6)
+- **Headquarters & Works**: `Third Floor, Mohali City Square, SCO 32, Patiala Rd, Zirakpur, Nabha, Punjab 140603`
+- **Geo-Location Link**: [Google Maps Location](https://maps.app.goo.gl/6CdJJZa52uNrNMT56)
 - **Social Media Profiles**: Instagram, Facebook, LinkedIn, YouTube, Twitter / X
 
 ---
@@ -261,13 +261,13 @@ The footer **must** provide verifiable legal, operational, geographical, and soc
 | BIZBEIN INNOVATIONS PVT. LTD. -- INDUSTRIAL CONVEYING, CODING & PACKAGING SYSTEMS               |
 +--------------------------------------------------------------------------------------------------+
 | HEAD OFFICE & WORKS               | PRODUCT DIVISIONS          | DIRECT CONTACT & ENQUIRY        |
-| Plot 5, NK Sharma Rd,             | * Conveyor Solutions       | Direct Phone / Fax:             |
-| Badal Colony, Zirakpur,           | * Batch Coding Printers    | +91 99158-56540                 |
-| Punjab 140603                     | * Sealing & Shrink Wrap    | +91 93153-94908                 |
-|                                   | * Vacuum Packaging         |                                 |
-| [View on Google Maps]             | * Industrial Consumables   | Official Inquiries:             |
-| (maps.app.goo.gl/o5exHzMpAHkD4rFY6) | * Spare Parts & Tooling  | sales@bizbein.com               |
-|                                   |                            | info@bizbein.com                |
+| Third Floor, Mohali City Square,   | * Conveyor Solutions       | Direct Phone / Fax:             |
+| SCO 32, Patiala Rd, Zirakpur       | * Batch Coding Printers    | +91 99158-56540                 |
+| Punjab 140603                      | * Sealing & Shrink Wrap    | +91 93153-94908                 |
+|                                    | * Vacuum Packaging         |                                 |
+| [View on Google Maps]              | * Industrial Consumables   | Official Inquiries:             |
+| (maps.app.goo.gl/6CdJJZa52uNrNMT56)| * Spare Parts & Tooling    | sales@bizbein.com               |
+|                                    |                            | info@bizbein.com                |
 +-----------------------------------+----------------------------+---------------------------------+
 | CONNECT WITH US: [Instagram] [Facebook] [LinkedIn] [YouTube] [Twitter / X]                       |
 +--------------------------------------------------------------------------------------------------+
@@ -320,13 +320,13 @@ To facilitate local SEO and automated procurement validation, location and conta
   "email": "sales@bizbein.com",
   "address": {
     "@type": "PostalAddress",
-    "streetAddress": "Plot 5, NK Sharma Rd, Badal Colony",
-    "addressLocality": "Zirakpur",
+    "streetAddress": "Third Floor, Mohali City Square, SCO 32, Patiala Rd",
+    "addressLocality": "Zirakpur, Nabha",
     "addressRegion": "Punjab",
     "postalCode": "140603",
     "addressCountry": "IN"
   },
-  "hasMap": "https://maps.app.goo.gl/o5exHzMpAHkD4rFY6",
+  "hasMap": "https://maps.app.goo.gl/6CdJJZa52uNrNMT56",
   "sameAs": [
     "https://www.instagram.com/bizbein",
     "https://www.facebook.com/bizbein",
@@ -349,7 +349,7 @@ To facilitate local SEO and automated procurement validation, location and conta
 | **Focus Rings** | Removing outlines with `outline: none` or `*:focus { outline: none; }`. | **Must** implement the `--color-focus-outer` high-visibility dual focus ring. |
 | **Layout Shift** | Lazy-loading industrial product machinery imagery without aspect-ratio containers. | **Must** reserve layout box (`aspect-ratio: 1 / 1` or `width/height` attributes) to ensure 0 Cumulative Layout Shift (CLS). |
 | **Mobile Traps** | Phone numbers displayed as plain static text. | **Must** link phone numbers with `tel:+919915856540` and email with `mailto:sales@bizbein.com` for single-tap action. |
-| **Map Links** | Embedding broken map iframes without fallback. | **Must** provide verified outbound link to `https://maps.app.goo.gl/o5exHzMpAHkD4rFY6` with accessible external link indicator. |
+| **Map Links** | Embedding broken map iframes without fallback. | **Must** provide verified outbound link to `https://maps.app.goo.gl/6CdJJZa52uNrNMT56` with accessible external link indicator. |
 
 ---
 
@@ -379,6 +379,6 @@ Before shipping any storefront template or component code to staging or producti
 - [ ] Secondary operational branding displays **BizBein Packaging — Conveying - Coding - Packaging**.
 - [ ] Direct lines match `+91 99158-56540` and `+91 93153-94908`.
 - [ ] Inquiries route to `sales@bizbein.com` and `info@bizbein.com`.
-- [ ] Address matches `Plot 5, NK Sharma Rd, Badal Colony, Zirakpur, Punjab 140603`.
-- [ ] Google Maps URL targets `https://maps.app.goo.gl/o5exHzMpAHkD4rFY6`.
+- [ ] Address matches `Third Floor, Mohali City Square, SCO 32, Patiala Rd, Zirakpur, Nabha, Punjab 140603`.
+- [ ] Google Maps URL targets `https://maps.app.goo.gl/6CdJJZa52uNrNMT56`.
 - [ ] Social media icons link directly to BizBein channels (Instagram, Facebook, LinkedIn, YouTube, Twitter/X).
