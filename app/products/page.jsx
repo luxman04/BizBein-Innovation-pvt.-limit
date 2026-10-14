@@ -1,9 +1,10 @@
 'use client';
 
-import React, { Suspense, useState, useMemo } from 'react';
+import React, { Suspense, useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import {
+  ChevronLeft,
   ChevronRight,
   Filter,
   ArrowUpDown,
@@ -14,7 +15,8 @@ import {
   Search,
   Sparkles,
   PhoneCall,
-  SlidersHorizontal
+  SlidersHorizontal,
+  LayoutGrid
 } from 'lucide-react';
 import { products, categories } from '../../data/products';
 import { useStore } from '../../context/StoreContext';
@@ -29,6 +31,43 @@ function ProductsContent() {
   const [sortBy, setSortBy] = useState('featured');
   const [wishlist, setWishlist] = useState({});
   const [addedAnimation, setAddedAnimation] = useState({});
+
+  const categoryScrollRef = useRef(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = () => {
+    const el = categoryScrollRef.current;
+    if (el) {
+      setCanScrollLeft(el.scrollLeft > 8);
+      setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 8);
+    }
+  };
+
+  useEffect(() => {
+    checkScroll();
+    window.addEventListener('resize', checkScroll);
+    return () => window.removeEventListener('resize', checkScroll);
+  }, []);
+
+  const scrollCategories = (direction) => {
+    const el = categoryScrollRef.current;
+    if (!el) return;
+    const scrollAmount = direction === 'left' ? -260 : 260;
+    el.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    setTimeout(checkScroll, 320);
+  };
+
+  const handleCategorySelect = (catId, e) => {
+    setActiveCategory(catId);
+    if (e && e.currentTarget) {
+      e.currentTarget.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center'
+      });
+    }
+  };
 
   const { addToCart, openQuoteModal } = useStore();
 
@@ -99,27 +138,58 @@ function ProductsContent() {
       <div className="container main-layout">
         {/* Category Pills & Toolbar */}
         <div className="catalog-toolbar">
-          <div className="category-scroll-bar">
-            <button
-              type="button"
-              className={`cat-pill ${activeCategory === 'all' ? 'active' : ''}`}
-              onClick={() => setActiveCategory('all')}
+          <div className="category-scroll-wrapper">
+            {canScrollLeft && (
+              <button
+                type="button"
+                className="category-scroll-btn left"
+                onClick={() => scrollCategories('left')}
+                aria-label="Scroll categories left"
+              >
+                <ChevronLeft size={16} />
+              </button>
+            )}
+
+            <div
+              className="category-scroll-bar"
+              ref={categoryScrollRef}
+              onScroll={checkScroll}
             >
-              All Categories ({products.length})
-            </button>
-            {categories.map((c) => {
-              const count = products.filter((p) => p.categoryId === c.id).length;
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  className={`cat-pill ${activeCategory === c.id ? 'active' : ''}`}
-                  onClick={() => setActiveCategory(c.id)}
-                >
-                  {c.name} {count > 0 && <span className="pill-count">{count}</span>}
-                </button>
-              );
-            })}
+              <button
+                type="button"
+                className={`cat-pill ${activeCategory === 'all' ? 'active' : ''}`}
+                onClick={(e) => handleCategorySelect('all', e)}
+              >
+                <LayoutGrid size={15} className="cat-pill-icon" />
+                <span>All Categories</span>
+                {activeCategory === 'all' && <span className="active-dot" />}
+              </button>
+              {categories.map((c) => {
+                const isActive = activeCategory === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    className={`cat-pill ${isActive ? 'active' : ''}`}
+                    onClick={(e) => handleCategorySelect(c.id, e)}
+                  >
+                    <span>{c.name}</span>
+                    {isActive && <span className="active-dot" />}
+                  </button>
+                );
+              })}
+            </div>
+
+            {canScrollRight && (
+              <button
+                type="button"
+                className="category-scroll-btn right"
+                onClick={() => scrollCategories('right')}
+                aria-label="Scroll categories right"
+              >
+                <ChevronRight size={16} />
+              </button>
+            )}
           </div>
 
           <div className="controls-row">
@@ -433,63 +503,140 @@ function ProductsContent() {
           margin-top: 24px;
           background: #ffffff;
           border: 1px solid #e2e8f0;
-          border-radius: 12px;
+          border-radius: 16px;
           padding: 16px 20px;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+          box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+        }
+
+        .category-scroll-wrapper {
+          position: relative;
+          display: flex;
+          align-items: center;
+          padding-bottom: 12px;
+          border-bottom: 1px solid #f1f5f9;
         }
 
         .category-scroll-bar {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 10px;
           overflow-x: auto;
-          padding-bottom: 12px;
-          border-bottom: 1px solid #f1f5f9;
+          scroll-behavior: smooth;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+          padding: 4px 4px;
+          width: 100%;
         }
 
         .category-scroll-bar::-webkit-scrollbar {
-          height: 4px;
+          display: none;
         }
 
-        .category-scroll-bar::-webkit-scrollbar-thumb {
-          background: #cbd5e1;
-          border-radius: 4px;
+        .category-scroll-btn {
+          position: absolute;
+          z-index: 10;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          color: #0f172a;
+          box-shadow: 0 3px 10px rgba(15, 23, 42, 0.12);
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .category-scroll-btn.left {
+          left: -12px;
+        }
+
+        .category-scroll-btn.right {
+          right: -12px;
+        }
+
+        .category-scroll-btn:hover {
+          background: #F8B50E;
+          border-color: #F8B50E;
+          color: #0f172a;
+          transform: scale(1.1);
+          box-shadow: 0 4px 14px rgba(248, 181, 14, 0.4);
+        }
+
+        .category-scroll-btn:active {
+          transform: scale(0.94);
         }
 
         .cat-pill {
-          background: #f1f5f9;
-          border: 1px solid #e2e8f0;
+          background: #f8fafc;
+          border: 1.5px solid #e2e8f0;
           color: #334155;
-          font-size: 13px;
+          font-size: 13.5px;
           font-weight: 600;
-          padding: 7px 14px;
+          padding: 8px 18px;
           border-radius: 9999px;
           white-space: nowrap;
           cursor: pointer;
           font-family: inherit;
-          transition: all 0.2s ease;
+          transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
           display: inline-flex;
           align-items: center;
-          gap: 6px;
+          gap: 8px;
+          user-select: none;
         }
 
         .cat-pill:hover {
-          border-color: #F8B50E;
+          background: #ffffff;
+          border-color: #cbd5e1;
           color: #0f172a;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+        }
+
+        .cat-pill:active {
+          transform: translateY(0) scale(0.97);
         }
 
         .cat-pill.active {
-          background-color: #F8B50E;
+          background: #F8B50E;
           color: #0f172a;
-          border-color: #F8B50E;
-          box-shadow: 0 2px 8px rgba(248, 181, 14, 0.25);
+          border-color: #d99b00;
+          font-weight: 700;
+          box-shadow: 0 4px 14px rgba(248, 181, 14, 0.38);
+          transform: translateY(-1px);
         }
 
-        .pill-count {
-          background: rgba(0, 0, 0, 0.08);
-          font-size: 11px;
-          padding: 1px 6px;
-          border-radius: 10px;
+        .cat-pill.active:hover {
+          background: #ebb000;
+          border-color: #c78d00;
+          box-shadow: 0 6px 18px rgba(248, 181, 14, 0.45);
+        }
+
+        .cat-pill-icon {
+          color: inherit;
+          flex-shrink: 0;
+        }
+
+        .active-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #0f172a;
+          display: inline-block;
+          animation: dotPulse 1.8s infinite;
+        }
+
+        @keyframes dotPulse {
+          0%, 100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+          50% {
+            transform: scale(1.4);
+            opacity: 0.65;
+          }
         }
 
         .controls-row {
@@ -507,41 +654,66 @@ function ProductsContent() {
           align-items: center;
           flex: 1;
           min-width: 260px;
+          transition: all 0.2s ease;
         }
 
         .search-box-icon {
           position: absolute;
-          left: 12px;
-          color: #64748b;
+          left: 14px;
+          color: #94a3b8;
+          transition: color 0.2s ease;
+          pointer-events: none;
+        }
+
+        .search-filter-box:focus-within .search-box-icon {
+          color: #F8B50E;
         }
 
         .search-filter-box input {
           width: 100%;
-          padding: 9px 36px 9px 36px;
-          border: 1px solid #cbd5e1;
-          border-radius: 8px;
+          padding: 10px 40px 10px 40px;
+          border: 1.5px solid #e2e8f0;
+          border-radius: 10px;
           font-size: 13.5px;
           font-family: inherit;
           color: #0f172a;
           background: #f8fafc;
-          transition: all 0.2s ease;
+          transition: all 0.22s ease;
+        }
+
+        .search-filter-box input:hover {
+          border-color: #cbd5e1;
+          background: #ffffff;
         }
 
         .search-filter-box input:focus {
           outline: none;
           border-color: #F8B50E;
           background: #ffffff;
-          box-shadow: 0 0 0 3px rgba(248, 181, 14, 0.2);
+          box-shadow: 0 0 0 3px rgba(248, 181, 14, 0.22);
         }
 
         .clear-search-btn {
           position: absolute;
-          right: 10px;
-          background: none;
+          right: 12px;
+          width: 22px;
+          height: 22px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          background: #e2e8f0;
           border: none;
-          font-size: 13px;
-          color: #94a3b8;
+          font-size: 11px;
+          color: #475569;
           cursor: pointer;
+          transition: all 0.2s ease;
+        }
+
+        .clear-search-btn:hover {
+          background: #cbd5e1;
+          color: #0f172a;
+          transform: rotate(90deg) scale(1.1);
         }
 
         .sort-box {
@@ -552,26 +724,38 @@ function ProductsContent() {
 
         .sort-box-icon {
           position: absolute;
-          left: 10px;
+          left: 12px;
           color: #64748b;
           pointer-events: none;
+          transition: color 0.2s ease;
+        }
+
+        .sort-box:hover .sort-box-icon {
+          color: #0f172a;
         }
 
         .sort-box select {
-          padding: 9px 14px 9px 32px;
-          border: 1px solid #cbd5e1;
-          border-radius: 8px;
+          padding: 10px 16px 10px 36px;
+          border: 1.5px solid #e2e8f0;
+          border-radius: 10px;
           font-size: 13.5px;
+          font-weight: 500;
           font-family: inherit;
           color: #0f172a;
           background: #ffffff;
           cursor: pointer;
-          transition: border-color 0.2s ease;
+          transition: all 0.22s ease;
+        }
+
+        .sort-box select:hover {
+          border-color: #F8B50E;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         .sort-box select:focus {
           outline: none;
           border-color: #F8B50E;
+          box-shadow: 0 0 0 3px rgba(248, 181, 14, 0.2);
         }
 
         /* Results summary */
