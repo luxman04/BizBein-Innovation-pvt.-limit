@@ -42,9 +42,9 @@ export default function Footer({ onOpenContact }) {
             </div>
 
             <p className="brand-text">
-              BizBein Innovations specializes in providing advanced solutions for conveying, 
-              packaging and coding. We offer a comprehensive range of machinery designed to 
-              streamline and enhance various industrial processes, including conveying, filling, 
+              BizBein Innovations specializes in providing advanced solutions for conveying,
+              packaging and coding. We offer a comprehensive range of machinery designed to
+              streamline and enhance various industrial processes, including conveying, filling,
               sealing, labeling, and continuous inkjet coding.
             </p>
 
@@ -58,7 +58,7 @@ export default function Footer({ onOpenContact }) {
               <div className="map-frame-wrapper">
                 <iframe
                   title="BizBein Plant Works Location Map"
-                  src="https://maps.google.com/maps?q=Plot%205,%20NK%20Sharma%20Rd,%20Badal%20Colony,%20Zirakpur,%20Punjab%20140603&t=&z=14&ie=UTF8&iwloc=&output=embed"
+                  src="https://maps.app.goo.gl/BsdE1nEEePFjxjHVA"
                   className="map-iframe"
                   loading="lazy"
                   allowFullScreen
@@ -66,7 +66,7 @@ export default function Footer({ onOpenContact }) {
               </div>
 
               <div className="map-footer-row">
-                <span className="map-address-snip">Plot 5, NK Sharma Rd, Zirakpur, Punjab</span>
+                <span className="map-address-snip">Third Floor, Mohali City Square, Sco 32, Patiala Rd, Zirakpur, Nabha, Punjab 140603, India</span>
                 <a
                   href={companyDetails.googleMapsUrl}
                   target="_blank"
@@ -80,11 +80,11 @@ export default function Footer({ onOpenContact }) {
             </div>
           </div>
 
-          {/* Column 2: USEFULL-LINKS */}
+          {/* Column 2: USEFUL LINKS */}
           <div className="footer-col">
             <div className="col-header-wrap">
               <span className="col-accent-bar">|</span>
-              <h4 className="col-title">USEFULL-LINKS</h4>
+              <h4 className="col-title">USEFUL LINKS</h4>
             </div>
 
             <ul className="links-list">
@@ -206,7 +206,7 @@ export default function Footer({ onOpenContact }) {
         <div className="footer-container payment-container">
           <div className="payment-content">
             <span className="payment-heading">We accept the following paying methods</span>
-            
+
             <div className="payment-badges-row">
               <span className="pay-badge pay-paytm">Paytm</span>
               <span className="pay-badge pay-gpay">G Pay</span>
