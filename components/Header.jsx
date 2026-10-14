@@ -251,8 +251,16 @@ export default function Header({
         </div>
       </div>
 
-      {/* 3. CATEGORY & NAVIGATION BAR (Dark Blue bar) */}
-      <nav className="nav-bar" aria-label="Primary Navigation">
+      {/* 3. CATEGORY & NAVIGATION BAR (Clean White Bar) */}
+      <nav
+        className="nav-bar"
+        aria-label="Primary Navigation"
+        style={{
+          backgroundColor: '#ffffff',
+          borderTop: '1px solid #e2e8f0',
+          borderBottom: '2px solid #F8B50E'
+        }}
+      >
         <div className="nav-container">
           {/* Yellow "All Categories" Button with Dropdown */}
           <div className="all-categories-menu-wrap">
@@ -782,8 +790,10 @@ export default function Header({
 
         /* 3. CATEGORY & NAV BAR */
         .nav-bar {
-          background-color: #0e1a2e;
+          background-color: #ffffff;
+          border-top: 1px solid #e2e8f0;
           border-bottom: 2px solid #F8B50E;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.04);
         }
 
         .nav-container {
@@ -882,37 +892,55 @@ export default function Header({
           padding: 0;
         }
 
+        :global(.nav-link),
         .nav-link {
           display: inline-flex;
           align-items: center;
-          gap: 4px;
-          color: #cbd5e1;
-          font-size: 13.5px;
+          gap: 5px;
+          color: #1e293b !important;
+          font-size: 14px;
           font-weight: 600;
-          text-decoration: none;
-          padding: 8px 14px;
+          text-decoration: none !important;
+          padding: 8px 16px;
           border-radius: 6px;
           transition: all 0.15s ease;
         }
 
-        .nav-link:hover,
-        .nav-link.active {
-          color: #ffffff;
-          background-color: rgba(255, 255, 255, 0.1);
+        :global(.nav-link:visited) {
+          color: #1e293b !important;
         }
 
-        .nav-link.active {
-          color: #F8B50E;
+        :global(.nav-link:hover),
+        .nav-link:hover {
+          color: #d97706 !important;
           background-color: rgba(248, 181, 14, 0.12);
         }
 
+        :global(.nav-link.active),
+        .nav-link.active {
+          color: #b45309 !important;
+          background-color: rgba(248, 181, 14, 0.16);
+        }
+
         .inline-chevron {
-          color: #94a3b8;
+          color: #64748b;
           margin-top: 1px;
+          transition: transform 0.2s ease, color 0.2s ease;
         }
 
         .nav-dropdown-parent {
           position: relative;
+        }
+
+        .nav-dropdown-parent:hover .inline-chevron {
+          transform: rotate(180deg);
+          color: #d97706;
+        }
+
+        .nav-dropdown-parent:hover > :global(.nav-link),
+        .nav-dropdown-parent:hover > .nav-link {
+          color: #d97706 !important;
+          background-color: rgba(248, 181, 14, 0.12);
         }
 
         .nav-dropdown-parent:hover .nav-simple-dropdown {
