@@ -218,7 +218,7 @@ export default function FeaturedProducts({
         .yellow-underline {
           width: 48px;
           height: 3px;
-          background-color: #f5a623;
+          background-color: #F8B50E;
           border-radius: 2px;
           margin-top: 6px;
         }
@@ -245,15 +245,15 @@ export default function FeaturedProducts({
         }
 
         .filter-pill:hover {
-          border-color: #f5a623;
+          border-color: #F8B50E;
           color: #1e293b;
         }
 
         .filter-pill.active {
-          background-color: #f5a623;
+          background-color: #F8B50E;
           color: #0f172a;
-          border-color: #f5a623;
-          box-shadow: 0 2px 8px rgba(245, 166, 35, 0.3);
+          border-color: #F8B50E;
+          box-shadow: 0 2px 8px rgba(248, 181, 14, 0.3);
         }
 
         .view-all-link {
@@ -271,7 +271,7 @@ export default function FeaturedProducts({
         }
 
         .view-all-link:hover {
-          color: #f5a623;
+          color: #F8B50E;
           transform: translateX(3px);
         }
 
@@ -296,9 +296,9 @@ export default function FeaturedProducts({
         }
 
         .product-card:hover {
-          border-color: #f5a623;
+          border-color: #F8B50E;
           transform: translateY(-4px);
-          box-shadow: 0 10px 24px rgba(245, 166, 35, 0.16);
+          box-shadow: 0 10px 24px rgba(248, 181, 14, 0.16);
         }
 
         .product-badge {
@@ -314,12 +314,12 @@ export default function FeaturedProducts({
         }
 
         .badge-bestseller {
-          background-color: #f5a623;
+          background-color: #F8B50E;
           color: #0f172a;
         }
 
         .badge-popular {
-          background-color: #f5a623;
+          background-color: #F8B50E;
           color: #0f172a;
         }
 
@@ -398,7 +398,7 @@ export default function FeaturedProducts({
           align-items: center;
           justify-content: center;
           gap: 6px;
-          background-color: #f5a623;
+          background-color: #F8B50E;
           color: #0f172a;
           border: none;
           padding: 8px 12px;
@@ -411,7 +411,7 @@ export default function FeaturedProducts({
         }
 
         .add-to-cart-btn:hover {
-          background-color: #e59a18;
+          background-color: #E5A407;
           transform: translateY(-1px);
         }
 
@@ -454,7 +454,7 @@ export default function FeaturedProducts({
 
         .btn-reset-filter {
           margin-top: 12px;
-          background: #f5a623;
+          background: #F8B50E;
           border: none;
           color: #0f172a;
           padding: 8px 16px;

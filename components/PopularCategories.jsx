@@ -101,7 +101,7 @@ export default function PopularCategories({ onSelectCategory }) {
         .yellow-underline {
           width: 48px;
           height: 3px;
-          background-color: #f5a623;
+          background-color: #F8B50E;
           border-radius: 2px;
           margin-top: 6px;
         }
@@ -121,7 +121,7 @@ export default function PopularCategories({ onSelectCategory }) {
         }
 
         .view-all-link:hover {
-          color: #f5a623;
+          color: #F8B50E;
           transform: translateX(3px);
         }
 
@@ -147,9 +147,9 @@ export default function PopularCategories({ onSelectCategory }) {
         }
 
         .category-card:hover {
-          border-color: #f5a623;
+          border-color: #F8B50E;
           transform: translateY(-4px);
-          box-shadow: 0 8px 20px rgba(245, 166, 35, 0.15);
+          box-shadow: 0 8px 20px rgba(248, 181, 14, 0.15);
         }
 
         .cat-img-box {
@@ -193,7 +193,7 @@ export default function PopularCategories({ onSelectCategory }) {
         }
 
         .cat-arrow {
-          color: #f5a623;
+          color: #F8B50E;
           flex-shrink: 0;
           transition: transform 0.2s ease;
         }

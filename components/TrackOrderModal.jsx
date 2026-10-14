@@ -135,7 +135,7 @@ export default function TrackOrderModal({ isOpen, onClose }) {
         }
 
         .modal-title-icon {
-          color: #f5a623;
+          color: #F8B50E;
         }
 
         .close-btn {
@@ -174,14 +174,14 @@ export default function TrackOrderModal({ isOpen, onClose }) {
         }
 
         .input-row input:focus {
-          border-color: #f5a623;
+          border-color: #F8B50E;
         }
 
         .track-btn {
           display: flex;
           align-items: center;
           gap: 6px;
-          background: #f5a623;
+          background: #F8B50E;
           color: #0b1526;
           border: none;
           padding: 0 20px;

@@ -432,7 +432,7 @@ export default function RequestQuoteModal({ isOpen, onClose, product }) {
         .basic-input:focus,
         textarea:focus {
           border-color: var(--bizbein-navy-700);
-          box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.25);
+          box-shadow: 0 0 0 3px rgba(248, 181, 14, 0.25);
         }
 
         textarea {

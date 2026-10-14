@@ -469,11 +469,11 @@ export default function Header({
         }
 
         .top-link:hover {
-          color: #f5a623;
+          color: #F8B50E;
         }
 
         .top-icon {
-          color: #f5a623;
+          color: #F8B50E;
         }
 
         .top-bar-right {
@@ -494,7 +494,7 @@ export default function Header({
         }
 
         .top-btn-link:hover {
-          color: #f5a623;
+          color: #F8B50E;
         }
 
         .user-login-btn {
@@ -504,7 +504,7 @@ export default function Header({
         }
 
         .user-icon {
-          color: #f5a623;
+          color: #F8B50E;
         }
 
         .top-divider {
@@ -563,7 +563,7 @@ export default function Header({
 
         .fallback-sub {
           font-size: 9px;
-          background: #f5a623;
+          background: #F8B50E;
           color: #1e293b;
           padding: 1px 4px;
           border-radius: 2px;
@@ -584,8 +584,8 @@ export default function Header({
         }
 
         .search-bar-module:focus-within {
-          border-color: #f5a623;
-          box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15);
+          border-color: #F8B50E;
+          box-shadow: 0 0 0 3px rgba(248, 181, 14, 0.15);
         }
 
         .search-input-wrap {
@@ -637,7 +637,7 @@ export default function Header({
         }
 
         .search-submit-btn {
-          background-color: #f5a623;
+          background-color: #F8B50E;
           border: none;
           color: #0f172a;
           padding: 0 18px;
@@ -650,7 +650,7 @@ export default function Header({
         }
 
         .search-submit-btn:hover {
-          background-color: #e59a18;
+          background-color: #E5A407;
         }
 
         /* Right Actions */
@@ -678,7 +678,7 @@ export default function Header({
         }
 
         .action-link-btn:hover {
-          color: #f5a623;
+          color: #F8B50E;
         }
 
         .action-icon {
@@ -709,7 +709,7 @@ export default function Header({
           position: absolute;
           top: -7px;
           right: -8px;
-          background-color: #f5a623;
+          background-color: #F8B50E;
           color: #111827;
           font-size: 10px;
           font-weight: 800;
@@ -726,7 +726,7 @@ export default function Header({
           display: flex;
           align-items: center;
           gap: 8px;
-          background-color: #f5a623;
+          background-color: #F8B50E;
           color: #0f172a;
           border: none;
           font-size: 13px;
@@ -735,14 +735,14 @@ export default function Header({
           border-radius: 9999px;
           cursor: pointer;
           font-family: inherit;
-          box-shadow: 0 2px 6px rgba(245, 166, 35, 0.3);
+          box-shadow: 0 2px 6px rgba(248, 181, 14, 0.3);
           transition: all 0.2s ease;
         }
 
         .talk-expert-btn:hover {
-          background-color: #e59a18;
+          background-color: #E5A407;
           transform: translateY(-1px);
-          box-shadow: 0 4px 10px rgba(245, 166, 35, 0.4);
+          box-shadow: 0 4px 10px rgba(248, 181, 14, 0.4);
         }
 
         .mobile-header-right {
@@ -756,7 +756,7 @@ export default function Header({
         /* 3. CATEGORY & NAV BAR */
         .nav-bar {
           background-color: #0e1a2e;
-          border-bottom: 2px solid #f5a623;
+          border-bottom: 2px solid #F8B50E;
         }
 
         .nav-container {
@@ -776,7 +776,7 @@ export default function Header({
           display: flex;
           align-items: center;
           gap: 10px;
-          background-color: #f5a623;
+          background-color: #F8B50E;
           color: #0f172a;
           border: none;
           font-size: 13.5px;
@@ -789,7 +789,7 @@ export default function Header({
         }
 
         .all-categories-btn:hover {
-          background-color: #e59a18;
+          background-color: #E5A407;
         }
 
         .categories-dropdown-menu {
@@ -874,7 +874,7 @@ export default function Header({
         }
 
         .nav-link.active {
-          color: #f5a623;
+          color: #F8B50E;
           font-weight: 600;
         }
 
@@ -976,7 +976,7 @@ export default function Header({
             position: absolute;
             top: -5px;
             right: -5px;
-            background: #f5a623;
+            background: #F8B50E;
             color: #0f172a;
             font-size: 10px;
             font-weight: 800;
@@ -1024,7 +1024,7 @@ export default function Header({
           }
 
           .mobile-search-submit {
-            background: #f5a623;
+            background: #F8B50E;
             border: none;
             border-radius: 6px;
             color: #0f172a;
@@ -1061,7 +1061,7 @@ export default function Header({
           justify-content: space-between;
           padding: 14px 16px;
           background: #0e1a2e;
-          border-bottom: 2px solid #f5a623;
+          border-bottom: 2px solid #F8B50E;
         }
 
         .drawer-logo-img {
@@ -1122,7 +1122,7 @@ export default function Header({
         }
 
         .drawer-icon {
-          color: #f5a623;
+          color: #F8B50E;
         }
 
         .drawer-cat-list {
@@ -1147,10 +1147,10 @@ export default function Header({
         }
 
         .drawer-cat-btn.active {
-          background: #f5a623;
+          background: #F8B50E;
           color: #0f172a;
           font-weight: 700;
-          border-color: #f5a623;
+          border-color: #F8B50E;
         }
 
         .drawer-actions-grid {
@@ -1174,7 +1174,7 @@ export default function Header({
         }
 
         .drawer-btn-yellow {
-          background: #f5a623;
+          background: #F8B50E;
           color: #0f172a;
         }
 

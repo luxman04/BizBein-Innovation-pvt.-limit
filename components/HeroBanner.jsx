@@ -306,10 +306,10 @@ export default function HeroBanner({ onExploreClick, onOpenQuote }) {
           bottom: 0;
           left: 45%;
           width: 70px;
-          background: #f5a623;
+          background: #F8B50E;
           transform: skewX(-24deg);
           z-index: 3;
-          box-shadow: 0 0 35px rgba(245, 166, 35, 0.4);
+          box-shadow: 0 0 35px rgba(248, 181, 14, 0.4);
           pointer-events: none;
         }
 
@@ -386,7 +386,7 @@ export default function HeroBanner({ onExploreClick, onOpenQuote }) {
         .kicker-flag {
           width: 4px;
           height: 14px;
-          background: #f5a623;
+          background: #F8B50E;
           border-radius: 2px;
         }
 
@@ -402,8 +402,8 @@ export default function HeroBanner({ onExploreClick, onOpenQuote }) {
         }
 
         .gold-text {
-          color: #f5a623;
-          text-shadow: 0 0 20px rgba(245, 166, 35, 0.3);
+          color: #F8B50E;
+          text-shadow: 0 0 20px rgba(248, 181, 14, 0.3);
         }
 
         .hero-tagline {
@@ -421,7 +421,7 @@ export default function HeroBanner({ onExploreClick, onOpenQuote }) {
           display: inline-flex;
           align-items: center;
           gap: 10px;
-          background-color: #f5a623;
+          background-color: #F8B50E;
           color: #0f172a;
           border: none;
           padding: 13px 26px;
@@ -430,14 +430,14 @@ export default function HeroBanner({ onExploreClick, onOpenQuote }) {
           font-weight: 700;
           cursor: pointer;
           font-family: inherit;
-          box-shadow: 0 4px 14px rgba(245, 166, 35, 0.4);
+          box-shadow: 0 4px 14px rgba(248, 181, 14, 0.4);
           transition: all 0.2s ease;
         }
 
         .hero-primary-cta:hover {
-          background-color: #e59a18;
+          background-color: #E5A407;
           transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(245, 166, 35, 0.55);
+          box-shadow: 0 6px 20px rgba(248, 181, 14, 0.55);
         }
 
         .cta-arrow {
@@ -466,7 +466,7 @@ export default function HeroBanner({ onExploreClick, onOpenQuote }) {
         }
 
         .trust-icon {
-          color: #f5a623;
+          color: #F8B50E;
           flex-shrink: 0;
         }
 
@@ -499,7 +499,7 @@ export default function HeroBanner({ onExploreClick, onOpenQuote }) {
         }
 
         .hero-floating-badge {
-          background: #f5a623;
+          background: #F8B50E;
           color: #0b1526;
           padding: 10px 22px;
           clip-path: polygon(14px 0%, 100% 0%, calc(100% - 14px) 100%, 0% 100%);
@@ -543,7 +543,7 @@ export default function HeroBanner({ onExploreClick, onOpenQuote }) {
         }
 
         .counter-curr {
-          color: #f5a623;
+          color: #F8B50E;
         }
 
         .counter-divider {
@@ -579,8 +579,8 @@ export default function HeroBanner({ onExploreClick, onOpenQuote }) {
 
         .progress-bar-btn.active {
           width: 38px;
-          background: #f5a623;
-          box-shadow: 0 0 8px rgba(245, 166, 35, 0.6);
+          background: #F8B50E;
+          box-shadow: 0 0 8px rgba(248, 181, 14, 0.6);
         }
 
         .carousel-arrow-buttons {
@@ -604,9 +604,9 @@ export default function HeroBanner({ onExploreClick, onOpenQuote }) {
         }
 
         .carousel-nav-btn:hover {
-          background: #f5a623;
+          background: #F8B50E;
           color: #0b1526;
-          border-color: #f5a623;
+          border-color: #F8B50E;
           transform: scale(1.08);
         }
 

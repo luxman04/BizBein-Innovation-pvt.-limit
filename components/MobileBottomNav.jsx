@@ -109,7 +109,7 @@ export default function MobileBottomNav({
           align-items: center;
           justify-content: center;
           margin-top: -12px;
-          box-shadow: 0 4px 8px rgba(245, 166, 35, 0.4);
+          box-shadow: 0 4px 8px rgba(248, 181, 14, 0.4);
         }
 
         .cart-badge-wrap {

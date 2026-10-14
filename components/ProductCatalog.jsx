@@ -150,8 +150,8 @@ export default function ProductCatalog({
                         <Star
                           key={i}
                           size={13}
-                          fill={i < Math.floor(product.rating) ? '#F5A623' : '#CBD5E1'}
-                          color={i < Math.floor(product.rating) ? '#F5A623' : '#CBD5E1'}
+                          fill={i < Math.floor(product.rating) ? '#F8B50E' : '#CBD5E1'}
+                          color={i < Math.floor(product.rating) ? '#F8B50E' : '#CBD5E1'}
                         />
                       ))}
                     </div>

@@ -131,7 +131,7 @@ export default function ExpertCallModal({ isOpen, onClose }) {
         }
 
         .modal-title-icon {
-          color: #f5a623;
+          color: #F8B50E;
         }
 
         .close-btn {
@@ -175,7 +175,7 @@ export default function ExpertCallModal({ isOpen, onClose }) {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          background: #f5a623;
+          background: #F8B50E;
           color: #0b1526;
           font-size: 13px;
           font-weight: 700;
@@ -186,7 +186,7 @@ export default function ExpertCallModal({ isOpen, onClose }) {
         }
 
         .phone-pill:hover {
-          background: #e59a18;
+          background: #E5A407;
         }
 
         .form-subheading {
@@ -227,12 +227,12 @@ export default function ExpertCallModal({ isOpen, onClose }) {
 
         .form-group input:focus,
         .form-group select:focus {
-          border-color: #f5a623;
+          border-color: #F8B50E;
         }
 
         .submit-btn {
           margin-top: 6px;
-          background-color: #f5a623;
+          background-color: #F8B50E;
           color: #0b1526;
           border: none;
           padding: 12px;
@@ -245,7 +245,7 @@ export default function ExpertCallModal({ isOpen, onClose }) {
         }
 
         .submit-btn:hover {
-          background-color: #e59a18;
+          background-color: #E5A407;
         }
 
         .success-box {

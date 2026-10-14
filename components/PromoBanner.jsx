@@ -82,7 +82,7 @@ export default function PromoBanner({ onOpenQuote }) {
           justify-content: space-between;
           padding: 32px 36px;
           box-shadow: 0 10px 25px rgba(11, 21, 38, 0.12);
-          border: 1px solid rgba(245, 166, 35, 0.25);
+          border: 1px solid rgba(248, 181, 14, 0.25);
         }
 
         .banner-bg-visual {
@@ -104,10 +104,10 @@ export default function PromoBanner({ onOpenQuote }) {
           bottom: 0;
           left: 48%;
           width: 44px;
-          background: #f5a623;
+          background: #F8B50E;
           transform: skewX(-22deg);
           z-index: 3;
-          box-shadow: 0 0 25px rgba(245, 166, 35, 0.5);
+          box-shadow: 0 0 25px rgba(248, 181, 14, 0.5);
         }
 
         .banner-left-content {
@@ -123,7 +123,7 @@ export default function PromoBanner({ onOpenQuote }) {
         .banner-title {
           font-size: 17px;
           font-weight: 800;
-          color: #f5a623;
+          color: #F8B50E;
           line-height: 1.3;
           letter-spacing: 0.02em;
           text-transform: uppercase;
@@ -139,7 +139,7 @@ export default function PromoBanner({ onOpenQuote }) {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          background-color: #f5a623;
+          background-color: #F8B50E;
           color: #0b1526;
           border: none;
           padding: 10px 20px;
@@ -154,9 +154,9 @@ export default function PromoBanner({ onOpenQuote }) {
         }
 
         .banner-cta-btn:hover {
-          background-color: #e59a18;
+          background-color: #E5A407;
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(245, 166, 35, 0.4);
+          box-shadow: 0 4px 12px rgba(248, 181, 14, 0.4);
         }
 
         .banner-features-column {
@@ -183,12 +183,12 @@ export default function PromoBanner({ onOpenQuote }) {
           width: 32px;
           height: 32px;
           border-radius: 50%;
-          border: 1.5px solid #f5a623;
-          color: #f5a623;
+          border: 1.5px solid #F8B50E;
+          color: #F8B50E;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: rgba(245, 166, 35, 0.1);
+          background: rgba(248, 181, 14, 0.1);
         }
 
         .feature-text {

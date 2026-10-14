@@ -14,8 +14,8 @@
   --bizbein-navy-100: #EEF1F8;
 
   --bizbein-gold-700: #D68C12;
-  --bizbein-gold-600: #EFA81D;
-  --bizbein-gold-500: #F5A623; /* Primary Logo Industrial Gold/Yellow */
+  --bizbein-gold-600: #F8B50E;
+  --bizbein-gold-500: #F8B50E; /* Primary Logo Industrial Gold/Yellow */
   --bizbein-gold-400: #FABD4E;
   --bizbein-gold-100: #FEF7EA;
 
@@ -153,13 +153,13 @@ body {
   background-color: var(--bizbein-gold-500);
   color: var(--bizbein-navy-900);
   border-color: var(--bizbein-gold-600);
-  box-shadow: 0 2px 4px rgba(245, 166, 35, 0.25);
+  box-shadow: 0 2px 4px rgba(248, 181, 14, 0.25);
 }
 
 .btn-primary:hover {
   background-color: var(--bizbein-gold-600);
   color: var(--bizbein-navy-900);
-  box-shadow: 0 4px 8px rgba(245, 166, 35, 0.35);
+  box-shadow: 0 4px 8px rgba(248, 181, 14, 0.35);
   transform: translateY(-1px);
 }
 
