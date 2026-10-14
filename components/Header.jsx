@@ -16,9 +16,13 @@ import {
   X,
   ChevronDown,
   Layers,
-  ArrowRight
+  ArrowRight,
+  LogOut,
+  ShieldAlert,
+  Package
 } from 'lucide-react';
 import { companyDetails, categories } from '../data/products';
+import { useStore } from '../context/StoreContext';
 
 export default function Header({
   cartCount,
@@ -33,6 +37,7 @@ export default function Header({
   onSelectCategory
 }) {
   const router = useRouter();
+  const { user, logout } = useStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
 
@@ -86,10 +91,33 @@ export default function Header({
               Track Order
             </button>
             <span className="top-divider">|</span>
-            <button type="button" onClick={onOpenExpert} className="top-btn-link user-login-btn">
-              <span>Login / Register</span>
-              <User size={13} className="top-icon user-icon" />
-            </button>
+            {user ? (
+              <div className="user-auth-pill-group">
+                <Link href="/account/orders" className="top-btn-link user-profile-link">
+                  <User size={13} className="top-icon user-icon" />
+                  <span>{user.name.split(' ')[0]}</span>
+                </Link>
+                {user.role === 'admin' && (
+                  <>
+                    <span className="top-divider">|</span>
+                    <Link href="/admin/orders" className="top-btn-link admin-badge-link">
+                      <ShieldAlert size={12} className="top-icon text-gold" />
+                      <span>Admin</span>
+                    </Link>
+                  </>
+                )}
+                <span className="top-divider">|</span>
+                <button type="button" onClick={logout} className="top-btn-link logout-btn" title="Sign Out">
+                  <LogOut size={12} />
+                  <span>Logout</span>
+                </button>
+              </div>
+            ) : (
+              <Link href="/login" className="top-btn-link user-login-btn">
+                <span>Login / Register</span>
+                <User size={13} className="top-icon user-icon" />
+              </Link>
+            )}
           </div>
         </div>
       </div>
@@ -536,6 +564,44 @@ export default function Header({
           display: flex;
           align-items: center;
           gap: 5px;
+        }
+
+        .user-auth-pill-group {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .user-profile-link {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          font-weight: 600;
+          color: #ffffff !important;
+        }
+
+        .admin-badge-link {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          background: rgba(248, 181, 14, 0.15);
+          color: #F8B50E !important;
+          padding: 2px 7px;
+          border-radius: 4px;
+          font-weight: 700;
+          font-size: 10.5px;
+          text-transform: uppercase;
+        }
+
+        .logout-btn {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          color: #94a3b8 !important;
+        }
+
+        .logout-btn:hover {
+          color: #ef4444 !important;
         }
 
         .user-icon {

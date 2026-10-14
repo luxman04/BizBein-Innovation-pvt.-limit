@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   X,
   Trash2,
@@ -9,7 +10,8 @@ import {
   Send,
   Phone,
   ShoppingCart,
-  ArrowRight
+  ArrowRight,
+  ShieldCheck
 } from 'lucide-react';
 import { companyDetails } from '../data/products';
 
@@ -21,6 +23,13 @@ export default function QuickInquiryDrawer({
   onRemoveItem,
   onOpenQuoteModal
 }) {
+  const router = useRouter();
+
+  const cartTotal = cartItems.reduce(
+    (acc, item) => acc + (item.price || 0) * (item.qty || 1),
+    0
+  );
+
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && isOpen) {
@@ -133,29 +142,39 @@ export default function QuickInquiryDrawer({
 
         {cartItems.length > 0 && (
           <div className="drawer-footer">
-            <div className="footer-notice">
-              <span>*Inquiries receive formal proforma invoice with exact freight & GST breakdown.</span>
+            <div className="cart-total-bar">
+              <span className="total-label">Estimated Total:</span>
+              <strong className="total-value">₹{cartTotal.toLocaleString('en-IN')}</strong>
             </div>
 
             <button
               type="button"
-              className="btn btn-primary submit-cart-btn"
+              className="btn btn-primary checkout-btn"
+              onClick={() => {
+                onClose();
+                router.push('/checkout');
+              }}
+            >
+              <span>Proceed to Checkout</span>
+              <ArrowRight size={17} />
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-outline submit-cart-btn"
               onClick={() => {
                 onClose();
                 onOpenQuoteModal(cartItems[0]);
               }}
             >
-              <Send size={16} />
-              <span>Submit Combined RFQ Proposal</span>
+              <Send size={15} />
+              <span>Or Submit RFQ Inquiry</span>
             </button>
 
-            <a
-              href={`tel:${companyDetails.primaryPhone.replace(/[^0-9+]/g, '')}`}
-              className="btn btn-outline direct-desk-call"
-            >
-              <Phone size={15} />
-              <span>Direct Hotline: {companyDetails.primaryPhone}</span>
-            </a>
+            <div className="footer-notice">
+              <ShieldCheck size={14} className="text-gold" />
+              <span>100% Genuine Industrial Machines • Direct Factory Dispatch</span>
+            </div>
           </div>
         )}
       </div>
@@ -330,7 +349,7 @@ export default function QuickInquiryDrawer({
         }
 
         .drawer-footer {
-          padding: 20px;
+          padding: 18px 20px;
           background: #ffffff;
           border-top: 1px solid var(--color-border-subtle);
           display: flex;
@@ -338,19 +357,68 @@ export default function QuickInquiryDrawer({
           gap: 10px;
         }
 
-        .footer-notice {
-          font-size: 11px;
-          color: var(--color-text-tertiary);
-          line-height: 1.4;
-          text-align: center;
+        .cart-total-bar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 8px 0 12px;
+          border-bottom: 1px solid #e2e8f0;
+        }
+
+        .total-label {
+          font-size: 13.5px;
+          color: #64748b;
+          font-weight: 600;
+        }
+
+        .total-value {
+          font-size: 19px;
+          color: #0f172a;
+          font-weight: 800;
+        }
+
+        .checkout-btn {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 12px 20px;
+          font-size: 14.5px;
+          font-weight: 700;
+          background-color: #F8B50E;
+          color: #0f172a;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: background-color 0.15s ease, transform 0.1s ease;
+        }
+
+        .checkout-btn:hover {
+          background-color: #e5a407;
+          transform: translateY(-1px);
         }
 
         .submit-cart-btn {
           width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 10px 18px;
+          font-size: 13.5px;
         }
 
-        .direct-desk-call {
-          width: 100%;
+        .footer-notice {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          font-size: 11px;
+          color: #64748b;
+          line-height: 1.4;
+          text-align: center;
+          padding-top: 4px;
         }
       `}</style>
     </div>
