@@ -1,6 +1,22 @@
 import '../styles/globals.css';
+import { Plus_Jakarta_Sans, Inter } from 'next/font/google';
+import StyledJsxRegistry from './registry';
 import { StoreProvider } from '../context/StoreContext';
 import StoreLayout from '../components/StoreLayout';
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-plus-jakarta-sans',
+  display: 'swap',
+});
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-inter',
+  display: 'swap',
+});
 
 export const metadata = {
   title: 'BizBein Innovations Pvt. Ltd. | Industrial Conveying, Coding & Packaging Equipment',
@@ -39,15 +55,18 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable}`}>
       <head>
         <link rel="icon" href="/bizbein-innovations-logo.png" />
       </head>
       <body>
-        <StoreProvider>
-          <StoreLayout>{children}</StoreLayout>
-        </StoreProvider>
+        <StyledJsxRegistry>
+          <StoreProvider>
+            <StoreLayout>{children}</StoreLayout>
+          </StoreProvider>
+        </StyledJsxRegistry>
       </body>
     </html>
   );
 }
+
