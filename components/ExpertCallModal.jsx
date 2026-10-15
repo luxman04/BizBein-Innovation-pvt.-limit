@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { X, Headphones, Phone, Mail, CheckCircle2, Clock } from 'lucide-react';
 import { companyDetails } from '../data/products';
+import WhatsAppIcon from './WhatsAppIcon';
+import { openWhatsApp, formatExpertCallRequest, WHATSAPP_RAW_NUMBER } from '../lib/whatsapp';
 
 export default function ExpertCallModal({ isOpen, onClose }) {
   const [submitted, setSubmitted] = useState(false);
@@ -13,10 +15,7 @@ export default function ExpertCallModal({ isOpen, onClose }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      onClose();
-    }, 2500);
+    openWhatsApp(formatExpertCallRequest(formData));
   };
 
   return (
@@ -36,21 +35,45 @@ export default function ExpertCallModal({ isOpen, onClose }) {
           {submitted ? (
             <div className="success-box">
               <CheckCircle2 size={46} className="text-success" />
-              <h4>Callback Requested!</h4>
-              <p>Our senior packaging & conveying systems engineer will call you shortly at <strong>{formData.phone}</strong>.</p>
+              <h4>Inquiry Dispatched to WhatsApp!</h4>
+              <p>Our senior packaging & conveying systems engineer has received your request on WhatsApp.</p>
+              <a
+                href={`https://wa.me/${WHATSAPP_RAW_NUMBER}?text=${encodeURIComponent(formatExpertCallRequest(formData))}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="submit-btn whatsapp-action-btn"
+              >
+                <WhatsAppIcon size={16} color="#ffffff" />
+                <span>Open WhatsApp Chat Directly</span>
+              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  setSubmitted(false);
+                  onClose();
+                }}
+                className="close-link"
+              >
+                Close Window
+              </button>
             </div>
           ) : (
             <>
               <div className="direct-call-banner">
-                <span className="banner-sub">Call Us Directly for Instant Engineering Advice:</span>
+                <span className="banner-sub">Call or WhatsApp Directly for Instant Engineering Advice:</span>
                 <div className="phone-badges">
+                  <a
+                    href={`https://wa.me/${WHATSAPP_RAW_NUMBER}?text=${encodeURIComponent("Hello BizBein Innovations, I need expert advice on industrial machinery.")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="phone-pill whatsapp-pill"
+                  >
+                    <WhatsAppIcon size={15} color="#ffffff" />
+                    <span>WhatsApp: {companyDetails.whatsappPhone}</span>
+                  </a>
                   <a href={`tel:${companyDetails.phone1.replace(/[^0-9+]/g, '')}`} className="phone-pill">
                     <Phone size={15} />
                     <span>{companyDetails.phone1}</span>
-                  </a>
-                  <a href={`tel:${companyDetails.phone2.replace(/[^0-9+]/g, '')}`} className="phone-pill">
-                    <Phone size={15} />
-                    <span>{companyDetails.phone2}</span>
                   </a>
                 </div>
               </div>
@@ -97,8 +120,9 @@ export default function ExpertCallModal({ isOpen, onClose }) {
                   </select>
                 </div>
 
-                <button type="submit" className="submit-btn">
-                  <span>Connect With Technical Specialist</span>
+                <button type="submit" className="submit-btn whatsapp-action-btn">
+                  <WhatsAppIcon size={16} color="#ffffff" />
+                  <span>Send Request to WhatsApp</span>
                 </button>
               </form>
             </>
@@ -228,6 +252,35 @@ export default function ExpertCallModal({ isOpen, onClose }) {
         .form-group input:focus,
         .form-group select:focus {
           border-color: #F8B50E;
+        }
+
+        .whatsapp-pill {
+          background-color: #16a34a !important;
+          color: #ffffff !important;
+          border-color: #16a34a !important;
+        }
+
+        .whatsapp-action-btn {
+          background-color: #16a34a !important;
+          color: #ffffff !important;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+        }
+
+        .whatsapp-action-btn:hover {
+          background-color: #15803d !important;
+        }
+
+        .close-link {
+          background: none;
+          border: none;
+          color: #64748b;
+          text-decoration: underline;
+          cursor: pointer;
+          font-size: 13px;
+          margin-top: 4px;
         }
 
         .submit-btn {

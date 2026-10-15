@@ -17,6 +17,8 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { companyDetails } from '../../../data/products';
+import WhatsAppIcon from '../../../components/WhatsAppIcon';
+import { openWhatsApp, formatOrderInquiry } from '../../../lib/whatsapp';
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -138,6 +140,15 @@ export default function OrderDetailPage() {
             </p>
           </div>
           <div className="success-actions">
+            <button
+              type="button"
+              onClick={() => openWhatsApp(formatOrderInquiry(order))}
+              className="btn-whatsapp-order"
+              title="Share order details to BizBein dispatch WhatsApp"
+            >
+              <WhatsAppIcon size={16} color="#ffffff" />
+              <span>Send Order to WhatsApp</span>
+            </button>
             <button type="button" onClick={handlePrint} className="btn-print">
               <Printer size={16} />
               <span>Print Invoice</span>
@@ -384,6 +395,30 @@ export default function OrderDetailPage() {
 
         .success-actions {
           flex-shrink: 0;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .btn-whatsapp-order {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 16px;
+          background: #16a34a;
+          color: #ffffff;
+          border: 1px solid #16a34a;
+          border-radius: 8px;
+          font-size: 13.5px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .btn-whatsapp-order:hover {
+          background: #15803d;
+          border-color: #15803d;
         }
 
         .btn-print {

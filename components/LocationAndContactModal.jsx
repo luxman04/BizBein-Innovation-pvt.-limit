@@ -84,6 +84,16 @@ export default function LocationAndContactModal({ isOpen, onClose }) {
               <span className="info-label">Direct Lines / Phone & Fax</span>
               <div className="phones-grid">
                 <a
+                  href={`https://wa.me/${companyDetails.whatsappRaw}?text=${encodeURIComponent("Hello BizBein Innovations, I have a machinery inquiry.")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="phone-touch-card whatsapp-card"
+                >
+                  <span className="phone-type">Official WhatsApp Support (Fast Reply)</span>
+                  <strong className="phone-num">{companyDetails.whatsappPhone}</strong>
+                </a>
+
+                <a
                   href={`tel:${companyDetails.primaryPhone.replace(/[^0-9+]/g, '')}`}
                   className="phone-touch-card"
                 >

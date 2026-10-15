@@ -14,6 +14,8 @@ import {
   Loader2
 } from 'lucide-react';
 import { companyDetails } from '../data/products';
+import WhatsAppIcon from './WhatsAppIcon';
+import { openWhatsApp, formatProductRfq, WHATSAPP_RAW_NUMBER } from '../lib/whatsapp';
 
 export default function RequestQuoteModal({ isOpen, onClose, product }) {
   const [formData, setFormData] = useState({
@@ -43,9 +45,20 @@ export default function RequestQuoteModal({ isOpen, onClose, product }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     setStatus('loading');
+    const waMsg = formatProductRfq({
+      product,
+      quantity: formData.quantity,
+      companyName: formData.companyName,
+      contactPerson: formData.contactPerson,
+      phone: formData.phone,
+      email: formData.email,
+      pincode: formData.pincode,
+      notes: formData.notes
+    });
+    openWhatsApp(waMsg);
     setTimeout(() => {
       setStatus('success');
-    }, 1000);
+    }, 600);
   };
 
   return (
@@ -77,21 +90,37 @@ export default function RequestQuoteModal({ isOpen, onClose, product }) {
             <div className="success-icon-wrap">
               <CheckCircle size={48} className="text-success" />
             </div>
-            <h4 className="success-title">Inquiry Submitted Successfully!</h4>
+            <h4 className="success-title">Inquiry Sent to WhatsApp!</h4>
             <p className="success-msg">
-              Thank you! Your quotation request for{' '}
-              <strong>{product?.name || 'Industrial Equipment'}</strong> has been routed to 
-              BizBein Innovations engineering desk.
+              Your quotation requirement for{' '}
+              <strong>{product?.name || 'Industrial Equipment'}</strong> has been generated and opened directly in WhatsApp with BizBein technical sales (+91 99158 56540).
             </p>
             <div className="success-summary">
-              <span>Our technical team will contact you within 2 business hours.</span>
-              <span>Need immediate pricing? Call our direct desk:</span>
+              <span>If WhatsApp did not open automatically, click below:</span>
+              <a
+                href={`https://wa.me/${WHATSAPP_RAW_NUMBER}?text=${encodeURIComponent(formatProductRfq({
+                  product,
+                  quantity: formData.quantity,
+                  companyName: formData.companyName,
+                  contactPerson: formData.contactPerson,
+                  phone: formData.phone,
+                  email: formData.email,
+                  pincode: formData.pincode,
+                  notes: formData.notes
+                }))}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-primary btn-whatsapp-direct"
+              >
+                <WhatsAppIcon size={18} color="#ffffff" />
+                <span>Open WhatsApp Chat Now</span>
+              </a>
               <a
                 href={`tel:${companyDetails.primaryPhone.replace(/[^0-9+]/g, '')}`}
-                className="btn btn-primary direct-call-btn"
+                className="btn btn-outline direct-call-btn"
               >
                 <Phone size={16} />
-                <span>Call {companyDetails.primaryPhone}</span>
+                <span>Or Call Direct: {companyDetails.primaryPhone}</span>
               </a>
             </div>
             <button
@@ -252,17 +281,17 @@ export default function RequestQuoteModal({ isOpen, onClose, product }) {
               <button
                 type="submit"
                 disabled={status === 'loading'}
-                className="btn btn-primary submit-btn"
+                className="btn btn-primary submit-btn btn-whatsapp-submit"
               >
                 {status === 'loading' ? (
                   <>
                     <Loader2 size={16} className="spinner" />
-                    <span>Routing to Factory Desk...</span>
+                    <span>Opening WhatsApp...</span>
                   </>
                 ) : (
                   <>
-                    <Send size={16} />
-                    <span>Generate Official RFQ Quote</span>
+                    <WhatsAppIcon size={18} color="#ffffff" />
+                    <span>Submit & Send to WhatsApp</span>
                   </>
                 )}
               </button>
@@ -515,6 +544,24 @@ export default function RequestQuoteModal({ isOpen, onClose, product }) {
 
         .direct-call-btn {
           margin-top: 6px;
+        }
+
+        .btn-whatsapp-submit,
+        .btn-whatsapp-direct {
+          background-color: #16a34a !important;
+          border-color: #16a34a !important;
+          color: #ffffff !important;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          font-weight: 700;
+        }
+
+        .btn-whatsapp-submit:hover,
+        .btn-whatsapp-direct:hover {
+          background-color: #15803d !important;
+          border-color: #15803d !important;
         }
 
         .close-finish-btn {

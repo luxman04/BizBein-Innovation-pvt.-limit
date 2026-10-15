@@ -74,6 +74,15 @@ export default function ContactPage() {
                   </div>
                 </div>
                 <div className="contact-pills-list">
+                  <a
+                    href={`https://wa.me/${companyDetails.whatsappRaw}?text=${encodeURIComponent("Hello BizBein Innovations, I would like to inquire about your machinery.")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="phone-link-card phone-link-whatsapp"
+                  >
+                    <span className="link-label">Official WhatsApp Desk:</span>
+                    <strong className="link-val">{companyDetails.whatsappPhone} (Click to Chat)</strong>
+                  </a>
                   <a href={`tel:${companyDetails.primaryPhone.replace(/[^0-9+]/g, '')}`} className="phone-link-card">
                     <span className="link-label">Commercial Orders Desk:</span>
                     <strong className="link-val">{companyDetails.primaryPhone}</strong>
@@ -339,6 +348,21 @@ export default function ContactPage() {
           align-items: center;
           text-decoration: none;
           transition: border-color 0.15s ease;
+        }
+
+        .phone-link-whatsapp {
+          background: #f0fdf4 !important;
+          border-color: #bbf7d0 !important;
+        }
+
+        .phone-link-whatsapp:hover {
+          border-color: #16a34a !important;
+          background: #dcfce7 !important;
+        }
+
+        .phone-link-whatsapp .link-val {
+          color: #15803d !important;
+          font-weight: 700;
         }
 
         .phone-link-card:hover {

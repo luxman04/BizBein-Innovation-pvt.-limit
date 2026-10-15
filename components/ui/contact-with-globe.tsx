@@ -4,8 +4,9 @@ import * as React from "react";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
-import { ArrowRight, Mail, Phone, Headphones } from "lucide-react";
+import { ArrowRight, Mail, Phone, Headphones, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { openWhatsApp, formatContactInquiry, WHATSAPP_RAW_NUMBER } from "@/lib/whatsapp";
 import * as SeparatorPrimitive from "@radix-ui/react-separator";
 import * as d3 from "d3";
 import { feature } from "topojson-client";
@@ -20,11 +21,20 @@ const smoothEase = [0.25, 0.1, 0.25, 1] as const;
 
 const CONTACT_LINKS = [
   {
+    icon: MessageCircle,
+    label: "+91 99158 56540 (WhatsApp Desk)",
+    href: `https://wa.me/${WHATSAPP_RAW_NUMBER}?text=${encodeURIComponent("Hello BizBein Innovations, I would like to inquire about your machinery.")}`,
+  },
+  {
+    icon: Phone,
+    label: "+91 99158 56540 (Direct Call)",
+    href: "tel:+919915856540",
+  },
+  {
     icon: Mail,
     label: "sales@bizbein.com",
     href: "mailto:sales@bizbein.com",
   },
-  { icon: Phone, label: "+91 99158 56540", href: "tel:+919915856540" },
   {
     icon: Headphones,
     label: "info@bizbein.com",
@@ -704,6 +714,7 @@ export default function ContactWithGlobe({
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
+    phone: "",
     company: "",
     email: "",
     message: "",
@@ -712,7 +723,7 @@ export default function ContactWithGlobe({
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 4000);
+    openWhatsApp(formatContactInquiry(formData));
   };
 
   return (
@@ -830,14 +841,35 @@ export default function ContactWithGlobe({
             <FormDots />
 
             {submitted ? (
-              <div className="py-12 text-center flex flex-col items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+              <div className="py-10 text-center flex flex-col items-center gap-3">
+                <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl font-bold shadow-sm">
                   ✓
                 </div>
-                <h4 className="text-lg font-bold text-zinc-900 dark:text-white">Message Dispatched!</h4>
-                <p className="text-sm text-zinc-500 max-w-xs">
-                  Thank you, our packaging & conveying engineer will contact you shortly.
+                <h4 className="text-xl font-bold text-zinc-900 dark:text-white">Inquiry Forwarded to WhatsApp!</h4>
+                <p className="text-sm text-zinc-500 max-w-sm">
+                  Your machinery requirement has been formatted and opened directly in WhatsApp with BizBein engineering sales desk (+91 99158 56540).
                 </p>
+                <div className="flex flex-wrap items-center justify-center gap-3 mt-3">
+                  <a
+                    href={`https://wa.me/${WHATSAPP_RAW_NUMBER}?text=${encodeURIComponent(formatContactInquiry(formData))}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition-colors shadow-sm"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    <span>Open WhatsApp Chat Again</span>
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSubmitted(false);
+                      setFormData({ name: "", phone: "", company: "", email: "", message: "" });
+                    }}
+                    className="px-5 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 text-xs font-semibold text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    Send Another Inquiry
+                  </button>
+                </div>
               </div>
             ) : (
               <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
@@ -852,35 +884,50 @@ export default function ContactWithGlobe({
                       placeholder="e.g. Rajesh Kumar"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-amber-500 dark:focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 transition-all duration-200"
+                      className="w-full bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/10 transition-all duration-200"
                     />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-xs font-semibold tracking-wider uppercase text-zinc-500 dark:text-zinc-400">
-                      Company / Plant
+                      Phone / WhatsApp *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="e.g. +91 99158 56540"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      className="w-full bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/10 transition-all duration-200"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-semibold tracking-wider uppercase text-zinc-500 dark:text-zinc-400">
+                      Official Email *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="procurement@company.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className="w-full bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/10 transition-all duration-200"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-semibold tracking-wider uppercase text-zinc-500 dark:text-zinc-400">
+                      Company / Factory
                     </label>
                     <input
                       type="text"
                       placeholder="e.g. Apex Industries"
                       value={formData.company}
                       onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                      className="w-full bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-amber-500 dark:focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 transition-all duration-200"
+                      className="w-full bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/10 transition-all duration-200"
                     />
                   </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-xs font-semibold tracking-wider uppercase text-zinc-500 dark:text-zinc-400">
-                    Official Email *
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    placeholder="procurement@company.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-2.5 text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-amber-500 dark:focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 transition-all duration-200"
-                  />
                 </div>
 
                 <div className="flex flex-col gap-2">
@@ -893,12 +940,13 @@ export default function ContactWithGlobe({
                     placeholder="Describe your line speed, packaging dimensions, or required conveyor specs..."
                     value={formData.message}
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    className="w-full bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-amber-500 dark:focus:border-amber-400 focus:ring-2 focus:ring-amber-500/10 resize-none transition-all duration-200"
+                    className="w-full bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 rounded-xl px-4 py-3 text-sm text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus:border-emerald-500 dark:focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/10 resize-none transition-all duration-200"
                   />
                 </div>
 
-                <Button type="submit" className="w-fit h-11 px-8 rounded-xl font-semibold text-sm bg-zinc-900 hover:bg-zinc-800 dark:bg-white dark:hover:bg-zinc-100 text-white dark:text-zinc-900 group">
-                  Submit Requirement
+                <Button type="submit" className="w-full sm:w-fit h-12 px-8 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2 group shadow-md transition-all">
+                  <MessageCircle className="w-4 h-4" />
+                  <span>Send Inquiry to WhatsApp</span>
                   <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-1" />
                 </Button>
               </form>

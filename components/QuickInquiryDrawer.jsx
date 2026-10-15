@@ -14,6 +14,8 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { companyDetails } from '../data/products';
+import WhatsAppIcon from './WhatsAppIcon';
+import { openWhatsApp, formatCartInquiry } from '../lib/whatsapp';
 
 export default function QuickInquiryDrawer({
   isOpen,
@@ -149,6 +151,17 @@ export default function QuickInquiryDrawer({
 
             <button
               type="button"
+              className="btn btn-whatsapp-drawer"
+              onClick={() => {
+                openWhatsApp(formatCartInquiry(cartItems, cartTotal));
+              }}
+            >
+              <WhatsAppIcon size={18} color="#ffffff" />
+              <span>Send Inquiry to WhatsApp</span>
+            </button>
+
+            <button
+              type="button"
               className="btn btn-primary checkout-btn"
               onClick={() => {
                 onClose();
@@ -168,7 +181,7 @@ export default function QuickInquiryDrawer({
               }}
             >
               <Send size={15} />
-              <span>Or Submit RFQ Inquiry</span>
+              <span>Or Submit Custom RFQ</span>
             </button>
 
             <div className="footer-notice">
@@ -377,6 +390,28 @@ export default function QuickInquiryDrawer({
           font-size: 19px;
           color: #0f172a;
           font-weight: 800;
+        }
+
+        .btn-whatsapp-drawer {
+          width: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          padding: 12px 20px;
+          font-size: 14.5px;
+          font-weight: 700;
+          background-color: #16a34a;
+          color: #ffffff;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: background-color 0.15s ease, transform 0.1s ease;
+        }
+
+        .btn-whatsapp-drawer:hover {
+          background-color: #15803d;
+          transform: translateY(-1px);
         }
 
         .checkout-btn {
