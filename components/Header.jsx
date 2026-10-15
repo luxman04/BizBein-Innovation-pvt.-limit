@@ -100,9 +100,13 @@ export default function Header({
                 {user.role === 'admin' && (
                   <>
                     <span className="top-divider">|</span>
-                    <Link href="/admin/orders" className="top-btn-link admin-badge-link">
+                    <Link href="/admin/products" className="top-btn-link admin-badge-link" title="Manage Products & Images">
                       <ShieldAlert size={12} className="top-icon text-gold" />
-                      <span>Admin</span>
+                      <span>Manage Products</span>
+                    </Link>
+                    <span className="top-divider">|</span>
+                    <Link href="/admin/orders" className="top-btn-link admin-badge-link" title="Commercial Orders Dispatch Desk">
+                      <span>Orders Desk</span>
                     </Link>
                   </>
                 )}
@@ -370,7 +374,7 @@ export default function Header({
               <Link href="/#about-us" className="nav-link">About Us</Link>
             </li>
             <li>
-              <Link href="/#contact-info" className="nav-link">Contact</Link>
+              <Link href="/contact" className="nav-link">Contact</Link>
             </li>
             <li>
               <Link href="/#blog-updates" className="nav-link">Blog</Link>
@@ -402,6 +406,31 @@ export default function Header({
             </div>
 
             <div className="drawer-scroll-body">
+              {user?.role === 'admin' && (
+                <div className="drawer-section" style={{ background: '#fef3c7', padding: '12px', borderRadius: '8px' }}>
+                  <div className="drawer-heading" style={{ color: '#92400e', marginBottom: '8px' }}>Administrator Controls</div>
+                  <div className="drawer-actions-grid">
+                    <Link
+                      href="/admin/products"
+                      className="drawer-btn drawer-btn-yellow"
+                      onClick={() => setMobileMenuOpen(false)}
+                      style={{ textDecoration: 'none' }}
+                    >
+                      <ShieldAlert size={16} />
+                      <span>Manage Products</span>
+                    </Link>
+                    <Link
+                      href="/admin/orders"
+                      className="drawer-btn drawer-btn-outline"
+                      onClick={() => setMobileMenuOpen(false)}
+                      style={{ textDecoration: 'none' }}
+                    >
+                      <span>Orders Dispatch Desk</span>
+                    </Link>
+                  </div>
+                </div>
+              )}
+
               <div className="drawer-section">
                 <div className="drawer-heading">Direct Contact & Orders</div>
                 <div className="drawer-contact-pills">
@@ -417,6 +446,14 @@ export default function Header({
                     <Mail size={15} className="drawer-icon" />
                     <span>{companyDetails.salesEmail}</span>
                   </a>
+                  <Link
+                    href="/contact"
+                    className="drawer-contact-row"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ textDecoration: 'none', color: '#1e40af', fontWeight: 700 }}
+                  >
+                    <span>Visit Interactive Contact & Works Page →</span>
+                  </Link>
                 </div>
               </div>
 
@@ -674,7 +711,8 @@ export default function Header({
         /* Search Module */
         .search-bar-module {
           flex: 1;
-          max-width: 600px;
+          min-width: 200px;
+          max-width: 580px;
           display: flex;
           align-items: center;
           border: 1.5px solid #e2e8f0;
@@ -691,6 +729,7 @@ export default function Header({
 
         .search-input-wrap {
           flex: 1;
+          min-width: 120px;
           padding: 0 14px;
         }
 
@@ -698,7 +737,7 @@ export default function Header({
           width: 100%;
           border: none;
           outline: none;
-          font-size: 13.5px;
+          font-size: 14px;
           color: #1e293b;
           font-family: inherit;
           padding: 8px 0;
@@ -715,6 +754,7 @@ export default function Header({
           display: flex;
           align-items: center;
           background: #f8fafc;
+          flex-shrink: 0;
         }
 
         .search-cat-dropdown select {
@@ -1042,19 +1082,28 @@ export default function Header({
         }
 
         /* Mobile Responsive */
-        @media (max-width: 1080px) {
+        @media (max-width: 1180px) {
           .top-bar-left {
             gap: 12px;
           }
           .action-link-btn span {
             display: none;
           }
-          .search-bar-module {
-            max-width: 380px;
+          .talk-expert-btn {
+            padding: 8px 14px;
+            font-size: 12.5px;
+          }
+          .nav-links-list {
+            gap: 4px;
+          }
+          :global(.nav-link),
+          .nav-link {
+            padding: 8px 12px;
+            font-size: 13.5px;
           }
         }
 
-        @media (max-width: 860px) {
+        @media (max-width: 920px) {
           .top-bar {
             display: none;
           }
@@ -1073,7 +1122,7 @@ export default function Header({
           }
 
           .logo-img {
-            height: 40px;
+            height: 38px;
           }
 
           .mobile-header-right {
@@ -1123,7 +1172,7 @@ export default function Header({
 
           .mobile-search-row {
             display: block;
-            padding: 8px 20px 2px;
+            padding: 8px 14px 4px;
           }
 
           .mobile-search-box {
@@ -1140,7 +1189,7 @@ export default function Header({
             border: none;
             background: transparent;
             outline: none;
-            font-size: 13px;
+            font-size: 16px;
             color: #1e293b;
             padding: 6px 0;
           }
@@ -1171,10 +1220,13 @@ export default function Header({
           max-width: 340px;
           background: #ffffff;
           height: 100%;
+          height: 100dvh;
           display: flex;
           flex-direction: column;
           animation: slideLeft 0.25s ease-out;
           box-shadow: 5px 0 25px rgba(0, 0, 0, 0.3);
+          padding-top: env(safe-area-inset-top, 0px);
+          padding-bottom: env(safe-area-inset-bottom, 0px);
         }
 
         .drawer-header {

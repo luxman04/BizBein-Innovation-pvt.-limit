@@ -931,6 +931,24 @@ export default function CheckoutPage() {
             grid-template-columns: 1fr;
           }
         }
+
+        @media (max-width: 480px) {
+          .checkout-page {
+            padding: 20px 12px;
+          }
+          .checkout-card {
+            padding: 16px 12px;
+          }
+          .bank-row {
+            flex-wrap: wrap;
+            gap: 2px;
+          }
+          .checkout-top-nav {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+          }
+        }
       `}</style>
     </div>
   );

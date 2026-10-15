@@ -96,7 +96,7 @@ export default function Footer({ onOpenContact }) {
                 <Link href="/#about-us" className="footer-text-link">About-Us</Link>
               </li>
               <li>
-                <button type="button" onClick={onOpenContact} className="footer-text-link footer-btn-link">Contact-Us</button>
+                <Link href="/contact" className="footer-text-link">Contact-Us</Link>
               </li>
               <li>
                 <Link href="/products/conveyor-systems" className="footer-text-link">Conveyor Systems</Link>
@@ -584,6 +584,18 @@ export default function Footer({ onOpenContact }) {
           }
           .small-map-box {
             max-width: 100%;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .footer-container {
+            padding: 0 14px;
+          }
+          .footer-top-tier {
+            padding: 30px 0 20px;
+          }
+          .copyright-line {
+            font-size: 11.5px;
           }
         }
       `}</style>

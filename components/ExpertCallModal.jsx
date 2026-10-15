@@ -271,6 +271,19 @@ export default function ExpertCallModal({ isOpen, onClose }) {
           font-size: 14px;
           color: #475569;
         }
+
+        @media (max-width: 480px) {
+          .modal-header {
+            padding: 14px 16px;
+          }
+          .modal-body {
+            padding: 16px 14px;
+          }
+          .phone-pill {
+            width: 100%;
+            justify-content: center;
+          }
+        }
       `}</style>
     </div>
   );

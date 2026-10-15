@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Home, Phone, MapPin, ShoppingCart, Mail } from 'lucide-react';
 import { companyDetails } from '../data/products';
 
@@ -40,15 +41,14 @@ export default function MobileBottomNav({
         <span>Inquiry</span>
       </button>
 
-      <button
-        type="button"
-        onClick={onOpenContact}
+      <Link
+        href="/contact"
         className="bottom-nav-item"
-        aria-label="View Plant Location and Address"
+        aria-label="View Plant Location and Contact Page"
       >
         <MapPin size={20} />
-        <span>Works</span>
-      </button>
+        <span>Contact</span>
+      </Link>
 
       <a
         href={`mailto:${companyDetails.salesEmail}`}
@@ -70,7 +70,7 @@ export default function MobileBottomNav({
           border-top: 2px solid var(--bizbein-navy-700);
           box-shadow: 0 -4px 16px rgba(26, 32, 53, 0.15);
           z-index: 250;
-          padding: 6px 8px env(safe-area-inset-bottom, 8px);
+          padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
           justify-content: space-around;
           align-items: center;
         }
@@ -87,9 +87,10 @@ export default function MobileBottomNav({
           font-family: inherit;
           font-size: 11px;
           font-weight: 600;
-          padding: 4px 8px;
+          padding: 4px 2px;
           cursor: pointer;
-          min-width: 54px;
+          min-width: 0;
+          flex: 1;
         }
 
         .bottom-nav-item:active {

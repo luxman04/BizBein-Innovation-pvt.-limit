@@ -105,6 +105,19 @@ export default function TrustFeatures() {
           color: var(--color-text-secondary);
           line-height: 1.5;
         }
+
+        @media (max-width: 480px) {
+          .trust-section {
+            padding: 24px 0;
+          }
+          .trust-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+          }
+          .trust-card {
+            padding: 12px;
+          }
+        }
       `}</style>
     </section>
   );

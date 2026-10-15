@@ -280,6 +280,8 @@ export default function QuickInquiryDrawer({
           align-items: center;
           justify-content: space-between;
           margin-top: 8px;
+          flex-wrap: wrap;
+          gap: 8px;
         }
 
         .qty-control {
@@ -349,7 +351,7 @@ export default function QuickInquiryDrawer({
         }
 
         .drawer-footer {
-          padding: 18px 20px;
+          padding: 16px 18px calc(18px + env(safe-area-inset-bottom, 0px));
           background: #ffffff;
           border-top: 1px solid var(--color-border-subtle);
           display: flex;

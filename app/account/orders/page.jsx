@@ -386,6 +386,39 @@ export default function CustomerOrdersPage() {
           color: #64748b;
           font-size: 13.5px;
         }
+
+        @media (max-width: 640px) {
+          .orders-container {
+            padding: 20px 12px;
+          }
+          .orders-header {
+            flex-direction: column;
+            gap: 14px;
+          }
+          .order-card-header {
+            padding: 10px 12px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+          }
+          .order-card-body {
+            padding: 14px 12px;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 14px;
+          }
+          .order-card-finance {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 12px;
+          }
+          .btn-view-invoice {
+            justify-content: center;
+            width: 100%;
+          }
+        }
       `}</style>
     </div>
   );

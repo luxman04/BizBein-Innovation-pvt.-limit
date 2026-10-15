@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getSessionUser } from '../../../../lib/auth';
-import { createOrder } from '../../../../lib/db';
+import { createOrder, findDbProductById } from '../../../../lib/db';
 import { products as catalogProducts } from '../../../../data/products';
 import { sendOrderNotifications } from '../../../../lib/notifications';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
   try {
@@ -28,7 +30,7 @@ export async function POST(request) {
     let serverSubtotal = 0;
 
     for (const item of items) {
-      const product = catalogProducts.find((p) => p.id === item.id);
+      const product = (await findDbProductById(item.id)) || catalogProducts.find((p) => p.id === item.id);
       if (!product) {
         return NextResponse.json(
           { error: `Product "${item.name || item.id}" was not found in our catalog.` },

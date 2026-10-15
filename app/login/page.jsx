@@ -146,7 +146,7 @@ function LoginContent() {
         )}
 
         {/* Auth Form */}
-        <form onSubmit={handleSubmit} className="auth-form" noValidate>
+        <form onSubmit={handleSubmit} className="auth-form" noValidate autoComplete="off">
           {mode === 'register' && (
             <div className="form-group">
               <label htmlFor="reg-name">Full Name / Business Representative *</label>
@@ -158,6 +158,7 @@ function LoginContent() {
                   placeholder="e.g. Rajesh Kumar"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  autoComplete="name"
                   required
                 />
               </div>
@@ -174,6 +175,7 @@ function LoginContent() {
                 placeholder="name@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
                 required
               />
             </div>
@@ -190,6 +192,7 @@ function LoginContent() {
                   placeholder="+91 98765-43210"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
+                  autoComplete="tel"
                   required
                 />
               </div>
@@ -213,6 +216,7 @@ function LoginContent() {
                 placeholder={mode === 'register' ? 'At least 6 characters' : 'Enter your password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                 required
               />
               <button
@@ -247,12 +251,6 @@ function LoginContent() {
         <div className="auth-security-footnote">
           <ShieldCheck size={15} className="text-gold" />
           <span>Protected with industry-standard bcrypt encryption and secure session tokens.</span>
-        </div>
-
-        {/* Quick Admin Credentials Hint for Testing */}
-        <div className="admin-test-hint">
-          <strong>Default Admin Demo Account:</strong>
-          <span>Email: <code>admin@bizbein.com</code> | Password: <code>Admin@12345</code></span>
         </div>
       </div>
 
@@ -501,24 +499,13 @@ function LoginContent() {
           border-top: 1px solid #f1f5f9;
         }
 
-        .admin-test-hint {
-          background: #f8fafc;
-          border: 1px dashed #cbd5e1;
-          border-radius: 6px;
-          padding: 8px 12px;
-          margin-top: 16px;
-          font-size: 11px;
-          color: #475569;
-          display: flex;
-          flex-direction: column;
-          gap: 2px;
-        }
-
-        .admin-test-hint code {
-          background: #e2e8f0;
-          padding: 1px 4px;
-          border-radius: 3px;
-          color: #0f172a;
+        @media (max-width: 480px) {
+          .auth-page-container {
+            padding: 24px 12px;
+          }
+          .auth-card {
+            padding: 20px 14px;
+          }
         }
       `}</style>
     </div>

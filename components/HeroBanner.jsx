@@ -644,14 +644,16 @@ export default function HeroBanner({ onExploreClick, onOpenQuote }) {
             padding: 32px 16px 28px;
           }
           .hero-headline {
-            font-size: 27px;
+            font-size: clamp(22px, 6vw, 30px);
           }
           .hero-right-content {
             min-height: auto;
-            align-items: flex-start;
+            align-items: center;
             flex-direction: row;
             justify-content: space-between;
             width: 100%;
+            flex-wrap: wrap;
+            gap: 14px;
           }
           .hero-floating-badge {
             clip-path: none;
@@ -666,6 +668,44 @@ export default function HeroBanner({ onExploreClick, onOpenQuote }) {
             grid-template-columns: 1fr 1fr;
             gap: 14px;
             margin-top: 18px;
+          }
+        }
+
+        @media (max-width: 580px) {
+          .hero-right-content {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+          }
+          .hero-floating-badge {
+            text-align: center;
+          }
+          .hero-controls-panel {
+            align-self: center;
+            max-width: 100%;
+            gap: 8px;
+            padding: 6px 12px;
+          }
+          .progress-bar-btn {
+            width: 16px;
+          }
+          .progress-bar-btn.active {
+            width: 24px;
+          }
+          .carousel-nav-btn {
+            width: 30px;
+            height: 30px;
+          }
+        }
+
+        @media (max-width: 400px) {
+          .hero-trust-bar {
+            grid-template-columns: 1fr;
+            gap: 10px;
+          }
+          .hero-primary-cta {
+            width: 100%;
+            justify-content: center;
           }
         }
       `}</style>

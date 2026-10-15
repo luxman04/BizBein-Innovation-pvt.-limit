@@ -138,10 +138,6 @@ export default function AdminOrdersPage() {
         <AlertTriangle size={48} className="text-red" />
         <h2>Administrative Privileges Required</h2>
         <p>{error}</p>
-        <div className="denied-hint">
-          <span>To test the admin panel, sign in with the default admin account:</span>
-          <code>Email: admin@bizbein.com | Password: Admin@12345</code>
-        </div>
         <Link href="/login?redirect=/admin/orders" className="btn btn-primary">
           Sign In as Administrator
         </Link>
@@ -207,6 +203,16 @@ export default function AdminOrdersPage() {
             <RefreshCw size={15} />
             <span>Refresh Data</span>
           </button>
+        </div>
+
+        {/* Section Navigation Tabs */}
+        <div className="admin-nav-tabs">
+          <Link href="/admin/orders" className="admin-tab active">
+            <span>Commercial Orders Desk</span>
+          </Link>
+          <Link href="/admin/products" className="admin-tab">
+            <span>Machinery & Product Catalog</span>
+          </Link>
         </div>
 
         {/* KPI Cards */}
@@ -472,6 +478,45 @@ export default function AdminOrdersPage() {
 
         .btn-refresh:hover {
           background: #f8fafc;
+        }
+
+        .admin-nav-tabs {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 20px;
+          border-bottom: 2px solid #e2e8f0;
+          padding-bottom: 2px;
+        }
+
+        .admin-tab {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 18px;
+          border-radius: 8px 8px 0 0;
+          font-size: 13.5px;
+          font-weight: 700;
+          color: #64748b;
+          text-decoration: none;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-bottom: none;
+          transition: all 0.15s ease;
+        }
+
+        .admin-tab:hover {
+          color: #13192B;
+          background: #f8fafc;
+        }
+
+        .admin-tab.active {
+          color: #13192B;
+          background: #ffffff;
+          border-color: #cbd5e1;
+          border-bottom: 2px solid #ffffff;
+          margin-bottom: -2px;
+          color: #0f172a;
+          box-shadow: 0 -3px 0 #F8B50E inset;
         }
 
         .kpi-grid {

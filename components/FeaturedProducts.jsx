@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { ShoppingCart, Heart, ArrowRight, Check, Eye } from 'lucide-react';
 import { products } from '../data/products';
+import { useStore } from '../context/StoreContext';
 
 export default function FeaturedProducts({
   onAddToCart,
@@ -12,6 +13,8 @@ export default function FeaturedProducts({
   setSelectedCategory,
   searchQuery
 }) {
+  const store = useStore();
+  const catalogList = store?.products || products;
   const [activeTab, setActiveTab] = useState('all');
   const [wishlist, setWishlist] = useState({});
   const [addedAnimation, setAddedAnimation] = useState({});
@@ -45,7 +48,7 @@ export default function FeaturedProducts({
   // Filter products based on active tab and search query
   const effectiveFilter = selectedCategory !== 'all' ? selectedCategory : activeTab;
 
-  const filteredProducts = products.filter((item) => {
+  const filteredProducts = catalogList.filter((item) => {
     const matchesCategory =
       effectiveFilter === 'all' ||
       item.categoryId === effectiveFilter ||
@@ -54,7 +57,7 @@ export default function FeaturedProducts({
     const matchesSearch =
       !searchQuery ||
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.category && item.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (item.brand && item.brand.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return matchesCategory && matchesSearch;
@@ -558,6 +561,27 @@ export default function FeaturedProducts({
           .add-to-cart-btn {
             padding: 7px 6px;
             font-size: 11.5px;
+          }
+        }
+
+        @media (max-width: 440px) {
+          .featured-container {
+            padding: 0 12px;
+          }
+          .product-actions-row {
+            flex-wrap: wrap;
+            gap: 6px;
+          }
+          .add-to-cart-btn {
+            width: 100%;
+            flex: 0 0 100%;
+            padding: 8px;
+            font-size: 12px;
+          }
+          .details-icon-btn,
+          .wishlist-icon-btn {
+            flex: 1;
+            height: 32px;
           }
         }
       `}</style>

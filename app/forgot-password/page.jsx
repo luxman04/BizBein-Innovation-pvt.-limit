@@ -55,9 +55,9 @@ export default function ForgotPasswordPage() {
             <h3>Recovery Instructions Generated</h3>
             <p>If an account exists for <strong>{email}</strong>, password reset instructions have been generated.</p>
 
-            {successData.resetToken && (
+            {process.env.NODE_ENV === 'development' && successData.resetToken && (
               <div className="token-test-box">
-                <span className="token-label">Direct Reset Access Link (Testing / Demo):</span>
+                <span className="token-label">Direct Reset Access Link (Development Only):</span>
                 <Link
                   href={`/reset-password?token=${successData.resetToken}`}
                   className="btn-direct-reset"

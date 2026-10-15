@@ -68,12 +68,22 @@ export default function WhatsAppButton() {
 
         @media (max-width: 768px) {
           .whatsapp-floating-wrap {
-            bottom: 74px;
+            bottom: calc(76px + env(safe-area-inset-bottom, 0px));
             right: 16px;
           }
           .whatsapp-btn {
-            padding: 9px 14px;
-            font-size: 12.5px;
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            border-radius: 50%;
+            justify-content: center;
+          }
+          .whatsapp-icon {
+            width: 26px;
+            height: 26px;
+          }
+          .whatsapp-label {
+            display: none;
           }
         }
       `}</style>

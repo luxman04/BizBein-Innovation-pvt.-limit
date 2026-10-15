@@ -762,9 +762,38 @@ export default function OrderDetailPage() {
           }
           .invoice-meta-box {
             text-align: left;
+            min-width: 0;
+            width: 100%;
           }
           .meta-badge {
             align-self: flex-start;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .invoice-sheet {
+            padding: 18px 14px;
+          }
+          .invoice-brand {
+            flex-direction: column;
+            gap: 10px;
+          }
+          .bank-meta-grid {
+            grid-template-columns: 1fr;
+          }
+          .invoice-signatory-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 20px;
+          }
+          .sign-box {
+            text-align: left;
+            width: 100%;
+          }
+          .order-bottom-bar {
+            flex-direction: column-reverse;
+            align-items: stretch;
+            gap: 12px;
           }
         }
       `}</style>

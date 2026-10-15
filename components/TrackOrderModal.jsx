@@ -300,6 +300,26 @@ export default function TrackOrderModal({ isOpen, onClose }) {
           font-size: 11px;
           color: #64748b;
         }
+
+        @media (max-width: 540px) {
+          .modal-header {
+            padding: 14px 16px;
+          }
+          .modal-body {
+            padding: 16px;
+          }
+          .summary-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+          }
+          .input-row {
+            flex-direction: column;
+          }
+          .track-btn {
+            padding: 10px 16px;
+            justify-content: center;
+          }
+        }
       `}</style>
     </div>
   );

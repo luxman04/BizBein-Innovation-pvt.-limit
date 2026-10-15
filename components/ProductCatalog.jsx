@@ -13,6 +13,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { products, categories, companyDetails } from '../data/products';
+import { useStore } from '../context/StoreContext';
 
 export default function ProductCatalog({
   selectedCategory,
@@ -22,22 +23,24 @@ export default function ProductCatalog({
   onAddToCart,
   cartItems = []
 }) {
+  const store = useStore();
+  const catalogList = store?.products || products;
   const [sortBy, setSortBy] = useState('featured');
 
   // Filter products by category and search query
-  const filteredProducts = products.filter((p) => {
+  const filteredProducts = catalogList.filter((p) => {
     const matchesCategory =
-      selectedCategory === 'all' || p.category === selectedCategory;
+      selectedCategory === 'all' || p.category === selectedCategory || p.categoryId === selectedCategory;
 
     const matchesSearch =
       searchQuery.trim() === '' ||
       p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.model.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.specs.some(
+      (p.model && p.model.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (Array.isArray(p.specs) && p.specs.some(
         (s) =>
-          s.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          s.value.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+          (s.label && s.label.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (s.value && s.value.toLowerCase().includes(searchQuery.toLowerCase()))
+      ));
 
     return matchesCategory && matchesSearch;
   });
@@ -670,6 +673,26 @@ export default function ProductCatalog({
           }
           .product-grid {
             grid-template-columns: 1fr;
+          }
+        }
+
+        @media (max-width: 560px) {
+          .catalog-section {
+            padding: 30px 0;
+          }
+          .catalog-controls {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 10px;
+          }
+          .sort-wrapper {
+            width: 100%;
+          }
+          .sort-wrapper select {
+            width: 100%;
+          }
+          .section-title {
+            font-size: 22px;
           }
         }
       `}</style>

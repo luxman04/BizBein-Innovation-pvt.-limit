@@ -69,7 +69,8 @@ function ProductsContent() {
     }
   };
 
-  const { addToCart, openQuoteModal } = useStore();
+  const { addToCart, openQuoteModal, products: liveProducts } = useStore();
+  const catalogList = liveProducts || products;
 
   const toggleWishlist = (id) => {
     setWishlist((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -85,17 +86,17 @@ function ProductsContent() {
 
   // Filter and sort products
   const filteredProducts = useMemo(() => {
-    return products
+    return catalogList
       .filter((p) => {
         const matchesCategory =
           activeCategory === 'all' ||
-          p.categoryId.toLowerCase() === activeCategory.toLowerCase();
+          (p.categoryId && p.categoryId.toLowerCase() === activeCategory.toLowerCase());
 
         const q = searchFilter.toLowerCase().trim();
         const matchesSearch =
           !q ||
           p.name.toLowerCase().includes(q) ||
-          p.category.toLowerCase().includes(q) ||
+          (p.category && p.category.toLowerCase().includes(q)) ||
           (p.brand && p.brand.toLowerCase().includes(q)) ||
           (p.description && p.description.toLowerCase().includes(q));
 
@@ -104,10 +105,10 @@ function ProductsContent() {
       .sort((a, b) => {
         if (sortBy === 'price-asc') return a.price - b.price;
         if (sortBy === 'price-desc') return b.price - a.price;
-        if (sortBy === 'rating') return b.rating - a.rating;
+        if (sortBy === 'rating') return (b.rating || 0) - (a.rating || 0);
         return 0; // featured/default
       });
-  }, [activeCategory, searchFilter, sortBy]);
+  }, [catalogList, activeCategory, searchFilter, sortBy]);
 
   return (
     <div className="products-all-page">
@@ -1211,16 +1212,25 @@ function ProductsContent() {
             margin: 14px 0 12px;
             font-size: 12.5px;
           }
-          .card-actions {
-            gap: 8px;
+          .actions-row {
+            flex-wrap: wrap;
+            gap: 6px;
           }
-          .btn-add-cart, .btn-details {
-            min-height: 42px;
+          .btn-add-cart {
+            width: 100%;
+            flex: 0 0 100%;
+            min-height: 40px;
+            font-size: 13px;
+          }
+          .btn-details {
+            flex: 1;
+            justify-content: center;
+            min-height: 38px;
             font-size: 13px;
           }
           .btn-wishlist {
-            min-height: 42px;
-            min-width: 42px;
+            min-height: 38px;
+            min-width: 40px;
           }
         }
       `}</style>

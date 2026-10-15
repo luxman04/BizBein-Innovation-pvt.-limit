@@ -30,12 +30,13 @@ export default function CategoryProductsPage() {
   const params = useParams();
   const categorySlug = params?.category || '';
 
+  const { addToCart, openQuoteModal, openExpertModal, products: liveProducts } = useStore();
   const category = getCategoryById(categorySlug);
-  const categoryProducts = useMemo(() => {
-    return getProductsByCategory(categorySlug);
-  }, [categorySlug]);
 
-  const { addToCart, openQuoteModal, openExpertModal } = useStore();
+  const categoryProducts = useMemo(() => {
+    const list = liveProducts || getProductsByCategory(categorySlug);
+    return list.filter((p) => p.categoryId && p.categoryId.toLowerCase() === categorySlug.toLowerCase());
+  }, [liveProducts, categorySlug]);
   const [wishlist, setWishlist] = useState({});
   const [addedAnimation, setAddedAnimation] = useState({});
   const [sortBy, setSortBy] = useState('featured');
@@ -1016,6 +1017,27 @@ export default function CategoryProductsPage() {
           .advisory-actions {
             flex-direction: column;
             align-items: stretch;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .category-title {
+            font-size: 22px;
+          }
+          .category-hero {
+            padding: 20px 0;
+          }
+          .card-actions-row {
+            flex-wrap: wrap;
+            gap: 6px;
+          }
+          .btn-add-to-cart {
+            width: 100%;
+            flex: 0 0 100%;
+          }
+          .btn-view-details {
+            flex: 1;
+            justify-content: center;
           }
         }
       `}</style>

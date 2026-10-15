@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
@@ -34,17 +34,38 @@ export default function ProductDetailPage() {
   const categorySlug = params?.category || '';
   const productId = params?.id || '';
 
-  const product = getProductById(productId);
+  const { addToCart, openQuoteModal, openExpertModal, products: liveProducts, getProductById: getStoreProductById } = useStore();
+  const [fetchedProduct, setFetchedProduct] = useState(null);
+  const [fetching, setFetching] = useState(false);
+
+  const product = (getStoreProductById && getStoreProductById(productId)) || getProductById(productId) || fetchedProduct;
   const category = getCategoryById(categorySlug) || (product ? getCategoryById(product.categoryId) : null);
 
-  const { addToCart, openQuoteModal, openExpertModal } = useStore();
+  useEffect(() => {
+    if (!product && productId && !fetching) {
+      setFetching(true);
+      fetch(`/api/products/${productId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data && data.success && data.product) {
+            setFetchedProduct(data.product);
+          }
+        })
+        .catch(() => {})
+        .finally(() => setFetching(false));
+    }
+  }, [product, productId, fetching]);
+
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
 
   // Related products in the same category
+  const allCategoryProducts = (liveProducts || getProductsByCategory(product?.categoryId || ''))
+    .filter((p) => product && p.categoryId === product.categoryId);
+
   const relatedProducts = product
-    ? getProductsByCategory(product.categoryId)
+    ? allCategoryProducts
         .filter((p) => p.id !== product.id)
         .slice(0, 3)
     : [];
@@ -706,23 +727,27 @@ export default function ProductDetailPage() {
           align-items: baseline;
           font-size: 13px;
           gap: 8px;
+          flex-wrap: wrap;
         }
 
         .spec-name {
           color: #64748b;
           font-weight: 500;
-          white-space: nowrap;
+          white-space: normal;
         }
 
         .spec-dots {
           flex: 1;
+          min-width: 8px;
           border-bottom: 1px dotted #cbd5e1;
         }
 
         .spec-val {
           font-weight: 700;
           color: #0f172a;
-          white-space: nowrap;
+          white-space: normal;
+          word-break: break-word;
+          text-align: right;
         }
 
         /* Controls */
@@ -1033,6 +1058,33 @@ export default function ProductDetailPage() {
           }
           .product-title {
             font-size: 22px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .main-content-wrap {
+            margin-top: 16px;
+          }
+          .product-showcase-grid {
+            padding: 16px 12px;
+            border-radius: 12px;
+            gap: 20px;
+          }
+          .image-stage {
+            height: 240px;
+            padding: 12px;
+          }
+          .price-box {
+            padding: 12px 14px;
+          }
+          .price-val {
+            font-size: 22px;
+          }
+          .key-specs-card {
+            padding: 12px 10px;
+          }
+          .spec-row {
+            font-size: 12px;
           }
         }
       `}</style>

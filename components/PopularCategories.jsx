@@ -215,6 +215,17 @@ export default function PopularCategories() {
             font-size: 11.5px;
           }
         }
+
+        @media (max-width: 480px) {
+          .section-container {
+            padding: 0 12px;
+          }
+          .section-header {
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+          }
+        }
       `}</style>
     </section>
   );

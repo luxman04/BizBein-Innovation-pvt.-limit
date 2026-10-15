@@ -529,6 +529,20 @@ export default function RequestQuoteModal({ isOpen, onClose, product }) {
             grid-column: span 1;
           }
         }
+
+        @media (max-width: 480px) {
+          .modal-header {
+            padding: 16px;
+          }
+          .rfq-form {
+            padding: 16px 14px;
+            gap: 12px;
+          }
+          .form-actions {
+            flex-direction: column-reverse;
+            gap: 8px;
+          }
+        }
       `}</style>
     </div>
   );

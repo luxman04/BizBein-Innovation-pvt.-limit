@@ -398,6 +398,19 @@ export default function LocationAndContactModal({ isOpen, onClose }) {
           .emails-grid {
             grid-template-columns: 1fr;
           }
+          .contact-modal-header {
+            padding: 16px;
+          }
+          .contact-modal-body {
+            padding: 16px 14px;
+            gap: 16px;
+          }
+          .info-block {
+            gap: 12px;
+          }
+          .contact-modal-footer {
+            padding: 12px 16px;
+          }
         }
       `}</style>
     </div>

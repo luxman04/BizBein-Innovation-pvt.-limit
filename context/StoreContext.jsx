@@ -2,13 +2,36 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { featuredProducts } from '../data/products';
+import { featuredProducts, products as initialProducts } from '../data/products';
 
 const StoreContext = createContext(null);
 
 export function StoreProvider({ children }) {
   const router = useRouter();
   const pathname = usePathname();
+
+  // Dynamic Products Catalog
+  const [products, setProducts] = useState(initialProducts);
+
+  const refreshProducts = useCallback(async () => {
+    try {
+      const res = await fetch('/api/products', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.products) && data.products.length > 0) {
+          setProducts(data.products);
+          return data.products;
+        }
+      }
+    } catch (err) {
+      console.warn('[StoreContext] Dynamic products fetch skipped:', err);
+    }
+    return initialProducts;
+  }, []);
+
+  useEffect(() => {
+    refreshProducts();
+  }, [refreshProducts]);
 
   // Cart State (Hydrated from localStorage)
   const [cartItems, setCartItems] = useState([
@@ -299,6 +322,12 @@ export function StoreProvider({ children }) {
     trackModalOpen,
     openTrackModal: () => setTrackModalOpen(true),
     closeTrackModal: () => setTrackModalOpen(false),
+
+    // Products Catalog
+    products,
+    refreshProducts,
+    getProductById: (id) =>
+      products.find((p) => p.id?.toString().toLowerCase() === id?.toString().toLowerCase()) || null,
 
     // Search
     searchQuery,
