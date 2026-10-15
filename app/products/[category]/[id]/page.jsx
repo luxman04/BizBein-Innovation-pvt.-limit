@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   ArrowLeft,
   ShoppingCart,
   Heart,
@@ -18,7 +20,13 @@ import {
   Sparkles,
   Share2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  RefreshCw,
+  Award,
+  CreditCard,
+  Maximize2,
+  X,
+  Plus
 } from 'lucide-react';
 import {
   getProductById,
@@ -28,18 +36,32 @@ import {
 } from '../../../../data/products';
 import { useStore } from '../../../../context/StoreContext';
 import WhatsAppIcon from '../../../../components/WhatsAppIcon';
+import { openWhatsApp, formatProductRfq, WHATSAPP_RAW_NUMBER } from '../../../../lib/whatsapp';
+import { getEnrichedProductDetails } from '../../../../lib/productEnricher';
 
 export default function ProductDetailPage() {
   const params = useParams();
   const categorySlug = params?.category || '';
   const productId = params?.id || '';
 
-  const { addToCart, openQuoteModal, openExpertModal, products: liveProducts, getProductById: getStoreProductById } = useStore();
+  const {
+    addToCart,
+    openQuoteModal,
+    openExpertModal,
+    products: liveProducts,
+    getProductById: getStoreProductById
+  } = useStore();
+
   const [fetchedProduct, setFetchedProduct] = useState(null);
   const [fetching, setFetching] = useState(false);
 
-  const product = (getStoreProductById && getStoreProductById(productId)) || getProductById(productId) || fetchedProduct;
-  const category = getCategoryById(categorySlug) || (product ? getCategoryById(product.categoryId) : null);
+  const product =
+    (getStoreProductById && getStoreProductById(productId)) ||
+    getProductById(productId) ||
+    fetchedProduct;
+  const category =
+    getCategoryById(categorySlug) ||
+    (product ? getCategoryById(product.categoryId) : null);
 
   useEffect(() => {
     if (!product && productId && !fetching) {
@@ -56,33 +78,158 @@ export default function ProductDetailPage() {
     }
   }, [product, productId, fetching]);
 
+  // Enriched specifications & Amazon-style variant data
+  const enriched = getEnrichedProductDetails(product);
+
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedVariant, setSelectedVariant] = useState(null);
+  const [selectedConfig, setSelectedConfig] = useState(null);
+  const [showAllSpecs, setShowAllSpecs] = useState(false);
+  const [bundleChecked, setBundleChecked] = useState({});
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (enriched) {
+      setSelectedImage(enriched.gallery[0]?.url || product?.image);
+      setSelectedVariant(enriched.variants[0] || null);
+      setSelectedConfig(enriched.configurations[0] || null);
+
+      const initBundle = {};
+      enriched.bundleItems.forEach((item) => {
+        initBundle[item.id] = true;
+      });
+      setBundleChecked(initBundle);
+    }
+  }, [product?.id]);
+
+  // Calculated Pricing based on selected variant and configuration add-ons
+  const basePrice = selectedVariant?.price || product?.price || 45000;
+  const configDelta = selectedConfig?.priceDelta || 0;
+  const unitPrice = basePrice + configDelta;
+  const totalPrice = unitPrice * quantity;
+  const mrpPrice = (selectedVariant?.mrp || Math.round(basePrice * 1.18)) + configDelta;
+  const discountPct = mrpPrice > unitPrice ? Math.round(((mrpPrice - unitPrice) / mrpPrice) * 100) : 15;
+
+  // Delivery date calculation (e.g. 3-4 days from today)
+  const deliveryDateStr = (() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 3);
+    return d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
+  })();
+
+  // Bundle Total calculation
+  const bundleTotal = enriched?.bundleItems
+    ? enriched.bundleItems
+        .filter((item) => bundleChecked[item.id])
+        .reduce((sum, item) => sum + (item.isPrimary ? unitPrice : item.price), 0)
+    : unitPrice;
 
   // Related products in the same category
   const allCategoryProducts = (liveProducts || getProductsByCategory(product?.categoryId || ''))
     .filter((p) => product && p.categoryId === product.categoryId);
 
   const relatedProducts = product
-    ? allCategoryProducts
-        .filter((p) => p.id !== product.id)
-        .slice(0, 3)
+    ? allCategoryProducts.filter((p) => p.id !== product.id).slice(0, 4)
     : [];
 
   const handleAddToCart = () => {
     if (!product) return;
-    addToCart(product, quantity);
+    const cartProduct = {
+      ...product,
+      price: unitPrice,
+      priceDisplay: `₹${unitPrice.toLocaleString('en-IN')}`,
+      name: `${product.name} (${selectedVariant?.shortTitle || 'Standard'})`,
+      selectedVariant: selectedVariant?.name,
+      selectedConfig: selectedConfig?.name
+    };
+    addToCart(cartProduct, quantity);
     setIsAdded(true);
-    setTimeout(() => setIsAdded(false), 2000);
+    setTimeout(() => setIsAdded(false), 2500);
   };
 
   const handleWhatsAppInquiry = () => {
     if (!product) return;
-    const msg = encodeURIComponent(
-      `Hello BizBein Innovations! I am interested in *${product.name}* (${product.brand}, Price: ${product.priceDisplay}). Please provide commercial availability and dispatch quotation.`
-    );
-    window.open(`https://wa.me/${companyDetails.whatsappRaw}?text=${msg}`, '_blank');
+    const msg = [
+      `*BizBein Innovations — Machinery Inquiry*`,
+      `----------------------------------------`,
+      `⚙️ *Product:* ${product.name}`,
+      selectedVariant ? `🏷️ *Model / Style:* ${selectedVariant.name}` : null,
+      selectedConfig ? `🔧 *Configuration:* ${selectedConfig.name}` : null,
+      `💰 *Unit Price:* ₹${unitPrice.toLocaleString('en-IN')}`,
+      `📦 *Quantity:* ${quantity}`,
+      `💵 *Estimated Total:* ₹${totalPrice.toLocaleString('en-IN')}`,
+      `----------------------------------------`,
+      `Hello BizBein Technical Sales, please confirm factory availability, dispatch lead time, and commercial quote from your Zirakpur works.`
+    ]
+      .filter(Boolean)
+      .join('\n');
+
+    openWhatsApp(msg);
+  };
+
+  const handleAddBundleToCart = () => {
+    if (!enriched) return;
+    enriched.bundleItems.forEach((item) => {
+      if (bundleChecked[item.id]) {
+        if (item.isPrimary) {
+          addToCart(
+            {
+              ...product,
+              price: unitPrice,
+              name: `${product.name} (${selectedVariant?.shortTitle || 'Standard'})`
+            },
+            1
+          );
+        } else {
+          addToCart(
+            {
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              image: item.image,
+              model: 'Package Accessory',
+              unit: 'Kit'
+            },
+            1
+          );
+        }
+      }
+    });
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 2500);
+  };
+
+  const handleInquireBundleWhatsApp = () => {
+    if (!enriched) return;
+    const selectedItems = enriched.bundleItems.filter((i) => bundleChecked[i.id]);
+    const msg = [
+      `*BizBein Innovations — Complete Automation Package Inquiry*`,
+      `----------------------------------------`,
+      `I am interested in procuring the following factory package:`,
+      '',
+      ...selectedItems.map(
+        (i, idx) =>
+          `${idx + 1}. *${i.name}* — ₹${(i.isPrimary ? unitPrice : i.price).toLocaleString('en-IN')}`
+      ),
+      '',
+      `----------------------------------------`,
+      `💰 *Package Total:* ₹${bundleTotal.toLocaleString('en-IN')}`,
+      `Please provide turnkey quotation, freight delivery, and commissioning support terms.`
+    ].join('\n');
+
+    openWhatsApp(msg);
+  };
+
+  const handleShare = () => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   if (!product) {
@@ -91,7 +238,7 @@ export default function ProductDetailPage() {
         <div className="container">
           <div className="not-found-card">
             <h2>Equipment Not Found</h2>
-            <p>The requested machinery model could not be found or has been updated.</p>
+            <p>The requested machinery model could not be located or has been updated.</p>
             <Link href="/products" className="btn-back">
               <ArrowLeft size={16} />
               <span>Browse All Machinery</span>
@@ -129,7 +276,7 @@ export default function ProductDetailPage() {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: #F8B50E;
+            background: #f8b50e;
             color: #0f172a;
             padding: 10px 20px;
             border-radius: 8px;
@@ -141,15 +288,21 @@ export default function ProductDetailPage() {
     );
   }
 
+  const currentGalleryImage = selectedImage || product.image;
+
   return (
-    <div className="product-detail-page">
-      {/* 1. Breadcrumbs */}
+    <div className="amazon-product-page">
+      {/* 1. Amazon-Style Top Breadcrumbs */}
       <div className="breadcrumb-strip">
         <div className="container">
           <nav className="breadcrumbs" aria-label="Breadcrumb">
-            <Link href="/" className="crumb-link">Home</Link>
+            <Link href="/" className="crumb-link">
+              Home
+            </Link>
             <ChevronRight size={13} className="crumb-sep" />
-            <Link href="/products" className="crumb-link">Products</Link>
+            <Link href="/products" className="crumb-link">
+              Equipment Catalog
+            </Link>
             {category && (
               <>
                 <ChevronRight size={13} className="crumb-sep" />
@@ -164,208 +317,500 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      {/* 2. Main Product Showcase */}
+      {/* 2. Main 3-Column Product Stage (Gallery | Product Details | Sticky Buy Box) */}
       <div className="container main-content-wrap">
-        <div className="product-showcase-grid">
-          {/* Left Column: Image Viewer */}
-          <div className="showcase-left">
-            <div className="image-stage">
-              {product.badge && (
-                <div className={`product-badge badge-${product.badgeType || 'bestseller'}`}>
-                  {product.badge}
-                </div>
-              )}
-              <img
-                src={product.image}
-                alt={product.name}
-                className="main-product-image"
-              />
-              <div className="image-qa-seal">
-                <CheckCircle2 size={14} className="qa-icon" />
-                <span>100% Factory QA Tested</span>
-              </div>
-            </div>
-
-            {/* Quick Guarantees Under Image */}
-            <div className="guarantees-grid">
-              <div className="guarantee-card">
-                <ShieldCheck size={20} className="guar-icon" />
-                <div>
-                  <div className="guar-title">1-Year Warranty</div>
-                  <div className="guar-sub">Standard comprehensive coverage</div>
-                </div>
+        <div className="amazon-grid-layout">
+          {/* ========================================================= */}
+          {/* COLUMN 1: LEFT VERTICAL THUMBNAIL STRIP & MAIN IMAGE STAGE */}
+          {/* ========================================================= */}
+          <div className="col-gallery">
+            <div className="gallery-layout-wrapper">
+              {/* Vertical Thumbnail Strip on Left Side */}
+              <div className="vertical-thumbnails-strip" aria-label="Product image thumbnails">
+                {enriched?.gallery.map((imgItem, idx) => (
+                  <button
+                    key={imgItem.id}
+                    type="button"
+                    className={`thumb-btn ${currentGalleryImage === imgItem.url ? 'thumb-active' : ''}`}
+                    onClick={() => setSelectedImage(imgItem.url)}
+                    onMouseEnter={() => setSelectedImage(imgItem.url)}
+                    title={imgItem.label}
+                  >
+                    <img src={imgItem.url} alt={imgItem.label} className="thumb-img" />
+                    {idx === 0 && <span className="thumb-tag">Main</span>}
+                  </button>
+                ))}
               </div>
 
-              <div className="guarantee-card">
-                <Truck size={20} className="guar-icon" />
-                <div>
-                  <div className="guar-title">Pan-India Dispatch</div>
-                  <div className="guar-sub">Ex-Works Zirakpur, Punjab</div>
-                </div>
-              </div>
+              {/* Main Image Stage */}
+              <div className="main-image-stage">
+                {product.badge && (
+                  <div className={`stage-badge badge-${product.badgeType || 'bestseller'}`}>
+                    {product.badge}
+                  </div>
+                )}
 
-              <div className="guarantee-card">
-                <Wrench size={20} className="guar-icon" />
-                <div>
-                  <div className="guar-title">On-Site Commissioning</div>
-                  <div className="guar-sub">Trained factory engineers</div>
+                <div className="stage-image-container" onClick={() => setIsLightboxOpen(true)}>
+                  <img
+                    src={currentGalleryImage}
+                    alt={product.name}
+                    className="stage-img"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src =
+                        'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80';
+                    }}
+                  />
+                  <div className="zoom-hint">
+                    <Maximize2 size={14} />
+                    <span>Click to see full view</span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="guarantee-card">
-                <Clock size={20} className="guar-icon" />
-                <div>
-                  <div className="guar-title">Spares Readily Available</div>
-                  <div className="guar-sub">24/48 hr dispatch on stock parts</div>
+                <div className="stage-footer-note">
+                  <span className="qa-chip">✓ 100% Factory Tested & Calibrated</span>
+                  <button type="button" className="share-btn" onClick={handleShare}>
+                    <Share2 size={13} />
+                    <span>{copied ? 'Link Copied!' : 'Share Equipment'}</span>
+                  </button>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Information, Pricing, Actions */}
-          <div className="showcase-right">
-            {/* Meta Row: Brand, Category, Rating */}
-            <div className="top-meta-row">
-              <span className="brand-pill">{product.brand || 'BizBein'}</span>
-              {category && (
-                <Link href={`/products/${category.id}`} className="cat-pill-link">
-                  {category.name}
-                </Link>
-              )}
+          {/* ========================================================= */}
+          {/* COLUMN 2: MIDDLE PRODUCT SPECS & ABOUT THIS ITEM           */}
+          {/* ========================================================= */}
+          <div className="col-center-details">
+            {/* Brand Store Link */}
+            <div className="brand-header-link">
+              <Link href="/products" className="store-link">
+                Visit the BizBein Machinery Store
+              </Link>
             </div>
 
-            <h1 className="product-title">{product.name}</h1>
+            {/* Product Title */}
+            <h1 className="amazon-product-title">{product.name}</h1>
 
-            <div className="rating-row">
-              <div className="stars">
-                {'★'.repeat(Math.round(product.rating || 5))}
+            {/* Star Ratings & Review Counts */}
+            <div className="ratings-review-strip">
+              <div className="stars-cluster">
+                <span className="star-score">{product.rating || 4.9}</span>
+                <span className="stars-symbols">★★★★★</span>
               </div>
-              <span className="rating-score">{product.rating}</span>
-              <span className="rating-count">({product.reviews} customer reviews)</span>
-              <span className="verified-badge">✓ Verified Industrial Equipment</span>
+              <span className="rating-divider">|</span>
+              <span className="reviews-count">{product.reviews || 42} verified factory ratings</span>
+              <span className="rating-divider">|</span>
+              <span className="category-pill">{category?.name || 'Industrial Packaging'}</span>
             </div>
+
+            <div className="horizontal-rule" />
 
             {/* Price Box */}
-            <div className="price-box">
-              <div className="price-headline">
-                <span className="price-val">{product.priceDisplay}</span>
-                <span className="price-unit">/ {product.unit}</span>
+            <div className="amazon-price-box">
+              <div className="price-primary-row">
+                <span className="discount-badge">-{discountPct}%</span>
+                <span className="currency-symbol">₹</span>
+                <span className="price-big">{unitPrice.toLocaleString('en-IN')}</span>
               </div>
-              <div className="price-tax-note">
-                Ex-Works Zirakpur • GST extra as applicable • Bulk quantity discounts available
+              <div className="mrp-row">
+                <span className="mrp-label">M.R.P.:</span>
+                <span className="mrp-strikethrough">₹{mrpPrice.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="taxes-note">
+                Ex-Works Factory Zirakpur • GST extra as applicable • Free factory loading
               </div>
             </div>
 
-            {/* Product Overview Description */}
-            <div className="overview-block">
-              <h3 className="section-label">Equipment Overview</h3>
-              <p className="overview-text">
-                {product.description ||
-                  `The ${product.name} is engineered to industrial standards by ${product.brand}. Designed for rugged high-throughput performance, low operational downtime, and seamless line integration.`}
-              </p>
+            {/* ========================================================= */}
+            {/* TRUST & SERVICE ICONS STRIP (AMAZON-STYLE)                */}
+            {/* ========================================================= */}
+            <div className="trust-carousel-strip">
+              <div className="trust-item">
+                <div className="trust-icon-box">
+                  <RefreshCw size={22} className="trust-ico" />
+                </div>
+                <span className="trust-label">10 Days Trial / Testing</span>
+              </div>
+
+              <div className="trust-item">
+                <div className="trust-icon-box">
+                  <Truck size={22} className="trust-ico" />
+                </div>
+                <span className="trust-label">All-India Free Dispatch</span>
+              </div>
+
+              <div className="trust-item">
+                <div className="trust-icon-box">
+                  <ShieldCheck size={22} className="trust-ico" />
+                </div>
+                <span className="trust-label">1 Year Warranty Care</span>
+              </div>
+
+              <div className="trust-item">
+                <div className="trust-icon-box">
+                  <CreditCard size={22} className="trust-ico" />
+                </div>
+                <span className="trust-label">Verified Proforma Dispatch</span>
+              </div>
+
+              <div className="trust-item">
+                <div className="trust-icon-box">
+                  <Award size={22} className="trust-ico" />
+                </div>
+                <span className="trust-label">Top Brand ISO Certified</span>
+              </div>
             </div>
 
-            {/* Key Technical Specs Quick Table */}
-            {product.specs && product.specs.length > 0 && (
-              <div className="key-specs-card">
-                <h3 className="section-label">Key Technical Specifications</h3>
-                <div className="specs-list">
-                  {product.specs.map((spec, index) => (
-                    <div key={index} className="spec-row">
-                      <span className="spec-name">{spec.label}</span>
-                      <span className="spec-dots"></span>
-                      <span className="spec-val">{spec.value}</span>
-                    </div>
+            <div className="horizontal-rule" />
+
+            {/* ========================================================= */}
+            {/* STYLE / MODEL VARIANT SELECTOR                            */}
+            {/* ========================================================= */}
+            {enriched?.variants && enriched.variants.length > 0 && (
+              <div className="variant-selector-section">
+                <div className="selector-title-row">
+                  <span className="selector-label">Style / Specification Variant:</span>
+                  <strong className="selector-current">{selectedVariant?.name}</strong>
+                </div>
+
+                <div className="variant-cards-grid">
+                  {enriched.variants.map((v) => (
+                    <button
+                      key={v.id}
+                      type="button"
+                      className={`variant-card ${selectedVariant?.id === v.id ? 'variant-card-active' : ''}`}
+                      onClick={() => setSelectedVariant(v)}
+                    >
+                      <span className="v-card-title">{v.shortTitle || v.name}</span>
+                      <strong className="v-card-price">₹{v.price.toLocaleString('en-IN')}</strong>
+                      <span className="v-card-mrp">₹{v.mrp.toLocaleString('en-IN')}</span>
+                      <span className="v-card-sub">{v.specsSummary}</span>
+                    </button>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Quantity Selector & Action Buttons */}
-            <div className="purchase-controls">
-              <div className="qty-picker">
-                <span className="qty-label">Quantity:</span>
-                <div className="qty-counter">
+            {/* ========================================================= */}
+            {/* CONFIGURATION / AUTOMATION SELECTOR                       */}
+            {/* ========================================================= */}
+            {enriched?.configurations && enriched.configurations.length > 0 && (
+              <div className="configuration-section">
+                <div className="selector-title-row">
+                  <span className="selector-label">Configuration & Automation Package:</span>
+                  <strong className="selector-current">{selectedConfig?.name}</strong>
+                </div>
+
+                <div className="config-pills-row">
+                  {enriched.configurations.map((cfg) => (
+                    <button
+                      key={cfg.id}
+                      type="button"
+                      className={`config-pill ${selectedConfig?.id === cfg.id ? 'config-pill-active' : ''}`}
+                      onClick={() => setSelectedConfig(cfg)}
+                    >
+                      <span className="cfg-name">{cfg.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="horizontal-rule" />
+
+            {/* ========================================================= */}
+            {/* QUICK TWO-COLUMN SPECIFICATIONS TABLE                     */}
+            {/* ========================================================= */}
+            <div className="quick-specs-table-wrap">
+              <h3 className="section-heading-sm">Key Machinery Specifications</h3>
+              <div className="specs-table">
+                <div className="spec-row-item">
+                  <span className="spec-key">Brand</span>
+                  <span className="spec-value">BizBein Innovations</span>
+                </div>
+                <div className="spec-row-item">
+                  <span className="spec-key">Machinery Model</span>
+                  <span className="spec-value">{product.model || product.name}</span>
+                </div>
+                <div className="spec-row-item">
+                  <span className="spec-key">Category</span>
+                  <span className="spec-value">{category?.name || product.category}</span>
+                </div>
+                <div className="spec-row-item">
+                  <span className="spec-key">Factory Warranty</span>
+                  <span className="spec-value">12 Months Comprehensive Coverage</span>
+                </div>
+                <div className="spec-row-item">
+                  <span className="spec-key">Origin / Works</span>
+                  <span className="spec-value">Zirakpur, SAS Nagar, Punjab</span>
+                </div>
+
+                {/* Additional Specs from product object */}
+                {product.specs &&
+                  product.specs
+                    .slice(0, showAllSpecs ? product.specs.length : 3)
+                    .map((s, idx) => (
+                      <div key={idx} className="spec-row-item">
+                        <span className="spec-key">{s.label}</span>
+                        <span className="spec-value">{s.value}</span>
+                      </div>
+                    ))}
+              </div>
+
+              {product.specs && product.specs.length > 3 && (
+                <button
+                  type="button"
+                  className="toggle-specs-btn"
+                  onClick={() => setShowAllSpecs(!showAllSpecs)}
+                >
+                  <span>{showAllSpecs ? 'See less specifications' : 'See more technical specifications'}</span>
+                  {showAllSpecs ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                </button>
+              )}
+            </div>
+
+            <div className="horizontal-rule" />
+
+            {/* ========================================================= */}
+            {/* ABOUT THIS ITEM BULLETED SECTION                          */}
+            {/* ========================================================= */}
+            <div className="about-item-section">
+              <h2 className="about-item-heading">About this item</h2>
+              <ul className="about-item-list">
+                {enriched?.aboutPoints.map((pt, idx) => (
+                  <li key={idx} className="about-bullet-point">
+                    <strong className="point-title">{pt.title}:</strong>{' '}
+                    <span className="point-content">{pt.content}</span>
+                  </li>
+                ))}
+                <li className="about-bullet-point">
+                  <strong className="point-title">Industrial Line Overview:</strong>{' '}
+                  <span className="point-content">
+                    {product.description ||
+                      `${product.name} is engineered for industrial heavy-throughput operations with minimum downtime, high thermal endurance, and seamless line synchronization.`}
+                  </span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* ========================================================= */}
+          {/* COLUMN 3: RIGHT STICKY BUY BOX / DIRECT ACTIONS           */}
+          {/* ========================================================= */}
+          <div className="col-buy-box">
+            <div className="sticky-buy-box-card">
+              <div className="buy-box-price-header">
+                <span className="currency">₹</span>
+                <span className="price-num">{unitPrice.toLocaleString('en-IN')}</span>
+                <span className="unit-label">/ {product.unit || 'Unit'}</span>
+              </div>
+
+              <div className="delivery-timing-block">
+                <span className="free-tag">FREE delivery</span> by{' '}
+                <strong>{deliveryDateStr}</strong> on direct factory dispatch.
+              </div>
+
+              <div className="stock-status-pill in-stock">
+                ✓ In Stock • Factory Ready
+              </div>
+
+              <div className="seller-meta-table">
+                <div className="meta-line">
+                  <span className="meta-left">Ships from:</span>
+                  <span className="meta-right">BizBein Works (Zirakpur)</span>
+                </div>
+                <div className="meta-line">
+                  <span className="meta-left">Sold by:</span>
+                  <span className="meta-right">BizBein Innovations</span>
+                </div>
+                <div className="meta-line">
+                  <span className="meta-left">Payment:</span>
+                  <span className="meta-right">Secure Commercial Proforma</span>
+                </div>
+              </div>
+
+              {/* Quantity Selector */}
+              <div className="quantity-select-box">
+                <label className="qty-label-text">Quantity:</label>
+                <div className="qty-pill-control">
                   <button
                     type="button"
                     className="qty-btn"
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                    aria-label="Decrease quantity"
                   >
                     -
                   </button>
-                  <span className="qty-value">{quantity}</span>
+                  <span className="qty-num">{quantity}</span>
                   <button
                     type="button"
                     className="qty-btn"
                     onClick={() => setQuantity((q) => q + 1)}
-                    aria-label="Increase quantity"
                   >
                     +
                   </button>
                 </div>
               </div>
 
-              <div className="cta-button-row">
+              {/* Action Buttons */}
+              <div className="buy-box-buttons">
+                {/* 1. Add to Inquiry Cart */}
                 <button
                   type="button"
-                  className={`btn-add-cart ${isAdded ? 'btn-success' : ''}`}
+                  className={`btn-action-primary ${isAdded ? 'btn-action-success' : ''}`}
                   onClick={handleAddToCart}
                 >
-                  {isAdded ? (
-                    <>
-                      <Check size={18} />
-                      <span>Added to Inquiry Cart!</span>
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingCart size={18} />
-                      <span>Add to Cart ({quantity})</span>
-                    </>
-                  )}
+                  <ShoppingCart size={17} />
+                  <span>{isAdded ? 'Added to Cart!' : `Add to Cart (${quantity})`}</span>
                 </button>
 
+                {/* 2. Direct WhatsApp Inquiry Button (High-converting green) */}
                 <button
                   type="button"
-                  className="btn-request-quote"
-                  onClick={() => openQuoteModal(product)}
-                >
-                  <FileText size={18} />
-                  <span>Request Official Quotation</span>
-                </button>
-              </div>
-
-              {/* Direct WhatsApp Contact Button */}
-              <div className="direct-contact-row">
-                <button
-                  type="button"
-                  className="btn-whatsapp-direct"
+                  className="btn-action-whatsapp"
                   onClick={handleWhatsAppInquiry}
                 >
                   <WhatsAppIcon size={18} color="#ffffff" />
-                  <span>Chat on WhatsApp with Machine Specialist</span>
+                  <span>Send Inquiry to WhatsApp</span>
                 </button>
 
+                {/* 3. Request Official RFQ Proposal */}
                 <button
                   type="button"
-                  className="btn-call-direct"
+                  className="btn-action-rfq"
+                  onClick={() => openQuoteModal(product)}
+                >
+                  <FileText size={16} />
+                  <span>Request Official RFQ Quote</span>
+                </button>
+
+                {/* 4. Talk to Senior Machine Specialist */}
+                <button
+                  type="button"
+                  className="btn-action-call"
                   onClick={openExpertModal}
                 >
-                  <Phone size={16} />
-                  <span>Call: {companyDetails.primaryPhone}</span>
+                  <Phone size={15} />
+                  <span>Speak with Engineer</span>
                 </button>
+              </div>
+
+              {/* Security & Transaction Assurance */}
+              <div className="secure-transaction-note">
+                <ShieldCheck size={14} className="shield-ico" />
+                <span>Secure Industrial Transaction • GST Input Credit Guaranteed</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* 3. Related Products in Same Category */}
+        {/* ========================================================= */}
+        {/* SECTION 3: FREQUENTLY BOUGHT / INQUIRED TOGETHER BUNDLE   */}
+        {/* ========================================================= */}
+        {enriched?.bundleItems && enriched.bundleItems.length > 1 && (
+          <div className="frequently-bought-section">
+            <h2 className="fbt-heading">Frequently Inquired Together</h2>
+            <div className="fbt-card">
+              <div className="fbt-products-row">
+                {enriched.bundleItems.map((item, idx) => (
+                  <React.Fragment key={item.id}>
+                    {idx > 0 && <span className="fbt-plus-symbol">+</span>}
+                    <div className="fbt-item-thumb-box">
+                      <img src={item.image} alt={item.name} className="fbt-thumb-img" />
+                    </div>
+                  </React.Fragment>
+                ))}
+
+                <div className="fbt-total-action-box">
+                  <div className="fbt-price-display">
+                    <span className="total-label">Total Package Price:</span>
+                    <strong className="total-price-val">₹{bundleTotal.toLocaleString('en-IN')}</strong>
+                  </div>
+
+                  <div className="fbt-btn-stack">
+                    <button
+                      type="button"
+                      className="btn-fbt-add"
+                      onClick={handleAddBundleToCart}
+                    >
+                      Add Selected to Cart
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-fbt-whatsapp"
+                      onClick={handleInquireBundleWhatsApp}
+                    >
+                      <WhatsAppIcon size={16} color="#ffffff" />
+                      <span>Inquire Package on WhatsApp</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="fbt-checkboxes-list">
+                {enriched.bundleItems.map((item) => (
+                  <label key={item.id} className="fbt-checkbox-row">
+                    <input
+                      type="checkbox"
+                      checked={!!bundleChecked[item.id]}
+                      onChange={(e) =>
+                        setBundleChecked({ ...bundleChecked, [item.id]: e.target.checked })
+                      }
+                      className="fbt-checkbox"
+                    />
+                    <span className="fbt-item-title-wrap">
+                      {item.isPrimary ? <strong>This item:</strong> : null} {item.name} —{' '}
+                      <strong className="fbt-item-price">
+                        ₹{(item.isPrimary ? unitPrice : item.price).toLocaleString('en-IN')}
+                      </strong>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* SECTION 4: FROM THE MANUFACTURER SHOWCASE                 */}
+        {/* ========================================================= */}
+        <div className="from-manufacturer-section">
+          <div className="mfg-header">
+            <span className="mfg-eyebrow">ENGINEERING WORKS & QUALITY ASSURANCE</span>
+            <h2 className="mfg-title">From the Manufacturer: BizBein Innovations</h2>
+            <p className="mfg-subtitle">
+              Engineered for demanding industrial production environments with precision kinematics, heavy SS metallurgy, and continuous duty drive cycles.
+            </p>
+          </div>
+
+          <div className="mfg-features-grid">
+            <div className="mfg-feature-card">
+              <div className="mfg-icon-wrap"><Wrench size={24} /></div>
+              <h3>Precision Heavy-Gauge Build</h3>
+              <p>Constructed from structural stainless steel SS 304 or high-tensile powder-coated carbon steel resisting chemical corrosion and line shocks.</p>
+            </div>
+            <div className="mfg-feature-card">
+              <div className="mfg-icon-wrap"><Clock size={24} /></div>
+              <h3>24/7 Continuous Duty S1</h3>
+              <p>Industrial motors paired with hardened helical reduction gearboxes designed for uninterrupted 3-shift factory operation.</p>
+            </div>
+            <div className="mfg-feature-card">
+              <div className="mfg-icon-wrap"><Truck size={24} /></div>
+              <h3>Direct Pan-India Dispatch</h3>
+              <p>Dispatched directly from our primary works in Zirakpur, Punjab with all-India transit insurance and factory installation guidance.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ========================================================= */}
+        {/* SECTION 5: RELATED MACHINERY IN SAME CATEGORY             */}
+        {/* ========================================================= */}
         {relatedProducts.length > 0 && (
           <div className="related-equipment-section">
             <div className="related-header">
               <div>
-                <h2 className="related-title">Related Machinery in {category?.name || 'this category'}</h2>
-                <p className="related-subtitle">Compatible conveyor lines, sealing units, and accessories.</p>
+                <h2 className="related-title">Customers who viewed this also considered</h2>
+                <p className="related-subtitle">Compatible machinery lines from BizBein catalog.</p>
               </div>
               {category && (
                 <Link href={`/products/${category.id}`} className="view-cat-link">
@@ -401,42 +846,68 @@ export default function ProductDetailPage() {
         )}
       </div>
 
+      {/* ========================================================= */}
+      {/* FULL VIEW LIGHTBOX MODAL                                  */}
+      {/* ========================================================= */}
+      {isLightboxOpen && (
+        <div className="lightbox-backdrop" onClick={() => setIsLightboxOpen(false)}>
+          <div className="lightbox-modal" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="lightbox-close"
+              onClick={() => setIsLightboxOpen(false)}
+            >
+              <X size={24} />
+            </button>
+            <img src={currentGalleryImage} alt={product.name} className="lightbox-img" />
+            <div className="lightbox-caption">
+              <strong>{product.name}</strong> • Factory Engineering Detail View
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* SCOPED COMPONENT STYLES (AMAZON REFERENCE SPECIFICATION)   */}
+      {/* ========================================================= */}
       <style jsx>{`
-        .product-detail-page {
-          background-color: #f8fafc;
-          padding-bottom: 70px;
+        .amazon-product-page {
+          background-color: #ffffff;
+          color: #0f1111;
+          padding-bottom: 80px;
+          font-family: inherit;
         }
 
         .container {
-          max-width: 1400px;
+          max-width: 1480px;
           margin: 0 auto;
           padding: 0 20px;
         }
 
-        /* Breadcrumb Strip */
+        /* 1. Breadcrumbs */
         .breadcrumb-strip {
-          background-color: #ffffff;
+          background-color: #f8fafc;
           border-bottom: 1px solid #e2e8f0;
-          padding: 14px 0;
+          padding: 12px 0;
+          font-size: 13px;
         }
 
         .breadcrumbs {
           display: flex;
           align-items: center;
           gap: 6px;
-          font-size: 13px;
-          color: #64748b;
           flex-wrap: wrap;
+          color: #565959;
         }
 
         .crumb-link {
-          color: #1e3a8a;
+          color: #007185;
           text-decoration: none;
-          transition: color 0.15s ease;
         }
 
         .crumb-link:hover {
-          color: #F8B50E;
+          color: #c7511f;
+          text-decoration: underline;
         }
 
         .crumb-sep {
@@ -444,350 +915,671 @@ export default function ProductDetailPage() {
         }
 
         .crumb-active {
-          color: #0f172a;
+          color: #0f1111;
           font-weight: 600;
         }
 
-        /* Main Content */
+        /* 2. Main 3-Column Grid */
         .main-content-wrap {
-          margin-top: 28px;
+          padding-top: 24px;
         }
 
-        .product-showcase-grid {
+        .amazon-grid-layout {
           display: grid;
-          grid-template-columns: 1fr 1.25fr;
-          gap: 36px;
-          background: #ffffff;
-          border: 1px solid #e2e8f0;
-          border-radius: 16px;
-          padding: 32px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+          grid-template-columns: 460px 1fr 340px;
+          gap: 32px;
+          align-items: start;
         }
 
-        /* Left Column */
-        .showcase-left {
+        @media (max-width: 1280px) {
+          .amazon-grid-layout {
+            grid-template-columns: 400px 1fr 300px;
+            gap: 24px;
+          }
+        }
+
+        @media (max-width: 1024px) {
+          .amazon-grid-layout {
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+          }
+          .col-buy-box {
+            grid-column: span 2;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .amazon-grid-layout {
+            grid-template-columns: 1fr;
+            gap: 20px;
+          }
+          .col-buy-box {
+            grid-column: span 1;
+          }
+        }
+
+        /* Column 1: Gallery */
+        .gallery-layout-wrapper {
+          display: flex;
+          gap: 16px;
+          align-items: flex-start;
+          position: sticky;
+          top: 90px;
+        }
+
+        .vertical-thumbnails-strip {
           display: flex;
           flex-direction: column;
-          gap: 20px;
+          gap: 10px;
+          width: 68px;
+          flex-shrink: 0;
         }
 
-        .image-stage {
-          position: relative;
+        .thumb-btn {
+          width: 64px;
+          height: 64px;
+          border: 1.5px solid #d5d9d9;
+          border-radius: 6px;
+          padding: 2px;
           background: #ffffff;
-          border: 1px solid #e2e8f0;
-          border-radius: 12px;
-          height: 380px;
+          cursor: pointer;
+          position: relative;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 24px;
           overflow: hidden;
         }
 
-        .main-product-image {
-          max-width: 100%;
-          max-height: 100%;
+        .thumb-btn:hover {
+          border-color: #007185;
+        }
+
+        .thumb-btn.thumb-active {
+          border-color: #e77600;
+          box-shadow: 0 0 0 2px rgba(231, 118, 0, 0.3);
+        }
+
+        .thumb-img {
+          width: 100%;
+          height: 100%;
           object-fit: contain;
-          transition: transform 0.3s ease;
         }
 
-        .image-stage:hover .main-product-image {
-          transform: scale(1.05);
+        .thumb-tag {
+          position: absolute;
+          bottom: 2px;
+          right: 2px;
+          background: rgba(15, 23, 42, 0.7);
+          color: #ffffff;
+          font-size: 8px;
+          padding: 1px 3px;
+          border-radius: 3px;
+          font-weight: 700;
         }
 
-        .product-badge {
+        .main-image-stage {
+          flex: 1;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 16px;
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .stage-badge {
           position: absolute;
           top: 14px;
           left: 14px;
-          z-index: 5;
           font-size: 11px;
-          font-weight: 800;
+          font-weight: 700;
           padding: 4px 10px;
           border-radius: 4px;
-          letter-spacing: 0.02em;
+          z-index: 2;
+          text-transform: uppercase;
         }
 
         .badge-bestseller {
-          background-color: #F8B50E;
+          background: #f8b50e;
           color: #0f172a;
         }
 
         .badge-popular {
-          background-color: #3b82f6;
+          background: #0284c7;
           color: #ffffff;
         }
 
         .badge-new {
-          background-color: #10b981;
+          background: #16a34a;
           color: #ffffff;
         }
 
-        .image-qa-seal {
+        .stage-image-container {
+          width: 100%;
+          min-height: 380px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          cursor: zoom-in;
+        }
+
+        .stage-img {
+          max-width: 100%;
+          max-height: 420px;
+          object-fit: contain;
+          transition: transform 0.25s ease;
+        }
+
+        .stage-image-container:hover .stage-img {
+          transform: scale(1.03);
+        }
+
+        .zoom-hint {
           position: absolute;
-          bottom: 12px;
-          left: 12px;
+          bottom: 6px;
+          right: 6px;
           display: inline-flex;
           align-items: center;
           gap: 5px;
-          background: #f0fdf4;
-          border: 1px solid #bbf7d0;
-          color: #166534;
+          background: rgba(255, 255, 255, 0.9);
+          border: 1px solid #cbd5e1;
+          padding: 4px 8px;
+          border-radius: 6px;
           font-size: 11px;
-          font-weight: 700;
-          padding: 3px 8px;
-          border-radius: 4px;
+          color: #475569;
+          font-weight: 600;
+          pointer-events: none;
         }
 
-        .qa-icon {
-          color: #16a34a;
-        }
-
-        .guarantees-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 12px;
-        }
-
-        .guarantee-card {
+        .stage-footer-note {
           display: flex;
-          align-items: flex-start;
-          gap: 10px;
-          background: #f8fafc;
-          border: 1px solid #e2e8f0;
-          border-radius: 8px;
-          padding: 12px;
-        }
-
-        .guar-icon {
-          color: #1e3a8a;
-          flex-shrink: 0;
-          margin-top: 2px;
-        }
-
-        .guar-title {
-          font-size: 12px;
-          font-weight: 700;
-          color: #0f172a;
-        }
-
-        .guar-sub {
-          font-size: 11px;
-          color: #64748b;
-          margin-top: 2px;
-        }
-
-        /* Right Column */
-        .showcase-right {
-          display: flex;
-          flex-direction: column;
-        }
-
-        .top-meta-row {
-          display: flex;
+          justify-content: space-between;
           align-items: center;
-          gap: 10px;
-          margin-bottom: 8px;
+          width: 100%;
+          margin-top: 14px;
+          padding-top: 10px;
+          border-top: 1px solid #f1f5f9;
         }
 
-        .brand-pill {
-          background: #eff6ff;
-          color: #1e40af;
+        .qa-chip {
           font-size: 11.5px;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          padding: 3px 8px;
-          border-radius: 4px;
+          color: #16a34a;
+          font-weight: 700;
         }
 
-        .cat-pill-link {
-          font-size: 12.5px;
-          color: #64748b;
-          text-decoration: none;
+        .share-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          background: none;
+          border: none;
+          color: #007185;
+          font-size: 12px;
+          cursor: pointer;
           font-weight: 600;
         }
 
-        .cat-pill-link:hover {
-          color: #F8B50E;
+        .share-btn:hover {
+          color: #c7511f;
+          text-decoration: underline;
         }
 
-        .product-title {
-          font-size: 28px;
-          font-weight: 900;
-          color: #0f172a;
-          line-height: 1.25;
-          margin: 0 0 10px;
-          letter-spacing: -0.01em;
+        /* Column 2: Center Details */
+        .brand-header-link {
+          margin-bottom: 4px;
         }
 
-        .rating-row {
+        .store-link {
+          color: #007185;
+          font-size: 13.5px;
+          font-weight: 600;
+          text-decoration: none;
+        }
+
+        .store-link:hover {
+          color: #c7511f;
+          text-decoration: underline;
+        }
+
+        .amazon-product-title {
+          font-size: 24px;
+          line-height: 1.35;
+          font-weight: 700;
+          color: #0f1111;
+          margin: 4px 0 8px;
+        }
+
+        .ratings-review-strip {
           display: flex;
           align-items: center;
-          gap: 8px;
-          font-size: 13px;
-          margin-bottom: 18px;
+          gap: 10px;
+          font-size: 13.5px;
+          margin-bottom: 14px;
           flex-wrap: wrap;
         }
 
-        .stars {
-          color: #F8B50E;
-          letter-spacing: 2px;
+        .stars-cluster {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
         }
 
-        .rating-score {
-          font-weight: 800;
-          color: #0f172a;
+        .star-score {
+          font-weight: 700;
+          color: #0f1111;
         }
 
-        .rating-count {
-          color: #64748b;
+        .stars-symbols {
+          color: #ffa41c;
+          letter-spacing: 1px;
+          font-size: 15px;
         }
 
-        .verified-badge {
-          background: #ecfdf5;
-          color: #047857;
-          font-size: 11.5px;
-          font-weight: 600;
+        .rating-divider {
+          color: #cbd5e1;
+        }
+
+        .reviews-count {
+          color: #007185;
+          cursor: pointer;
+        }
+
+        .category-pill {
+          background: #f1f5f9;
+          color: #475569;
           padding: 2px 8px;
           border-radius: 4px;
+          font-size: 11.5px;
+          font-weight: 600;
+        }
+
+        .horizontal-rule {
+          height: 1px;
+          background: #e7e7e7;
+          margin: 16px 0;
         }
 
         /* Price Box */
-        .price-box {
-          background: #f8fafc;
-          border: 1px solid #e2e8f0;
-          border-left: 4px solid #F8B50E;
-          border-radius: 8px;
-          padding: 16px 20px;
-          margin-bottom: 20px;
+        .amazon-price-box {
+          margin: 12px 0;
         }
 
-        .price-headline {
+        .price-primary-row {
           display: flex;
           align-items: baseline;
           gap: 8px;
         }
 
-        .price-val {
-          font-size: 26px;
-          font-weight: 900;
-          color: #0f172a;
+        .discount-badge {
+          color: #cc0c39;
+          font-size: 24px;
+          font-weight: 400;
         }
 
-        .price-unit {
-          font-size: 14px;
-          color: #64748b;
+        .currency-symbol {
+          font-size: 16px;
+          vertical-align: super;
           font-weight: 600;
         }
 
-        .price-tax-note {
-          font-size: 12px;
-          color: #64748b;
+        .price-big {
+          font-size: 32px;
+          font-weight: 700;
+          color: #0f1111;
+          line-height: 1;
+        }
+
+        .mrp-row {
+          font-size: 12.5px;
+          color: #565959;
           margin-top: 4px;
         }
 
-        /* Overview */
-        .overview-block {
-          margin-bottom: 20px;
+        .mrp-strikethrough {
+          text-decoration: line-through;
+          margin-left: 4px;
         }
 
-        .section-label {
-          font-size: 13px;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          color: #0f172a;
-          margin: 0 0 8px;
+        .taxes-note {
+          font-size: 12px;
+          color: #007185;
+          margin-top: 4px;
         }
 
-        .overview-text {
-          font-size: 14px;
-          line-height: 1.6;
-          color: #334155;
-          margin: 0;
+        /* Trust Carousel Strip (5 Icons) */
+        .trust-carousel-strip {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          gap: 8px;
+          margin: 16px 0;
         }
 
-        /* Key Specs */
-        .key-specs-card {
-          background: #ffffff;
-          border: 1px solid #e2e8f0;
-          border-radius: 8px;
-          padding: 16px;
-          margin-bottom: 24px;
+        @media (max-width: 600px) {
+          .trust-carousel-strip {
+            grid-template-columns: repeat(3, 1fr);
+          }
         }
 
-        .specs-list {
+        .trust-item {
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          align-items: center;
+          text-align: center;
+          gap: 6px;
         }
 
-        .spec-row {
+        .trust-icon-box {
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
           display: flex;
-          align-items: baseline;
-          font-size: 13px;
-          gap: 8px;
+          align-items: center;
+          justify-content: center;
+          color: #e77600;
+        }
+
+        .trust-label {
+          font-size: 11px;
+          color: #007185;
+          line-height: 1.3;
+          font-weight: 600;
+        }
+
+        /* Variant Selector Cards */
+        .variant-selector-section,
+        .configuration-section {
+          margin: 16px 0;
+        }
+
+        .selector-title-row {
+          font-size: 13.5px;
+          margin-bottom: 8px;
+        }
+
+        .selector-label {
+          color: #565959;
+          margin-right: 6px;
+        }
+
+        .selector-current {
+          color: #0f1111;
+        }
+
+        .variant-cards-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+          gap: 10px;
+        }
+
+        .variant-card {
+          border: 1.5px solid #d5d9d9;
+          border-radius: 8px;
+          background: #ffffff;
+          padding: 10px 12px;
+          text-align: left;
+          cursor: pointer;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .variant-card:hover {
+          border-color: #007185;
+        }
+
+        .variant-card.variant-card-active {
+          border-color: #e77600;
+          background: #fffbf5;
+          box-shadow: 0 0 0 1px #e77600;
+        }
+
+        .v-card-title {
+          font-size: 12px;
+          font-weight: 700;
+          color: #0f1111;
+        }
+
+        .v-card-price {
+          font-size: 14px;
+          color: #b12704;
+        }
+
+        .v-card-mrp {
+          font-size: 11px;
+          color: #565959;
+          text-decoration: line-through;
+        }
+
+        .v-card-sub {
+          font-size: 10.5px;
+          color: #565959;
+          line-height: 1.2;
+          margin-top: 2px;
+        }
+
+        /* Configuration Pills */
+        .config-pills-row {
+          display: flex;
+          gap: 10px;
           flex-wrap: wrap;
         }
 
-        .spec-name {
-          color: #64748b;
-          font-weight: 500;
-          white-space: normal;
+        .config-pill {
+          border: 1.5px solid #d5d9d9;
+          border-radius: 8px;
+          background: #ffffff;
+          padding: 8px 14px;
+          cursor: pointer;
+          font-size: 12.5px;
+          font-weight: 600;
+          color: #0f1111;
+          transition: all 0.15s ease;
         }
 
-        .spec-dots {
-          flex: 1;
-          min-width: 8px;
-          border-bottom: 1px dotted #cbd5e1;
+        .config-pill:hover {
+          border-color: #007185;
         }
 
-        .spec-val {
+        .config-pill.config-pill-active {
+          border-color: #007185;
+          background: #f0fdf4;
+          color: #047857;
+          box-shadow: 0 0 0 1px #007185;
+        }
+
+        /* Quick Specs Table */
+        .section-heading-sm {
+          font-size: 15px;
           font-weight: 700;
-          color: #0f172a;
-          white-space: normal;
-          word-break: break-word;
-          text-align: right;
+          margin-bottom: 10px;
+          color: #0f1111;
         }
 
-        /* Controls */
-        .purchase-controls {
+        .specs-table {
           display: flex;
           flex-direction: column;
-          gap: 14px;
-          border-top: 1px solid #f1f5f9;
-          padding-top: 20px;
+          border-top: 1px solid #e7e7e7;
         }
 
-        .qty-picker {
-          display: flex;
-          align-items: center;
-          gap: 14px;
+        .spec-row-item {
+          display: grid;
+          grid-template-columns: 180px 1fr;
+          padding: 7px 0;
+          border-bottom: 1px solid #f1f5f9;
+          font-size: 13px;
         }
 
-        .qty-label {
-          font-size: 13.5px;
+        .spec-key {
           font-weight: 700;
-          color: #0f172a;
+          color: #0f1111;
         }
 
-        .qty-counter {
+        .spec-value {
+          color: #334155;
+        }
+
+        .toggle-specs-btn {
           display: inline-flex;
           align-items: center;
-          border: 1px solid #cbd5e1;
-          border-radius: 6px;
-          overflow: hidden;
+          gap: 5px;
+          background: none;
+          border: none;
+          color: #007185;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          margin-top: 8px;
+          padding: 0;
+        }
+
+        .toggle-specs-btn:hover {
+          color: #c7511f;
+          text-decoration: underline;
+        }
+
+        /* About This Item */
+        .about-item-heading {
+          font-size: 18px;
+          font-weight: 700;
+          color: #0f1111;
+          margin-bottom: 10px;
+        }
+
+        .about-item-list {
+          list-style-type: disc;
+          padding-left: 18px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .about-bullet-point {
+          font-size: 13.5px;
+          line-height: 1.5;
+          color: #334155;
+        }
+
+        .point-title {
+          color: #0f1111;
+        }
+
+        /* Column 3: Sticky Buy Box Card */
+        .sticky-buy-box-card {
+          border: 1px solid #d5d9d9;
+          border-radius: 10px;
+          padding: 20px;
+          background: #ffffff;
+          position: sticky;
+          top: 90px;
+          box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+        }
+
+        .buy-box-price-header {
+          display: flex;
+          align-items: baseline;
+          gap: 2px;
+          margin-bottom: 8px;
+        }
+
+        .buy-box-price-header .currency {
+          font-size: 15px;
+          font-weight: 600;
+          color: #b12704;
+          vertical-align: super;
+        }
+
+        .buy-box-price-header .price-num {
+          font-size: 26px;
+          font-weight: 700;
+          color: #b12704;
+        }
+
+        .buy-box-price-header .unit-label {
+          font-size: 12px;
+          color: #565959;
+          margin-left: 4px;
+        }
+
+        .delivery-timing-block {
+          font-size: 13px;
+          color: #0f1111;
+          margin-bottom: 12px;
+          line-height: 1.4;
+        }
+
+        .delivery-timing-block .free-tag {
+          color: #007185;
+          font-weight: 700;
+        }
+
+        .stock-status-pill {
+          font-size: 15px;
+          font-weight: 700;
+          color: #007600;
+          margin-bottom: 14px;
+        }
+
+        .seller-meta-table {
+          font-size: 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          margin-bottom: 16px;
+          padding-bottom: 12px;
+          border-bottom: 1px solid #e7e7e7;
+        }
+
+        .meta-line {
+          display: grid;
+          grid-template-columns: 85px 1fr;
+        }
+
+        .meta-left {
+          color: #565959;
+        }
+
+        .meta-right {
+          color: #007185;
+          font-weight: 600;
+        }
+
+        .quantity-select-box {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 16px;
+        }
+
+        .qty-label-text {
+          font-size: 13px;
+          font-weight: 600;
+          color: #0f1111;
+        }
+
+        .qty-pill-control {
+          display: flex;
+          align-items: center;
+          border: 1px solid #d5d9d9;
+          border-radius: 8px;
+          background: #f8fafc;
         }
 
         .qty-btn {
-          background: #f8fafc;
+          width: 32px;
+          height: 32px;
           border: none;
-          width: 34px;
-          height: 34px;
+          background: none;
+          cursor: pointer;
           font-size: 16px;
           font-weight: 700;
-          cursor: pointer;
-          color: #0f172a;
+          color: #0f1111;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -797,187 +1589,428 @@ export default function ProductDetailPage() {
           background: #e2e8f0;
         }
 
-        .qty-value {
-          width: 40px;
-          text-align: center;
-          font-size: 14px;
-          font-weight: 800;
-          color: #0f172a;
-        }
-
-        .cta-button-row {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 12px;
-        }
-
-        .btn-add-cart {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          background-color: #F8B50E;
-          color: #0f172a;
-          border: none;
-          padding: 12px 18px;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 800;
-          cursor: pointer;
-          font-family: inherit;
-          transition: all 0.2s ease;
-        }
-
-        .btn-add-cart:hover {
-          background-color: #E5A407;
-          transform: translateY(-1px);
-        }
-
-        .btn-add-cart.btn-success {
-          background-color: #16a34a;
-          color: #ffffff;
-        }
-
-        .btn-request-quote {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 8px;
-          background: #0f172a;
-          color: #ffffff;
-          border: none;
-          padding: 12px 18px;
-          border-radius: 8px;
-          font-size: 14px;
+        .qty-num {
+          padding: 0 10px;
           font-weight: 700;
-          cursor: pointer;
-          font-family: inherit;
-          transition: all 0.2s ease;
+          font-size: 14px;
         }
 
-        .btn-request-quote:hover {
-          background: #1e293b;
-          transform: translateY(-1px);
-        }
-
-        .direct-contact-row {
-          display: grid;
-          grid-template-columns: 1.4fr 1fr;
+        .buy-box-buttons {
+          display: flex;
+          flex-direction: column;
           gap: 10px;
-          margin-top: 4px;
         }
 
-        .btn-whatsapp-direct {
-          display: inline-flex;
+        .btn-action-primary {
+          width: 100%;
+          background: #ffd814;
+          border: 1px solid #fcd200;
+          color: #0f1111;
+          padding: 12px;
+          border-radius: 20px;
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+          display: flex;
           align-items: center;
           justify-content: center;
           gap: 8px;
-          background-color: #25D366;
+          transition: background 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        .btn-action-primary:hover {
+          background: #f7ca00;
+          border-color: #f2c200;
+        }
+
+        .btn-action-success {
+          background: #16a34a !important;
+          color: #ffffff !important;
+          border-color: #16a34a !important;
+        }
+
+        .btn-action-whatsapp {
+          width: 100%;
+          background: #16a34a;
+          border: 1px solid #16a34a;
           color: #ffffff;
-          border: none;
-          padding: 10px 14px;
-          border-radius: 8px;
-          font-size: 13px;
+          padding: 12px;
+          border-radius: 20px;
+          font-size: 14px;
           font-weight: 700;
           cursor: pointer;
-          font-family: inherit;
-          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          transition: background 0.15s ease;
         }
 
-        .btn-whatsapp-direct:hover {
-          background-color: #1EBE5D;
+        .btn-action-whatsapp:hover {
+          background: #15803d;
         }
 
-        .btn-call-direct {
-          display: inline-flex;
+        .btn-action-rfq {
+          width: 100%;
+          background: #ffa41c;
+          border: 1px solid #ff8f00;
+          color: #0f1111;
+          padding: 11px;
+          border-radius: 20px;
+          font-size: 13.5px;
+          font-weight: 700;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          transition: background 0.15s ease;
+        }
+
+        .btn-action-rfq:hover {
+          background: #fa8900;
+        }
+
+        .btn-action-call {
+          width: 100%;
+          background: #f1f5f9;
+          border: 1px solid #cbd5e1;
+          color: #1e293b;
+          padding: 10px;
+          border-radius: 20px;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          display: flex;
           align-items: center;
           justify-content: center;
           gap: 6px;
-          background: #f1f5f9;
-          border: 1px solid #cbd5e1;
-          color: #0f172a;
-          padding: 10px 14px;
-          border-radius: 8px;
-          font-size: 12.5px;
-          font-weight: 700;
-          cursor: pointer;
-          font-family: inherit;
-          transition: all 0.2s ease;
         }
 
-        .btn-call-direct:hover {
+        .btn-action-call:hover {
           background: #e2e8f0;
         }
 
-        /* Related Section */
+        .secure-transaction-note {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          font-size: 11px;
+          color: #565959;
+          margin-top: 14px;
+          line-height: 1.3;
+        }
+
+        .shield-ico {
+          color: #16a34a;
+          flex-shrink: 0;
+        }
+
+        /* Section 3: Frequently Inquired Together */
+        .frequently-bought-section {
+          margin-top: 48px;
+          padding-top: 28px;
+          border-top: 1px solid #e7e7e7;
+        }
+
+        .fbt-heading {
+          font-size: 20px;
+          font-weight: 700;
+          color: #0f1111;
+          margin-bottom: 16px;
+        }
+
+        .fbt-card {
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          background: #ffffff;
+          padding: 24px;
+        }
+
+        .fbt-products-row {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          flex-wrap: wrap;
+          margin-bottom: 18px;
+        }
+
+        .fbt-item-thumb-box {
+          width: 120px;
+          height: 120px;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          padding: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #f8fafc;
+        }
+
+        .fbt-thumb-img {
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: contain;
+        }
+
+        .fbt-plus-symbol {
+          font-size: 24px;
+          color: #94a3b8;
+          font-weight: 600;
+        }
+
+        .fbt-total-action-box {
+          margin-left: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        @media (max-width: 768px) {
+          .fbt-total-action-box {
+            margin-left: 0;
+            width: 100%;
+          }
+        }
+
+        .fbt-price-display {
+          display: flex;
+          align-items: baseline;
+          gap: 8px;
+        }
+
+        .total-label {
+          font-size: 13px;
+          color: #565959;
+        }
+
+        .total-price-val {
+          font-size: 20px;
+          color: #b12704;
+          font-weight: 700;
+        }
+
+        .fbt-btn-stack {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .btn-fbt-add {
+          background: #ffd814;
+          border: 1px solid #fcd200;
+          color: #0f1111;
+          padding: 10px 18px;
+          border-radius: 8px;
+          font-weight: 700;
+          font-size: 13px;
+          cursor: pointer;
+        }
+
+        .btn-fbt-add:hover {
+          background: #f7ca00;
+        }
+
+        .btn-fbt-whatsapp {
+          background: #16a34a;
+          border: 1px solid #16a34a;
+          color: #ffffff;
+          padding: 10px 18px;
+          border-radius: 8px;
+          font-weight: 700;
+          font-size: 13px;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .btn-fbt-whatsapp:hover {
+          background: #15803d;
+        }
+
+        .fbt-checkboxes-list {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          border-top: 1px solid #f1f5f9;
+          padding-top: 14px;
+        }
+
+        .fbt-checkbox-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 13px;
+          color: #334155;
+          cursor: pointer;
+        }
+
+        .fbt-item-price {
+          color: #b12704;
+        }
+
+        /* Section 4: From the Manufacturer */
+        .from-manufacturer-section {
+          margin-top: 48px;
+          background: linear-gradient(135deg, #0b1526 0%, #172554 100%);
+          border-radius: 16px;
+          padding: 40px 32px;
+          color: #ffffff;
+        }
+
+        .mfg-header {
+          text-align: center;
+          max-width: 800px;
+          margin: 0 auto 36px;
+        }
+
+        .mfg-eyebrow {
+          color: #f8b50e;
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: 1px;
+        }
+
+        .mfg-title {
+          font-size: 28px;
+          font-weight: 800;
+          margin: 8px 0;
+        }
+
+        .mfg-subtitle {
+          font-size: 14.5px;
+          color: #94a3b8;
+          line-height: 1.5;
+        }
+
+        .mfg-features-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 24px;
+        }
+
+        @media (max-width: 768px) {
+          .mfg-features-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        .mfg-feature-card {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          padding: 24px;
+        }
+
+        .mfg-icon-wrap {
+          width: 48px;
+          height: 48px;
+          border-radius: 10px;
+          background: rgba(248, 181, 14, 0.15);
+          color: #f8b50e;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 14px;
+        }
+
+        .mfg-feature-card h3 {
+          font-size: 16px;
+          font-weight: 700;
+          margin-bottom: 8px;
+          color: #ffffff;
+        }
+
+        .mfg-feature-card p {
+          font-size: 13px;
+          color: #cbd5e1;
+          line-height: 1.5;
+          margin: 0;
+        }
+
+        /* Section 5: Related Machinery */
         .related-equipment-section {
-          margin-top: 50px;
+          margin-top: 48px;
+          padding-top: 28px;
+          border-top: 1px solid #e7e7e7;
         }
 
         .related-header {
           display: flex;
-          align-items: flex-end;
           justify-content: space-between;
+          align-items: flex-end;
           margin-bottom: 20px;
         }
 
         .related-title {
-          font-size: 22px;
-          font-weight: 800;
-          color: #0f172a;
-          margin: 0 0 4px;
+          font-size: 20px;
+          font-weight: 700;
+          color: #0f1111;
+          margin: 0;
         }
 
         .related-subtitle {
-          font-size: 13.5px;
+          font-size: 13px;
           color: #64748b;
-          margin: 0;
+          margin-top: 4px;
         }
 
         .view-cat-link {
           display: inline-flex;
           align-items: center;
           gap: 4px;
-          color: #1e3a8a;
-          font-weight: 700;
-          font-size: 13.5px;
+          color: #007185;
+          font-size: 13px;
+          font-weight: 600;
           text-decoration: none;
         }
 
         .view-cat-link:hover {
-          color: #F8B50E;
+          color: #c7511f;
+          text-decoration: underline;
         }
 
         .related-grid {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 20px;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 16px;
+        }
+
+        @media (max-width: 1024px) {
+          .related-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        @media (max-width: 600px) {
+          .related-grid {
+            grid-template-columns: 1fr;
+          }
         }
 
         .related-card {
-          background: #ffffff;
           border: 1px solid #e2e8f0;
-          border-radius: 12px;
+          border-radius: 10px;
+          background: #ffffff;
           overflow: hidden;
           display: flex;
           flex-direction: column;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-          transition: all 0.2s ease;
+          transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
 
         .related-card:hover {
-          border-color: #F8B50E;
-          transform: translateY(-3px);
-          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
         }
 
         .rel-img-wrap {
-          height: 160px;
+          height: 170px;
+          background: #f8fafc;
           display: flex;
           align-items: center;
           justify-content: center;
           padding: 12px;
-          background: #ffffff;
         }
 
         .rel-img {
@@ -990,102 +2023,96 @@ export default function ProductDetailPage() {
           padding: 14px;
           display: flex;
           flex-direction: column;
-          border-top: 1px solid #f1f5f9;
           flex: 1;
         }
 
         .rel-brand {
-          font-size: 10.5px;
-          font-weight: 700;
-          color: #1e40af;
+          font-size: 11px;
+          color: #64748b;
+          font-weight: 600;
           text-transform: uppercase;
         }
 
         .rel-name {
-          font-size: 14px;
+          font-size: 13.5px;
           font-weight: 700;
-          color: #0f172a;
-          margin: 4px 0 6px;
-        }
-
-        .rel-name a {
-          color: inherit;
-          text-decoration: none;
+          margin: 4px 0 8px;
+          color: #0f1111;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
 
         .rel-price {
-          font-size: 15px;
-          font-weight: 800;
-          color: #0f172a;
-          margin-bottom: 10px;
+          font-size: 14.5px;
+          font-weight: 700;
+          color: #b12704;
+          margin-bottom: 12px;
         }
 
         .rel-btn-view {
-          font-size: 12px;
-          font-weight: 700;
-          color: #1e3a8a;
-          text-decoration: none;
           margin-top: auto;
+          font-size: 12.5px;
+          color: #007185;
+          font-weight: 600;
+          text-decoration: none;
         }
 
         .rel-btn-view:hover {
-          color: #F8B50E;
+          color: #c7511f;
+          text-decoration: underline;
         }
 
-        /* Responsive */
-        @media (max-width: 1024px) {
-          .product-showcase-grid {
-            grid-template-columns: 1fr;
-            padding: 24px;
-          }
-          .image-stage {
-            height: 300px;
-          }
+        /* Lightbox Modal */
+        .lightbox-backdrop {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.85);
+          z-index: 9999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 20px;
         }
 
-        @media (max-width: 640px) {
-          .cta-button-row {
-            grid-template-columns: 1fr;
-          }
-          .direct-contact-row {
-            grid-template-columns: 1fr;
-          }
-          .guarantees-grid {
-            grid-template-columns: 1fr;
-          }
-          .related-grid {
-            grid-template-columns: 1fr;
-          }
-          .product-title {
-            font-size: 22px;
-          }
+        .lightbox-modal {
+          max-width: 900px;
+          max-height: 90vh;
+          background: #ffffff;
+          border-radius: 12px;
+          padding: 20px;
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
 
-        @media (max-width: 480px) {
-          .main-content-wrap {
-            margin-top: 16px;
-          }
-          .product-showcase-grid {
-            padding: 16px 12px;
-            border-radius: 12px;
-            gap: 20px;
-          }
-          .image-stage {
-            height: 240px;
-            padding: 12px;
-          }
-          .price-box {
-            padding: 12px 14px;
-          }
-          .price-val {
-            font-size: 22px;
-          }
-          .key-specs-card {
-            padding: 12px 10px;
-          }
-          .spec-row {
-            font-size: 12px;
-          }
+        .lightbox-close {
+          position: absolute;
+          top: 12px;
+          right: 12px;
+          background: #f1f5f9;
+          border: none;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+        }
+
+        .lightbox-img {
+          max-width: 100%;
+          max-height: 70vh;
+          object-fit: contain;
+        }
+
+        .lightbox-caption {
+          font-size: 13px;
+          color: #475569;
+          margin-top: 12px;
         }
       `}</style>
     </div>
