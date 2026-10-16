@@ -992,45 +992,26 @@ export default function ProductDetailPage() {
       )}
 
       {/* ========================================================= */}
-      {/* MOBILE APP-STYLE FIXED BOTTOM ACTION BAR                  */}
+      {/* FLIPKART-STYLE MOBILE FIXED BOTTOM ACTION BAR             */}
       {/* ========================================================= */}
       <div className="mobile-fixed-bottom-bar" aria-label="Quick Purchase Actions">
-        <div className="fixed-bar-price-col">
-          <span className="fixed-bar-label">Total:</span>
-          <strong className="fixed-bar-price">₹{(unitPrice * quantity).toLocaleString('en-IN')}</strong>
-        </div>
+        <button
+          type="button"
+          className={`flipkart-btn-cart ${isAdded ? 'btn-added' : ''}`}
+          onClick={handleAddToCart}
+          aria-label="Add to cart"
+        >
+          <span>{isAdded ? '✓ Added' : 'Add to cart'}</span>
+        </button>
 
-        <div className="fixed-bar-btns-group">
-          <button
-            type="button"
-            className={`fixed-bar-btn-cart ${isAdded ? 'btn-action-success' : ''}`}
-            onClick={handleAddToCart}
-            aria-label="Add to Cart"
-          >
-            <ShoppingCart size={14} />
-            <span>{isAdded ? 'Added' : 'Add to Cart'}</span>
-          </button>
-
-          <button
-            type="button"
-            className="fixed-bar-btn-buynow"
-            onClick={handleBuyNow}
-            aria-label="Buy Now"
-          >
-            <Zap size={14} fill="#ffffff" />
-            <span>Buy Now</span>
-          </button>
-
-          <button
-            type="button"
-            className="fixed-bar-btn-wa"
-            onClick={handleWhatsAppInquiry}
-            aria-label="Inquire on WhatsApp"
-            title="Chat on WhatsApp"
-          >
-            <WhatsAppIcon size={16} color="#ffffff" />
-          </button>
-        </div>
+        <button
+          type="button"
+          className="flipkart-btn-buy"
+          onClick={handleBuyNow}
+          aria-label={`Buy at ₹${(unitPrice * quantity).toLocaleString('en-IN')}`}
+        >
+          <span>Buy at ₹{(unitPrice * quantity).toLocaleString('en-IN')}</span>
+        </button>
       </div>
 
       {/* ========================================================= */}
@@ -1139,7 +1120,10 @@ export default function ProductDetailPage() {
             padding-bottom: 96px;
           }
           .mobile-fixed-bottom-bar {
-            display: flex !important;
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 10px !important;
+            align-items: center !important;
           }
           .gallery-layout-wrapper {
             position: static;
@@ -1170,25 +1154,13 @@ export default function ProductDetailPage() {
 
         @media (max-width: 480px) {
           .mobile-fixed-bottom-bar {
-            padding: 6px 10px calc(8px + env(safe-area-inset-bottom, 0px)) 10px;
-            gap: 6px;
+            padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)) 10px !important;
+            gap: 8px !important;
           }
-          .fixed-bar-price-col {
-            min-width: 58px;
-          }
-          .fixed-bar-price {
-            font-size: 13.5px;
-          }
-          .fixed-bar-btn-cart,
-          .fixed-bar-btn-buynow {
-            height: 33px;
-            font-size: 11px;
-            padding: 0 4px;
-            gap: 3px;
-          }
-          .fixed-bar-btn-wa {
-            width: 33px;
-            height: 33px;
+          .flipkart-btn-cart,
+          .flipkart-btn-buy {
+            height: 44px;
+            font-size: 14px;
           }
           .mob-primary-btns-row {
             gap: 6px;
@@ -2251,7 +2223,7 @@ export default function ProductDetailPage() {
           gap: 5px;
         }
 
-        /* Mobile Fixed Bottom Action Bar */
+        /* Flipkart-Style Mobile Fixed Bottom Action Bar */
         .mobile-fixed-bottom-bar {
           display: none;
           position: fixed;
@@ -2259,102 +2231,68 @@ export default function ProductDetailPage() {
           left: 0;
           right: 0;
           z-index: 999;
-          background: rgba(255, 255, 255, 0.98);
-          backdrop-filter: blur(10px);
-          -webkit-backdrop-filter: blur(10px);
-          border-top: 1px solid #e2e8f0;
+          background: #ffffff;
+          border-top: 1px solid #e5e7eb;
+          box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.06);
           padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px)) 12px;
-          box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
-          align-items: center;
-          justify-content: space-between;
-          gap: 8px;
+          box-sizing: border-box;
+          gap: 10px;
         }
 
-        .fixed-bar-price-col {
-          display: flex;
-          flex-direction: column;
-          min-width: 68px;
-          flex-shrink: 0;
-        }
-
-        .fixed-bar-label {
-          font-size: 9.5px;
-          text-transform: uppercase;
-          color: #64748b;
+        .flipkart-btn-cart {
+          width: 100%;
+          height: 46px;
+          background: #ffffff;
+          border: 1.5px solid #d1d5db;
+          border-radius: 8px;
+          color: #111827;
+          font-size: 14.5px;
           font-weight: 600;
-          letter-spacing: 0.4px;
-        }
-
-        .fixed-bar-price {
-          font-size: 14px;
-          font-weight: 800;
-          color: #b12704;
-          line-height: 1.1;
-        }
-
-        .fixed-bar-btns-group {
           display: flex;
           align-items: center;
-          gap: 6px;
-          flex: 1;
-          justify-content: flex-end;
-          min-width: 0;
+          justify-content: center;
+          cursor: pointer;
+          font-family: inherit;
+          transition: all 0.15s ease;
+          letter-spacing: -0.01em;
+          user-select: none;
         }
 
-        .fixed-bar-btn-cart {
-          flex: 1;
-          min-width: 0;
-          height: 34px;
-          padding: 0 6px;
-          background: #ffd814;
-          border: 1px solid #fcd200;
-          border-radius: 7px;
-          color: #0f1111;
-          font-size: 11.5px;
+        .flipkart-btn-cart:active {
+          background: #f3f4f6;
+          border-color: #9ca3af;
+        }
+
+        .flipkart-btn-cart.btn-added {
+          background: #ecfdf5;
+          border-color: #10b981;
+          color: #065f46;
           font-weight: 700;
-          cursor: pointer;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          gap: 4px;
-          white-space: nowrap;
-          transition: background 0.15s ease;
         }
 
-        .fixed-bar-btn-buynow {
-          flex: 1;
-          min-width: 0;
-          height: 34px;
-          padding: 0 6px;
-          background: #1E253D;
-          border: 1px solid #1E253D;
-          border-radius: 7px;
-          color: #ffffff;
-          font-size: 11.5px;
+        .flipkart-btn-buy {
+          width: 100%;
+          height: 46px;
+          background: #FFC200;
+          border: 1px solid #FFC200;
+          border-radius: 8px;
+          color: #111827;
+          font-size: 14.5px;
           font-weight: 700;
-          cursor: pointer;
-          display: inline-flex;
+          display: flex;
           align-items: center;
           justify-content: center;
-          gap: 4px;
-          white-space: nowrap;
-          transition: background 0.15s ease;
-          box-shadow: 0 2px 4px rgba(30, 37, 61, 0.2);
+          cursor: pointer;
+          font-family: inherit;
+          transition: all 0.15s ease;
+          letter-spacing: -0.01em;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+          user-select: none;
         }
 
-        .fixed-bar-btn-wa {
-          width: 34px;
-          height: 34px;
-          flex-shrink: 0;
-          background: #16a34a;
-          border: 1px solid #16a34a;
-          border-radius: 7px;
-          color: #ffffff;
-          cursor: pointer;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          transition: background 0.15s ease;
+        .flipkart-btn-buy:active {
+          background: #f5b800;
+          transform: scale(0.99);
         }
 
         /* Section 3: Frequently Inquired Together */
@@ -2764,6 +2702,57 @@ export default function ProductDetailPage() {
           font-size: 13px;
           color: #475569;
           margin-top: 12px;
+        }
+
+        /* Definitive Mobile Responsive Overrides for Specifications & About Product */
+        @media (max-width: 1024px) {
+          .specs-and-features-section {
+            display: flex !important;
+            flex-direction: column !important;
+            width: 100% !important;
+            gap: 20px !important;
+            margin-top: 20px !important;
+            padding-top: 0 !important;
+            border-top: none !important;
+          }
+
+          .quick-specs-table-wrap,
+          .about-item-section {
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+            display: block !important;
+            padding: 18px 16px !important;
+            border-radius: 12px !important;
+          }
+
+          .spec-row-item {
+            grid-template-columns: 140px 1fr !important;
+            padding: 8px 6px !important;
+            font-size: 13px !important;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .spec-row-item {
+            grid-template-columns: 115px 1fr !important;
+            font-size: 12px !important;
+            padding: 7px 4px !important;
+          }
+
+          .about-item-section {
+            padding: 16px 14px !important;
+          }
+
+          .about-item-heading {
+            font-size: 15px !important;
+            margin-bottom: 12px !important;
+          }
+
+          .about-bullet-point {
+            font-size: 13px !important;
+            line-height: 1.5 !important;
+          }
         }
       `}</style>
     </div>
