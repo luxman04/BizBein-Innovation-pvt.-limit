@@ -374,9 +374,11 @@ export default function RequestQuoteModal({ isOpen, onClose, product }) {
         .item-thumb {
           width: 56px;
           height: 56px;
-          object-fit: cover;
+          object-fit: contain;
           border-radius: 4px;
           background: #ffffff;
+          padding: 4px;
+          border: 1px solid var(--color-border-subtle);
         }
 
         .item-meta {

@@ -475,16 +475,22 @@ export default function ProductCatalog({
           position: relative;
           width: 100%;
           height: 180px;
-          background-color: var(--color-surface-subtle);
+          background-color: #ffffff;
           border-radius: var(--radius-md);
           overflow: hidden;
           margin-bottom: 14px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 8px;
         }
 
         .product-img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
+          max-width: 100%;
+          max-height: 100%;
+          width: auto;
+          height: auto;
+          object-fit: contain;
           transition: transform 0.3s ease;
         }
 

@@ -791,9 +791,11 @@ export default function CheckoutPage() {
         .summary-item-img {
           width: 44px;
           height: 44px;
-          object-fit: cover;
+          object-fit: contain;
           border-radius: 6px;
           border: 1px solid #e2e8f0;
+          background: #ffffff;
+          padding: 2px;
           flex-shrink: 0;
         }
 

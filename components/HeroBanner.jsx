@@ -134,6 +134,18 @@ export default function HeroBanner({ onExploreClick, onOpenQuote }) {
 
         {/* Content Container */}
         <div className="hero-container">
+          {/* Dedicated Mobile Equipment Image Card (Cleanly scaled & fitted on mobile) */}
+          <div className="hero-mobile-img-card" key={`mob-img-${slideIndex}`}>
+            <img
+              src={currentSlide.bgImage}
+              alt={`${currentSlide.titleLine1} ${currentSlide.titleLine2} ${currentSlide.titleHighlight}`}
+              className="hero-mobile-img"
+            />
+            <div className="hero-mobile-badge">
+              <span>{currentSlide.badgeText}</span>
+            </div>
+          </div>
+
           {/* Left Text Content */}
           <div className="hero-left-content" key={slideIndex}>
             <div className="hero-kicker">
@@ -335,6 +347,10 @@ export default function HeroBanner({ onExploreClick, onOpenQuote }) {
           right: 99%;
           width: 400px;
           background: #091322;
+        }
+
+        .hero-mobile-img-card {
+          display: none;
         }
 
         /* Content Container */
@@ -626,65 +642,113 @@ export default function HeroBanner({ onExploreClick, onOpenQuote }) {
         @media (max-width: 860px) {
           .hero-wrapper {
             min-height: auto;
+            background: #091322;
+          }
+          .hero-slides-viewport {
+            display: none;
           }
           .hero-diagonal-band {
             display: none;
           }
           .hero-left-overlay {
-            width: 100%;
-            transform: none;
-            background: linear-gradient(180deg, rgba(9, 19, 34, 0.95) 0%, rgba(13, 26, 45, 0.9) 100%);
-          }
-          .hero-left-overlay::before {
             display: none;
+          }
+          .hero-floating-badge {
+            display: none;
+          }
+          .hero-mobile-img-card {
+            display: block;
+            width: 100%;
+            height: 220px;
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            animation: mobileImgFade 0.4s ease-out;
+            margin-bottom: 4px;
+          }
+          @keyframes mobileImgFade {
+            from {
+              opacity: 0.5;
+              transform: scale(1.02);
+            }
+            to {
+              opacity: 1;
+              transform: scale(1);
+            }
+          }
+          .hero-mobile-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+          }
+          .hero-mobile-badge {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            right: 8px;
+            background: #F8B50E;
+            color: #0b1526;
+            font-size: 10.5px;
+            font-weight: 800;
+            padding: 6px 10px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            text-align: center;
+            letter-spacing: 0.02em;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
           }
           .hero-container {
             flex-direction: column;
-            gap: 24px;
-            padding: 32px 16px 28px;
+            gap: 16px;
+            padding: 20px 14px 24px;
+          }
+          .hero-left-content {
+            gap: 12px;
           }
           .hero-headline {
-            font-size: clamp(22px, 6vw, 30px);
+            font-size: clamp(20px, 5.5vw, 26px);
+            line-height: 1.15;
+          }
+          .hero-tagline {
+            font-size: 13px;
           }
           .hero-right-content {
             min-height: auto;
             align-items: center;
-            flex-direction: row;
-            justify-content: space-between;
+            justify-content: center;
             width: 100%;
-            flex-wrap: wrap;
-            gap: 14px;
+            margin-top: 4px;
           }
-          .hero-floating-badge {
-            clip-path: none;
-            border-radius: 6px;
-            padding: 8px 14px;
-          }
-          .badge-highlight-text {
-            font-size: 11px;
+          .hero-controls-panel {
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.08);
+            gap: 8px;
+            padding: 6px 12px;
           }
           .hero-trust-bar {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 14px;
-            margin-top: 18px;
+            gap: 10px;
+            margin-top: 14px;
           }
         }
 
-        @media (max-width: 580px) {
-          .hero-right-content {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 12px;
+        @media (max-width: 480px) {
+          .hero-mobile-img-card {
+            height: 190px;
           }
-          .hero-floating-badge {
-            text-align: center;
+          .hero-mobile-badge {
+            font-size: 9.5px;
+            padding: 5px 8px;
           }
-          .hero-controls-panel {
-            align-self: center;
-            max-width: 100%;
-            gap: 8px;
-            padding: 6px 12px;
+          .hero-primary-cta {
+            width: 100%;
+            justify-content: center;
+            padding: 12px 18px;
           }
           .progress-bar-btn {
             width: 16px;
@@ -698,14 +762,10 @@ export default function HeroBanner({ onExploreClick, onOpenQuote }) {
           }
         }
 
-        @media (max-width: 400px) {
+        @media (max-width: 380px) {
           .hero-trust-bar {
             grid-template-columns: 1fr;
-            gap: 10px;
-          }
-          .hero-primary-cta {
-            width: 100%;
-            justify-content: center;
+            gap: 8px;
           }
         }
       `}</style>

@@ -257,9 +257,11 @@ export default function QuickInquiryDrawer({
         .cart-item-img {
           width: 72px;
           height: 72px;
-          object-fit: cover;
+          object-fit: contain;
           border-radius: 6px;
           background: #ffffff;
+          padding: 4px;
+          border: 1px solid var(--color-border-subtle);
           flex-shrink: 0;
         }
 
