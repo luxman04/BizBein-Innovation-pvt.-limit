@@ -635,14 +635,26 @@ export default function FeaturedProducts({
             padding: 0 12px;
           }
           .product-primary-actions {
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 5px;
           }
           .add-to-cart-btn,
           .buy-now-btn {
             width: 100%;
-            padding: 7px 6px;
-            font-size: 11.5px;
+            height: 32px;
+            min-height: 32px;
+            padding: 0 4px;
+            font-size: 11px;
+            gap: 3px;
+            white-space: nowrap;
+          }
+          .details-icon-btn {
+            height: 28px;
+            font-size: 11px;
+          }
+          .wishlist-icon-btn {
+            height: 28px;
+            width: 28px;
           }
         }
       `}</style>

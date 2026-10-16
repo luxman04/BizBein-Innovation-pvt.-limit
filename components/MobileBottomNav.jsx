@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Home, Phone, MapPin, ShoppingCart, Mail } from 'lucide-react';
 import { companyDetails } from '../data/products';
 
@@ -10,6 +11,16 @@ export default function MobileBottomNav({
   onOpenCart,
   onOpenContact
 }) {
+  const pathname = usePathname();
+  const isProductDetailPage =
+    pathname &&
+    pathname.startsWith('/products/') &&
+    pathname.split('/').filter(Boolean).length >= 3;
+
+  if (isProductDetailPage) {
+    return null;
+  }
+
   return (
     <nav className="mobile-bottom-nav" aria-label="Mobile Quick Actions">
       <a href="#machinery-catalog" className="bottom-nav-item">

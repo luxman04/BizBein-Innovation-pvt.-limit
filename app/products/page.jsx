@@ -1273,24 +1273,31 @@ function ProductsContent() {
             font-size: 12.5px;
           }
           .actions-primary-row {
-            grid-template-columns: 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 6px;
           }
           .btn-add-cart,
           .btn-buy-now {
             width: 100%;
-            min-height: 38px;
-            font-size: 13px;
+            height: 32px;
+            min-height: 32px;
+            font-size: 11.5px;
+            padding: 0 4px;
+            gap: 4px;
+            white-space: nowrap;
           }
           .btn-details {
             flex: 1;
             justify-content: center;
-            min-height: 36px;
-            font-size: 13px;
+            height: 30px;
+            min-height: 30px;
+            font-size: 11.5px;
           }
           .btn-wishlist {
-            min-height: 36px;
-            min-width: 40px;
+            height: 30px;
+            min-height: 30px;
+            width: 32px;
+            min-width: 32px;
           }
         }
       `}</style>

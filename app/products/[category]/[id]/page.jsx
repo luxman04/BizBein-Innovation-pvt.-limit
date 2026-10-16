@@ -535,6 +535,102 @@ export default function ProductDetailPage() {
             <div className="horizontal-rule" />
 
             {/* ========================================================= */}
+            {/* MOBILE ACTION BOX: SHOWN BEFORE KEY SPECIFICATIONS        */}
+            {/* ========================================================= */}
+            <div className="mobile-action-box-wrap">
+              <div className="mobile-action-box-card">
+                <div className="mob-action-price-row">
+                  <div className="mob-price-group">
+                    <span className="mob-currency">₹</span>
+                    <strong className="mob-price-num">{unitPrice.toLocaleString('en-IN')}</strong>
+                    <span className="mob-unit-label">/ {product.unit || 'Unit'}</span>
+                  </div>
+                  <div className="mob-stock-badge">✓ In Stock</div>
+                </div>
+
+                <div className="mob-delivery-note">
+                  <span className="mob-free-tag">FREE delivery</span> by <strong>{deliveryDateStr}</strong> on direct dispatch
+                </div>
+
+                {/* Mobile Quantity Selector */}
+                <div className="mob-qty-row">
+                  <span className="mob-qty-label">Quantity:</span>
+                  <div className="mob-qty-pill">
+                    <button
+                      type="button"
+                      className="mob-qty-btn"
+                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                      aria-label="Decrease quantity"
+                    >
+                      -
+                    </button>
+                    <span className="mob-qty-num">{quantity}</span>
+                    <button
+                      type="button"
+                      className="mob-qty-btn"
+                      onClick={() => setQuantity((q) => q + 1)}
+                      aria-label="Increase quantity"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* Mobile Main Action Buttons */}
+                <div className="mob-buttons-stack">
+                  <div className="mob-primary-btns-row">
+                    <button
+                      type="button"
+                      className={`mob-btn-cart ${isAdded ? 'btn-action-success' : ''}`}
+                      onClick={handleAddToCart}
+                    >
+                      <ShoppingCart size={15} />
+                      <span>{isAdded ? 'Added!' : `Add to Cart (${quantity})`}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="mob-btn-buynow"
+                      onClick={handleBuyNow}
+                    >
+                      <Zap size={15} fill="#ffffff" />
+                      <span>Buy Now</span>
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="mob-btn-whatsapp"
+                    onClick={handleWhatsAppInquiry}
+                  >
+                    <WhatsAppIcon size={16} color="#ffffff" />
+                    <span>Send Inquiry to WhatsApp</span>
+                  </button>
+
+                  <div className="mob-aux-btns-row">
+                    <button
+                      type="button"
+                      className="mob-btn-rfq"
+                      onClick={() => openQuoteModal(product)}
+                    >
+                      <FileText size={14} />
+                      <span>Official RFQ</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="mob-btn-call"
+                      onClick={openExpertModal}
+                    >
+                      <Phone size={14} />
+                      <span>Call Tech</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ========================================================= */}
             {/* QUICK TWO-COLUMN SPECIFICATIONS TABLE                     */}
             {/* ========================================================= */}
             <div className="quick-specs-table-wrap">
@@ -893,6 +989,48 @@ export default function ProductDetailPage() {
       )}
 
       {/* ========================================================= */}
+      {/* MOBILE APP-STYLE FIXED BOTTOM ACTION BAR                  */}
+      {/* ========================================================= */}
+      <div className="mobile-fixed-bottom-bar" aria-label="Quick Purchase Actions">
+        <div className="fixed-bar-price-col">
+          <span className="fixed-bar-label">Total:</span>
+          <strong className="fixed-bar-price">₹{(unitPrice * quantity).toLocaleString('en-IN')}</strong>
+        </div>
+
+        <div className="fixed-bar-btns-group">
+          <button
+            type="button"
+            className={`fixed-bar-btn-cart ${isAdded ? 'btn-action-success' : ''}`}
+            onClick={handleAddToCart}
+            aria-label="Add to Cart"
+          >
+            <ShoppingCart size={14} />
+            <span>{isAdded ? 'Added' : 'Add to Cart'}</span>
+          </button>
+
+          <button
+            type="button"
+            className="fixed-bar-btn-buynow"
+            onClick={handleBuyNow}
+            aria-label="Buy Now"
+          >
+            <Zap size={14} fill="#ffffff" />
+            <span>Buy Now</span>
+          </button>
+
+          <button
+            type="button"
+            className="fixed-bar-btn-wa"
+            onClick={handleWhatsAppInquiry}
+            aria-label="Inquire on WhatsApp"
+            title="Chat on WhatsApp"
+          >
+            <WhatsAppIcon size={16} color="#ffffff" />
+          </button>
+        </div>
+      </div>
+
+      {/* ========================================================= */}
       {/* SCOPED COMPONENT STYLES (AMAZON REFERENCE SPECIFICATION)   */}
       {/* ========================================================= */}
       <style jsx>{`
@@ -965,21 +1103,81 @@ export default function ProductDetailPage() {
 
         @media (max-width: 1024px) {
           .amazon-grid-layout {
-            grid-template-columns: 1fr 1fr;
-            gap: 28px;
+            grid-template-columns: 1fr;
+            gap: 20px;
+          }
+          .mobile-action-box-wrap {
+            display: block !important;
           }
           .col-buy-box {
-            grid-column: span 2;
+            display: none !important;
           }
         }
 
         @media (max-width: 768px) {
-          .amazon-grid-layout {
-            grid-template-columns: 1fr;
-            gap: 20px;
+          .amazon-product-page {
+            padding-bottom: 96px;
           }
-          .col-buy-box {
-            grid-column: span 1;
+          .mobile-fixed-bottom-bar {
+            display: flex !important;
+          }
+          .gallery-layout-wrapper {
+            flex-direction: column-reverse;
+            gap: 12px;
+            position: static;
+            width: 100%;
+          }
+          .vertical-thumbnails-strip {
+            flex-direction: row;
+            width: 100%;
+            overflow-x: auto;
+            gap: 8px;
+            justify-content: flex-start;
+            padding-bottom: 4px;
+          }
+          .thumb-btn {
+            width: 52px;
+            height: 52px;
+            flex-shrink: 0;
+          }
+          .stage-image-container {
+            min-height: 250px;
+            max-height: 320px;
+          }
+          .stage-img {
+            max-height: 300px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .mobile-fixed-bottom-bar {
+            padding: 6px 10px calc(8px + env(safe-area-inset-bottom, 0px)) 10px;
+            gap: 6px;
+          }
+          .fixed-bar-price-col {
+            min-width: 58px;
+          }
+          .fixed-bar-price {
+            font-size: 13.5px;
+          }
+          .fixed-bar-btn-cart,
+          .fixed-bar-btn-buynow {
+            height: 33px;
+            font-size: 11px;
+            padding: 0 4px;
+            gap: 3px;
+          }
+          .fixed-bar-btn-wa {
+            width: 33px;
+            height: 33px;
+          }
+          .mob-primary-btns-row {
+            gap: 6px;
+          }
+          .mob-btn-cart,
+          .mob-btn-buynow {
+            font-size: 11.5px;
+            height: 35px;
           }
         }
 
@@ -1758,6 +1956,348 @@ export default function ProductDetailPage() {
         .shield-ico {
           color: #16a34a;
           flex-shrink: 0;
+        }
+
+        /* Mobile Action Box (Shown before Key Machinery Specifications) */
+        .mobile-action-box-wrap {
+          display: none;
+          margin: 18px 0 24px;
+        }
+
+        .mobile-action-box-card {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 14px 16px;
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+        }
+
+        .mob-action-price-row {
+          display: flex;
+          align-items: baseline;
+          justify-content: space-between;
+          margin-bottom: 6px;
+        }
+
+        .mob-price-group {
+          display: flex;
+          align-items: baseline;
+          gap: 3px;
+        }
+
+        .mob-currency {
+          font-size: 14px;
+          font-weight: 700;
+          color: #b12704;
+        }
+
+        .mob-price-num {
+          font-size: 22px;
+          font-weight: 800;
+          color: #b12704;
+          letter-spacing: -0.5px;
+        }
+
+        .mob-unit-label {
+          font-size: 12px;
+          color: #64748b;
+          font-weight: 500;
+        }
+
+        .mob-stock-badge {
+          font-size: 11.5px;
+          font-weight: 700;
+          color: #047857;
+          background: #ecfdf5;
+          border: 1px solid #a7f3d0;
+          padding: 2px 8px;
+          border-radius: 12px;
+        }
+
+        .mob-delivery-note {
+          font-size: 12px;
+          color: #334155;
+          margin-bottom: 12px;
+          line-height: 1.4;
+        }
+
+        .mob-free-tag {
+          color: #007185;
+          font-weight: 700;
+        }
+
+        .mob-qty-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 12px;
+          padding-bottom: 10px;
+          border-bottom: 1px dashed #e2e8f0;
+        }
+
+        .mob-qty-label {
+          font-size: 12.5px;
+          font-weight: 600;
+          color: #1e293b;
+        }
+
+        .mob-qty-pill {
+          display: flex;
+          align-items: center;
+          border: 1.5px solid #cbd5e1;
+          border-radius: 8px;
+          background: #ffffff;
+        }
+
+        .mob-qty-btn {
+          width: 30px;
+          height: 30px;
+          border: none;
+          background: transparent;
+          font-size: 16px;
+          font-weight: 700;
+          color: #0f172a;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.15s;
+        }
+
+        .mob-qty-btn:active {
+          background: #f1f5f9;
+        }
+
+        .mob-qty-num {
+          padding: 0 12px;
+          font-size: 13px;
+          font-weight: 700;
+          color: #0f172a;
+          min-width: 24px;
+          text-align: center;
+        }
+
+        .mob-buttons-stack {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .mob-primary-btns-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+        }
+
+        .mob-btn-cart {
+          height: 36px;
+          padding: 0 8px;
+          background: #ffd814;
+          border: 1px solid #fcd200;
+          border-radius: 8px;
+          color: #0f1111;
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+          white-space: nowrap;
+          transition: all 0.15s ease;
+        }
+
+        .mob-btn-cart:active {
+          background: #f7ca00;
+        }
+
+        .mob-btn-buynow {
+          height: 36px;
+          padding: 0 8px;
+          background: #1E253D;
+          border: 1px solid #1E253D;
+          border-radius: 8px;
+          color: #ffffff;
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+          white-space: nowrap;
+          transition: all 0.15s ease;
+          box-shadow: 0 2px 4px rgba(30, 37, 61, 0.18);
+        }
+
+        .mob-btn-buynow:active {
+          background: #2B3353;
+        }
+
+        .mob-btn-whatsapp {
+          height: 34px;
+          padding: 0 10px;
+          background: #16a34a;
+          border: 1px solid #16a34a;
+          border-radius: 8px;
+          color: #ffffff;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          width: 100%;
+          transition: background 0.15s ease;
+        }
+
+        .mob-btn-whatsapp:active {
+          background: #15803d;
+        }
+
+        .mob-aux-btns-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+        }
+
+        .mob-btn-rfq {
+          height: 32px;
+          padding: 0 6px;
+          background: #fff7ed;
+          border: 1px solid #fed7aa;
+          border-radius: 8px;
+          color: #c2410c;
+          font-size: 11.5px;
+          font-weight: 600;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+        }
+
+        .mob-btn-call {
+          height: 32px;
+          padding: 0 6px;
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
+          border-radius: 8px;
+          color: #334155;
+          font-size: 11.5px;
+          font-weight: 600;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+        }
+
+        /* Mobile Fixed Bottom Action Bar */
+        .mobile-fixed-bottom-bar {
+          display: none;
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          z-index: 999;
+          background: rgba(255, 255, 255, 0.98);
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          border-top: 1px solid #e2e8f0;
+          padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px)) 12px;
+          box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+        }
+
+        .fixed-bar-price-col {
+          display: flex;
+          flex-direction: column;
+          min-width: 68px;
+          flex-shrink: 0;
+        }
+
+        .fixed-bar-label {
+          font-size: 9.5px;
+          text-transform: uppercase;
+          color: #64748b;
+          font-weight: 600;
+          letter-spacing: 0.4px;
+        }
+
+        .fixed-bar-price {
+          font-size: 14px;
+          font-weight: 800;
+          color: #b12704;
+          line-height: 1.1;
+        }
+
+        .fixed-bar-btns-group {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          flex: 1;
+          justify-content: flex-end;
+          min-width: 0;
+        }
+
+        .fixed-bar-btn-cart {
+          flex: 1;
+          min-width: 0;
+          height: 34px;
+          padding: 0 6px;
+          background: #ffd814;
+          border: 1px solid #fcd200;
+          border-radius: 7px;
+          color: #0f1111;
+          font-size: 11.5px;
+          font-weight: 700;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+          white-space: nowrap;
+          transition: background 0.15s ease;
+        }
+
+        .fixed-bar-btn-buynow {
+          flex: 1;
+          min-width: 0;
+          height: 34px;
+          padding: 0 6px;
+          background: #1E253D;
+          border: 1px solid #1E253D;
+          border-radius: 7px;
+          color: #ffffff;
+          font-size: 11.5px;
+          font-weight: 700;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 4px;
+          white-space: nowrap;
+          transition: background 0.15s ease;
+          box-shadow: 0 2px 4px rgba(30, 37, 61, 0.2);
+        }
+
+        .fixed-bar-btn-wa {
+          width: 34px;
+          height: 34px;
+          flex-shrink: 0;
+          background: #16a34a;
+          border: 1px solid #16a34a;
+          border-radius: 7px;
+          color: #ffffff;
+          cursor: pointer;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: background 0.15s ease;
         }
 
         /* Section 3: Frequently Inquired Together */
