@@ -208,6 +208,40 @@ export function StoreProvider({ children }) {
     return true;
   };
 
+  const buyNow = (product, qty = 1, options = {}) => {
+    const quantity = Math.max(1, parseInt(qty, 10) || 1);
+
+    if (!user) {
+      try {
+        const pendingData = {
+          product,
+          qty: quantity,
+          variant: options?.variant || null,
+          savedAt: Date.now()
+        };
+        localStorage.setItem('bizbein_pending_add', JSON.stringify(pendingData));
+      } catch (e) {}
+
+      showToast('Please sign in or create an account to proceed to checkout.', 'info');
+      router.push('/login?redirect=/checkout&pendingAdd=1');
+      return false;
+    }
+
+    setCartItems((prev) => {
+      const existing = prev.find((item) => item.id === product.id);
+      if (existing) {
+        return prev.map((item) =>
+          item.id === product.id ? { ...item, qty: item.qty + quantity } : item
+        );
+      }
+      return [...prev, { ...product, qty: quantity }];
+    });
+
+    setCartDrawerOpen(false);
+    router.push('/checkout');
+    return true;
+  };
+
   const updateQty = (id, newQty) => {
     if (newQty <= 0) {
       removeItem(id);
@@ -286,6 +320,7 @@ export function StoreProvider({ children }) {
     // Cart
     cartItems,
     addToCart,
+    buyNow,
     updateQty,
     removeItem,
     clearCart,

@@ -26,7 +26,8 @@ import {
   CreditCard,
   Maximize2,
   X,
-  Plus
+  Plus,
+  Zap
 } from 'lucide-react';
 import {
   getProductById,
@@ -46,6 +47,7 @@ export default function ProductDetailPage() {
 
   const {
     addToCart,
+    buyNow,
     openQuoteModal,
     openExpertModal,
     products: liveProducts,
@@ -149,6 +151,19 @@ export default function ProductDetailPage() {
     addToCart(cartProduct, quantity);
     setIsAdded(true);
     setTimeout(() => setIsAdded(false), 2500);
+  };
+
+  const handleBuyNow = () => {
+    if (!product) return;
+    const cartProduct = {
+      ...product,
+      price: unitPrice,
+      priceDisplay: `₹${unitPrice.toLocaleString('en-IN')}`,
+      name: `${product.name} (${selectedVariant?.shortTitle || 'Standard'})`,
+      selectedVariant: selectedVariant?.name,
+      selectedConfig: selectedConfig?.name
+    };
+    if (buyNow) buyNow(cartProduct, quantity);
   };
 
   const handleWhatsAppInquiry = () => {
@@ -664,7 +679,17 @@ export default function ProductDetailPage() {
                   <span>{isAdded ? 'Added to Cart!' : `Add to Cart (${quantity})`}</span>
                 </button>
 
-                {/* 2. Direct WhatsApp Inquiry Button (High-converting green) */}
+                {/* 2. Direct Buy Now */}
+                <button
+                  type="button"
+                  className="btn-action-buynow"
+                  onClick={handleBuyNow}
+                >
+                  <Zap size={17} fill="#ffffff" />
+                  <span>Buy Now</span>
+                </button>
+
+                {/* 3. Direct WhatsApp Inquiry Button (High-converting green) */}
                 <button
                   type="button"
                   className="btn-action-whatsapp"
@@ -1627,6 +1652,35 @@ export default function ProductDetailPage() {
           background: #16a34a !important;
           color: #ffffff !important;
           border-color: #16a34a !important;
+        }
+
+        .btn-action-buynow {
+          width: 100%;
+          background: #1E253D;
+          border: 1px solid #1E253D;
+          color: #ffffff;
+          padding: 12px;
+          border-radius: 20px;
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+          box-shadow: 0 2px 6px rgba(30, 37, 61, 0.2);
+        }
+
+        .btn-action-buynow:hover {
+          background: #2B3353;
+          border-color: #2B3353;
+          box-shadow: 0 4px 12px rgba(30, 37, 61, 0.3);
+          transform: translateY(-1px);
+        }
+
+        .btn-action-buynow:active {
+          transform: translateY(0);
         }
 
         .btn-action-whatsapp {

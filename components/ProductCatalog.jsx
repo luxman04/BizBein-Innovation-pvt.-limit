@@ -10,7 +10,8 @@ import {
   Check,
   Filter,
   ArrowUpDown,
-  AlertCircle
+  AlertCircle,
+  Zap
 } from 'lucide-react';
 import { products, categories, companyDetails } from '../data/products';
 import { useStore } from '../context/StoreContext';
@@ -21,11 +22,20 @@ export default function ProductCatalog({
   searchQuery,
   onOpenQuoteModal,
   onAddToCart,
+  onBuyNow,
   cartItems = []
 }) {
   const store = useStore();
   const catalogList = store?.products || products;
   const [sortBy, setSortBy] = useState('featured');
+
+  const handleBuyNow = (product) => {
+    if (onBuyNow) {
+      onBuyNow(product);
+    } else if (store?.buyNow) {
+      store.buyNow(product);
+    }
+  };
 
   // Filter products by category and search query
   const filteredProducts = catalogList.filter((p) => {
@@ -226,6 +236,15 @@ export default function ProductCatalog({
                       )}
                     </button>
                   </div>
+
+                  <button
+                    type="button"
+                    className="btn action-btn-buynow"
+                    onClick={() => handleBuyNow(product)}
+                  >
+                    <Zap size={15} fill="#ffffff" />
+                    <span>Buy Now</span>
+                  </button>
 
                   {/* Direct Tech Assistance Hotline */}
                   <div className="card-footer-helpline">
@@ -583,6 +602,29 @@ export default function ProductCatalog({
 
         .action-btn-cart {
           padding: 12px 14px;
+        }
+
+        .action-btn-buynow {
+          width: 100%;
+          background-color: #1E253D !important;
+          color: #ffffff !important;
+          border: 1px solid #1E253D !important;
+          font-weight: 700;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          padding: 10px 14px;
+          border-radius: var(--radius-md);
+          margin-bottom: 12px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .action-btn-buynow:hover {
+          background-color: #2B3353 !important;
+          border-color: #2B3353 !important;
+          transform: translateY(-1px);
         }
 
         .card-footer-helpline {

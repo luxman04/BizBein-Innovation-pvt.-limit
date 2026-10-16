@@ -9,7 +9,7 @@ import { featuredProducts, companyDetails } from '../data/products';
 import { useStore } from '../context/StoreContext';
 
 export default function StorefrontHomePage() {
-  const { addToCart, openQuoteModal, searchQuery } = useStore();
+  const { addToCart, buyNow, openQuoteModal, searchQuery } = useStore();
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   // Schema.org Structured Data
@@ -66,6 +66,7 @@ export default function StorefrontHomePage() {
         {/* 4. Featured Products Showcase */}
         <FeaturedProducts
           onAddToCart={addToCart}
+          onBuyNow={buyNow}
           onOpenQuoteModal={openQuoteModal}
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}

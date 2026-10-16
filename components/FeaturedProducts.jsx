@@ -2,12 +2,13 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { ShoppingCart, Heart, ArrowRight, Check, Eye } from 'lucide-react';
+import { ShoppingCart, Heart, ArrowRight, Check, Eye, Zap } from 'lucide-react';
 import { products } from '../data/products';
 import { useStore } from '../context/StoreContext';
 
 export default function FeaturedProducts({
   onAddToCart,
+  onBuyNow,
   onOpenQuoteModal,
   selectedCategory,
   setSelectedCategory,
@@ -43,6 +44,14 @@ export default function FeaturedProducts({
     setTimeout(() => {
       setAddedAnimation((prev) => ({ ...prev, [product.id]: false }));
     }, 1500);
+  };
+
+  const handleBuyNow = (product) => {
+    if (onBuyNow) {
+      onBuyNow(product);
+    } else if (store?.buyNow) {
+      store.buyNow(product);
+    }
   };
 
   // Filter products based on active tab and search query
@@ -140,47 +149,63 @@ export default function FeaturedProducts({
                       <span className="price-tag">{product.priceDisplay}</span>
                     </div>
 
-                    {/* Action Row */}
-                    <div className="product-actions-row">
-                      <button
-                        type="button"
-                        className={`add-to-cart-btn ${isAdded ? 'btn-success' : ''}`}
-                        onClick={() => handleAdd(product)}
-                      >
-                        {isAdded ? (
-                          <>
-                            <Check size={16} />
-                            <span>Added!</span>
-                          </>
-                        ) : (
-                          <>
-                            <ShoppingCart size={15} />
-                            <span>Add to Cart</span>
-                          </>
-                        )}
-                      </button>
+                    {/* Action Buttons */}
+                    <div className="product-actions-group">
+                      <div className="product-primary-actions">
+                        <button
+                          type="button"
+                          className={`add-to-cart-btn ${isAdded ? 'btn-success' : ''}`}
+                          onClick={() => handleAdd(product)}
+                          title="Add to Cart"
+                        >
+                          {isAdded ? (
+                            <>
+                              <Check size={14} />
+                              <span>Added!</span>
+                            </>
+                          ) : (
+                            <>
+                              <ShoppingCart size={14} />
+                              <span>Add to Cart</span>
+                            </>
+                          )}
+                        </button>
 
-                      <Link
-                        href={`/products/${product.categoryId}/${product.id}`}
-                        className="details-icon-btn"
-                        title="View Details"
-                        aria-label="View Details"
-                      >
-                        <Eye size={16} />
-                      </Link>
+                        <button
+                          type="button"
+                          className="buy-now-btn"
+                          onClick={() => handleBuyNow(product)}
+                          title="Buy Now"
+                        >
+                          <Zap size={14} fill="#ffffff" />
+                          <span>Buy Now</span>
+                        </button>
+                      </div>
 
-                      <button
-                        type="button"
-                        className={`wishlist-icon-btn ${isWishlisted ? 'wishlisted' : ''}`}
-                        onClick={() => toggleWishlist(product.id)}
-                        aria-label="Add to Wishlist"
-                      >
-                        <Heart
-                          size={16}
-                          fill={isWishlisted ? '#ef4444' : 'none'}
-                          stroke={isWishlisted ? '#ef4444' : '#64748b'}
-                        />
-                      </button>
+                      <div className="product-secondary-actions">
+                        <Link
+                          href={`/products/${product.categoryId}/${product.id}`}
+                          className="details-icon-btn"
+                          title="View Details"
+                          aria-label="View Details"
+                        >
+                          <Eye size={14} />
+                          <span>Details</span>
+                        </Link>
+
+                        <button
+                          type="button"
+                          className={`wishlist-icon-btn ${isWishlisted ? 'wishlisted' : ''}`}
+                          onClick={() => toggleWishlist(product.id)}
+                          aria-label="Add to Wishlist"
+                        >
+                          <Heart
+                            size={14}
+                            fill={isWishlisted ? '#ef4444' : 'none'}
+                            stroke={isWishlisted ? '#ef4444' : '#64748b'}
+                          />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -406,39 +431,124 @@ export default function FeaturedProducts({
           color: #0f172a;
         }
 
-        /* Action Row */
-        .product-actions-row {
+        /* Action Buttons */
+        .product-actions-group {
           display: flex;
-          align-items: center;
-          gap: 8px;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .product-primary-actions {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 6px;
         }
 
         .add-to-cart-btn {
-          flex: 1;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          gap: 6px;
+          gap: 5px;
           background-color: #F8B50E;
           color: #0f172a;
-          border: none;
-          padding: 8px 12px;
+          border: 1px solid #F8B50E;
+          padding: 8px 6px;
           border-radius: 6px;
-          font-size: 12.5px;
+          font-size: 11.5px;
           font-weight: 700;
           cursor: pointer;
           font-family: inherit;
           transition: all 0.15s ease;
+          white-space: nowrap;
         }
 
         .add-to-cart-btn:hover {
           background-color: #E5A407;
+          border-color: #E5A407;
           transform: translateY(-1px);
         }
 
         .add-to-cart-btn.btn-success {
           background-color: #16a34a;
+          border-color: #16a34a;
           color: #ffffff;
+        }
+
+        .buy-now-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+          background-color: #1E253D;
+          color: #ffffff;
+          border: 1px solid #1E253D;
+          padding: 8px 6px;
+          border-radius: 6px;
+          font-size: 11.5px;
+          font-weight: 700;
+          cursor: pointer;
+          font-family: inherit;
+          transition: all 0.15s ease;
+          white-space: nowrap;
+        }
+
+        .buy-now-btn:hover {
+          background-color: #2B3353;
+          border-color: #2B3353;
+          transform: translateY(-1px);
+        }
+
+        .product-secondary-actions {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .details-icon-btn {
+          flex: 1;
+          background: #f1f5f9;
+          border: 1px solid #e2e8f0;
+          color: #334155;
+          border-radius: 6px;
+          height: 30px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 5px;
+          font-size: 11.5px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          text-decoration: none;
+        }
+
+        .details-icon-btn:hover {
+          background: #0f172a;
+          color: #ffffff;
+          border-color: #0f172a;
+        }
+
+        .wishlist-icon-btn {
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 6px;
+          width: 32px;
+          height: 30px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .wishlist-icon-btn:hover {
+          border-color: #cbd5e1;
+          background: #f8fafc;
+        }
+
+        .wishlist-icon-btn.wishlisted {
+          border-color: #fecaca;
+          background: #fef2f2;
         }
 
         .product-meta-row {
@@ -465,50 +575,6 @@ export default function FeaturedProducts({
 
         .product-title-link:hover {
           color: #F8B50E;
-        }
-
-        .details-icon-btn {
-          background: #f1f5f9;
-          border: 1px solid #e2e8f0;
-          color: #334155;
-          border-radius: 6px;
-          width: 34px;
-          height: 34px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all 0.15s ease;
-          text-decoration: none;
-        }
-
-        .details-icon-btn:hover {
-          background: #0f172a;
-          color: #ffffff;
-          border-color: #0f172a;
-        }
-
-        .wishlist-icon-btn {
-          background: #ffffff;
-          border: 1px solid #e2e8f0;
-          border-radius: 6px;
-          width: 34px;
-          height: 34px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          transition: all 0.15s ease;
-        }
-
-        .wishlist-icon-btn:hover {
-          border-color: #cbd5e1;
-          background: #f8fafc;
-        }
-
-        .wishlist-icon-btn.wishlisted {
-          border-color: #fecaca;
-          background: #fef2f2;
         }
 
         .empty-results-box {
@@ -564,24 +630,19 @@ export default function FeaturedProducts({
           }
         }
 
-        @media (max-width: 440px) {
+        @media (max-width: 480px) {
           .featured-container {
             padding: 0 12px;
           }
-          .product-actions-row {
-            flex-wrap: wrap;
-            gap: 6px;
+          .product-primary-actions {
+            grid-template-columns: 1fr;
+            gap: 5px;
           }
-          .add-to-cart-btn {
+          .add-to-cart-btn,
+          .buy-now-btn {
             width: 100%;
-            flex: 0 0 100%;
-            padding: 8px;
-            font-size: 12px;
-          }
-          .details-icon-btn,
-          .wishlist-icon-btn {
-            flex: 1;
-            height: 32px;
+            padding: 7px 6px;
+            font-size: 11.5px;
           }
         }
       `}</style>

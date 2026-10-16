@@ -4,7 +4,7 @@
 
 /* ==========================================================================
    BIZBEIN INNOVATIONS PVT. LTD. — GLOBAL STYLESHEET
-   WCAG 2.2 AA Certified Industrial E-Commerce Experience
+   WCAG 2.2 AA Certified Industrial E-Commerce Experiences
    ========================================================================== */
 
 :root {
@@ -404,6 +404,22 @@ a.dropdown-link:hover {
   background-color: var(--bizbein-navy-800);
   color: #FFFFFF;
   box-shadow: 0 4px 8px rgba(43, 51, 83, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Buy Now Button (#1E253D) */
+.btn-buy-now {
+  background-color: #1E253D;
+  color: #FFFFFF;
+  border: 1px solid #1E253D;
+  font-weight: 700;
+  transition: all 0.15s ease;
+}
+
+.btn-buy-now:hover {
+  background-color: #2B3353;
+  border-color: #2B3353;
+  color: #FFFFFF;
   transform: translateY(-1px);
 }
 

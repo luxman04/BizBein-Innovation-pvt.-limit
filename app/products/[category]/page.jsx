@@ -10,6 +10,7 @@ import {
   Heart,
   Eye,
   Check,
+  Zap,
   Phone,
   FileText,
   ShieldCheck,
@@ -30,7 +31,7 @@ export default function CategoryProductsPage() {
   const params = useParams();
   const categorySlug = params?.category || '';
 
-  const { addToCart, openQuoteModal, openExpertModal, products: liveProducts } = useStore();
+  const { addToCart, buyNow, openQuoteModal, openExpertModal, products: liveProducts } = useStore();
   const category = getCategoryById(categorySlug);
 
   const categoryProducts = useMemo(() => {
@@ -51,6 +52,10 @@ export default function CategoryProductsPage() {
     setTimeout(() => {
       setAddedAnimation((prev) => ({ ...prev, [product.id]: false }));
     }, 1500);
+  };
+
+  const handleBuyNow = (product) => {
+    if (buyNow) buyNow(product);
   };
 
   const sortedProducts = useMemo(() => {
@@ -325,46 +330,61 @@ export default function CategoryProductsPage() {
                   </div>
 
                   {/* Actions Row */}
-                  <div className="card-actions-row">
-                    <button
-                      type="button"
-                      className={`btn-add-to-cart ${isAdded ? 'btn-success' : ''}`}
-                      onClick={() => handleAdd(product)}
-                    >
-                      {isAdded ? (
-                        <>
-                          <Check size={16} />
-                          <span>Added!</span>
-                        </>
-                      ) : (
-                        <>
-                          <ShoppingCart size={15} />
-                          <span>Add to Cart</span>
-                        </>
-                      )}
-                    </button>
+                  <div className="card-actions-wrapper">
+                    <div className="card-actions-primary">
+                      <button
+                        type="button"
+                        className={`btn-add-to-cart ${isAdded ? 'btn-success' : ''}`}
+                        onClick={() => handleAdd(product)}
+                        title="Add to Cart"
+                      >
+                        {isAdded ? (
+                          <>
+                            <Check size={14} />
+                            <span>Added!</span>
+                          </>
+                        ) : (
+                          <>
+                            <ShoppingCart size={14} />
+                            <span>Add to Cart</span>
+                          </>
+                        )}
+                      </button>
 
-                    <Link
-                      href={`/products/${category.id}/${product.id}`}
-                      className="btn-view-details"
-                      title="View Full Specifications"
-                    >
-                      <Eye size={15} />
-                      <span>Details</span>
-                    </Link>
+                      <button
+                        type="button"
+                        className="btn-buy-now"
+                        onClick={() => handleBuyNow(product)}
+                        title="Buy Now"
+                      >
+                        <Zap size={14} fill="#ffffff" />
+                        <span>Buy Now</span>
+                      </button>
+                    </div>
 
-                    <button
-                      type="button"
-                      className={`btn-wishlist ${isWishlisted ? 'active' : ''}`}
-                      onClick={() => toggleWishlist(product.id)}
-                      aria-label="Wishlist"
-                    >
-                      <Heart
-                        size={16}
-                        fill={isWishlisted ? '#ef4444' : 'none'}
-                        stroke={isWishlisted ? '#ef4444' : '#64748b'}
-                      />
-                    </button>
+                    <div className="card-actions-secondary">
+                      <Link
+                        href={`/products/${category.id}/${product.id}`}
+                        className="btn-view-details"
+                        title="View Full Specifications"
+                      >
+                        <Eye size={14} />
+                        <span>Details</span>
+                      </Link>
+
+                      <button
+                        type="button"
+                        className={`btn-wishlist ${isWishlisted ? 'active' : ''}`}
+                        onClick={() => toggleWishlist(product.id)}
+                        aria-label="Wishlist"
+                      >
+                        <Heart
+                          size={14}
+                          fill={isWishlisted ? '#ef4444' : 'none'}
+                          stroke={isWishlisted ? '#ef4444' : '#64748b'}
+                        />
+                      </button>
+                    </div>
                   </div>
 
                   {/* Commercial proposal trigger */}
@@ -830,51 +850,91 @@ export default function CategoryProductsPage() {
         }
 
         /* Actions */
-        .card-actions-row {
+        .card-actions-wrapper {
           display: flex;
-          align-items: center;
+          flex-direction: column;
           gap: 6px;
           margin-bottom: 8px;
         }
 
+        .card-actions-primary {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 6px;
+        }
+
         .btn-add-to-cart {
-          flex: 1;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          gap: 6px;
+          gap: 5px;
           background-color: #F8B50E;
           color: #0f172a;
-          border: none;
-          padding: 9px 12px;
+          border: 1px solid #F8B50E;
+          padding: 8px 6px;
           border-radius: 6px;
-          font-size: 13px;
+          font-size: 12px;
           font-weight: 700;
           cursor: pointer;
           font-family: inherit;
           transition: all 0.15s ease;
+          white-space: nowrap;
         }
 
         .btn-add-to-cart:hover {
           background-color: #E5A407;
+          border-color: #E5A407;
           transform: translateY(-1px);
         }
 
         .btn-add-to-cart.btn-success {
           background-color: #16a34a;
+          border-color: #16a34a;
           color: #ffffff;
         }
 
-        .btn-view-details {
+        .btn-buy-now {
           display: inline-flex;
           align-items: center;
+          justify-content: center;
+          gap: 5px;
+          background-color: #1E253D;
+          color: #ffffff;
+          border: 1px solid #1E253D;
+          padding: 8px 6px;
+          border-radius: 6px;
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+          font-family: inherit;
+          transition: all 0.15s ease;
+          white-space: nowrap;
+        }
+
+        .btn-buy-now:hover {
+          background-color: #2B3353;
+          border-color: #2B3353;
+          transform: translateY(-1px);
+        }
+
+        .card-actions-secondary {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .btn-view-details {
+          flex: 1;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
           gap: 4px;
           background: #f1f5f9;
           border: 1px solid #e2e8f0;
           color: #334155;
-          padding: 9px 12px;
+          padding: 7px 10px;
           border-radius: 6px;
-          font-size: 12.5px;
+          font-size: 11.5px;
           font-weight: 600;
           text-decoration: none;
           transition: all 0.15s ease;
@@ -890,8 +950,8 @@ export default function CategoryProductsPage() {
           background: #ffffff;
           border: 1px solid #e2e8f0;
           border-radius: 6px;
-          width: 36px;
-          height: 36px;
+          width: 32px;
+          height: 31px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -1027,17 +1087,25 @@ export default function CategoryProductsPage() {
           .category-hero {
             padding: 20px 0;
           }
-          .card-actions-row {
-            flex-wrap: wrap;
+          .card-actions-primary {
+            grid-template-columns: 1fr;
             gap: 6px;
           }
-          .btn-add-to-cart {
+          .btn-add-to-cart,
+          .btn-buy-now {
             width: 100%;
-            flex: 0 0 100%;
+            min-height: 38px;
+            font-size: 13px;
           }
           .btn-view-details {
             flex: 1;
             justify-content: center;
+            min-height: 36px;
+            font-size: 13px;
+          }
+          .btn-wishlist {
+            min-height: 36px;
+            min-width: 40px;
           }
         }
       `}</style>
