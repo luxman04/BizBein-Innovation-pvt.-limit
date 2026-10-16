@@ -340,28 +340,32 @@ export default function ProductDetailPage() {
           {/* ========================================================= */}
           <div className="col-gallery">
             <div className="gallery-layout-wrapper">
-              {/* Vertical Thumbnail Strip on Left Side */}
-              <div className="vertical-thumbnails-strip" aria-label="Product image thumbnails">
-                {enriched?.gallery.map((imgItem, idx) => (
-                  <button
-                    key={imgItem.id}
-                    type="button"
-                    className={`thumb-btn ${currentGalleryImage === imgItem.url ? 'thumb-active' : ''}`}
-                    onClick={() => setSelectedImage(imgItem.url)}
-                    onMouseEnter={() => setSelectedImage(imgItem.url)}
-                    title={imgItem.label}
-                  >
-                    <img src={imgItem.url} alt={imgItem.label} className="thumb-img" />
-                    {idx === 0 && <span className="thumb-tag">Main</span>}
-                  </button>
-                ))}
-              </div>
-
               {/* Main Image Stage */}
               <div className="main-image-stage">
                 {product.badge && (
                   <div className={`stage-badge badge-${product.badgeType || 'bestseller'}`}>
                     {product.badge}
+                  </div>
+                )}
+
+                {/* Extra Images: Vertical Strip directly on Main Image */}
+                {enriched?.gallery && enriched.gallery.length > 1 && (
+                  <div className="vertical-thumbnails-strip" aria-label="Product extra images">
+                    {enriched.gallery.map((imgItem) => (
+                      <button
+                        key={imgItem.id}
+                        type="button"
+                        className={`thumb-btn ${currentGalleryImage === imgItem.url ? 'thumb-active' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedImage(imgItem.url);
+                        }}
+                        onMouseEnter={() => setSelectedImage(imgItem.url)}
+                        title={imgItem.label}
+                      >
+                        <img src={imgItem.url} alt={imgItem.label} className="thumb-img" />
+                      </button>
+                    ))}
                   </div>
                 )}
 
@@ -1122,23 +1126,22 @@ export default function ProductDetailPage() {
             display: flex !important;
           }
           .gallery-layout-wrapper {
-            flex-direction: column-reverse;
-            gap: 12px;
             position: static;
             width: 100%;
           }
           .vertical-thumbnails-strip {
-            flex-direction: row;
-            width: 100%;
-            overflow-x: auto;
-            gap: 8px;
-            justify-content: flex-start;
-            padding-bottom: 4px;
+            top: 10px;
+            left: 10px;
+            gap: 5px;
+            padding: 3px;
+            border-radius: 8px;
+            max-height: calc(100% - 60px);
           }
           .thumb-btn {
-            width: 52px;
-            height: 52px;
-            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 5px;
+            padding: 1px;
           }
           .stage-image-container {
             min-height: 250px;
@@ -1183,66 +1186,14 @@ export default function ProductDetailPage() {
 
         /* Column 1: Gallery */
         .gallery-layout-wrapper {
-          display: flex;
-          gap: 16px;
-          align-items: flex-start;
+          display: block;
+          width: 100%;
           position: sticky;
           top: 90px;
         }
 
-        .vertical-thumbnails-strip {
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-          width: 68px;
-          flex-shrink: 0;
-        }
-
-        .thumb-btn {
-          width: 64px;
-          height: 64px;
-          border: 1.5px solid #d5d9d9;
-          border-radius: 6px;
-          padding: 2px;
-          background: #ffffff;
-          cursor: pointer;
-          position: relative;
-          transition: border-color 0.15s ease, box-shadow 0.15s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
-        }
-
-        .thumb-btn:hover {
-          border-color: #007185;
-        }
-
-        .thumb-btn.thumb-active {
-          border-color: #e77600;
-          box-shadow: 0 0 0 2px rgba(231, 118, 0, 0.3);
-        }
-
-        .thumb-img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-        }
-
-        .thumb-tag {
-          position: absolute;
-          bottom: 2px;
-          right: 2px;
-          background: rgba(15, 23, 42, 0.7);
-          color: #ffffff;
-          font-size: 8px;
-          padding: 1px 3px;
-          border-radius: 3px;
-          font-weight: 700;
-        }
-
         .main-image-stage {
-          flex: 1;
+          width: 100%;
           background: #ffffff;
           border: 1px solid #e2e8f0;
           border-radius: 12px;
@@ -1251,18 +1202,77 @@ export default function ProductDetailPage() {
           display: flex;
           flex-direction: column;
           align-items: center;
+          overflow: hidden;
         }
 
         .stage-badge {
           position: absolute;
           top: 14px;
-          left: 14px;
+          right: 14px;
           font-size: 11px;
           font-weight: 700;
           padding: 4px 10px;
           border-radius: 4px;
-          z-index: 2;
+          z-index: 12;
           text-transform: uppercase;
+        }
+
+        .vertical-thumbnails-strip {
+          position: absolute;
+          top: 14px;
+          left: 14px;
+          z-index: 15;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          padding: 4px;
+          background: rgba(255, 255, 255, 0.85);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
+          border: 1px solid rgba(226, 232, 240, 0.85);
+          border-radius: 10px;
+          box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+          max-height: calc(100% - 70px);
+          overflow-y: auto;
+          scrollbar-width: none;
+        }
+
+        .vertical-thumbnails-strip::-webkit-scrollbar {
+          display: none;
+        }
+
+        .thumb-btn {
+          width: 44px;
+          height: 44px;
+          border: 1.5px solid #e2e8f0;
+          border-radius: 6px;
+          padding: 2px;
+          background: #ffffff;
+          cursor: pointer;
+          position: relative;
+          transition: all 0.15s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          flex-shrink: 0;
+        }
+
+        .thumb-btn:hover {
+          border-color: #007185;
+          transform: scale(1.04);
+        }
+
+        .thumb-btn.thumb-active {
+          border-color: #1E253D;
+          box-shadow: 0 0 0 2px rgba(30, 37, 61, 0.3);
+          transform: scale(1.04);
+        }
+
+        .thumb-img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
         }
 
         .badge-bestseller {
