@@ -633,81 +633,6 @@ export default function ProductDetailPage() {
                 </div>
               </div>
             </div>
-
-            {/* ========================================================= */}
-            {/* QUICK TWO-COLUMN SPECIFICATIONS TABLE                     */}
-            {/* ========================================================= */}
-            <div className="quick-specs-table-wrap">
-              <h3 className="section-heading-sm">Key Machinery Specifications</h3>
-              <div className="specs-table">
-                <div className="spec-row-item">
-                  <span className="spec-key">Brand</span>
-                  <span className="spec-value">BizBein Innovations</span>
-                </div>
-                <div className="spec-row-item">
-                  <span className="spec-key">Machinery Model</span>
-                  <span className="spec-value">{product.model || product.name}</span>
-                </div>
-                <div className="spec-row-item">
-                  <span className="spec-key">Category</span>
-                  <span className="spec-value">{category?.name || product.category}</span>
-                </div>
-                <div className="spec-row-item">
-                  <span className="spec-key">Factory Warranty</span>
-                  <span className="spec-value">12 Months Comprehensive Coverage</span>
-                </div>
-                <div className="spec-row-item">
-                  <span className="spec-key">Origin / Works</span>
-                  <span className="spec-value">Zirakpur, SAS Nagar, Punjab</span>
-                </div>
-
-                {/* Additional Specs from product object */}
-                {product.specs &&
-                  product.specs
-                    .slice(0, showAllSpecs ? product.specs.length : 3)
-                    .map((s, idx) => (
-                      <div key={idx} className="spec-row-item">
-                        <span className="spec-key">{s.label}</span>
-                        <span className="spec-value">{s.value}</span>
-                      </div>
-                    ))}
-              </div>
-
-              {product.specs && product.specs.length > 3 && (
-                <button
-                  type="button"
-                  className="toggle-specs-btn"
-                  onClick={() => setShowAllSpecs(!showAllSpecs)}
-                >
-                  <span>{showAllSpecs ? 'See less specifications' : 'See more technical specifications'}</span>
-                  {showAllSpecs ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-                </button>
-              )}
-            </div>
-
-            <div className="horizontal-rule" />
-
-            {/* ========================================================= */}
-            {/* ABOUT THIS ITEM BULLETED SECTION                          */}
-            {/* ========================================================= */}
-            <div className="about-item-section">
-              <h2 className="about-item-heading">About this item</h2>
-              <ul className="about-item-list">
-                {enriched?.aboutPoints.map((pt, idx) => (
-                  <li key={idx} className="about-bullet-point">
-                    <strong className="point-title">{pt.title}:</strong>{' '}
-                    <span className="point-content">{pt.content}</span>
-                  </li>
-                ))}
-                <li className="about-bullet-point">
-                  <strong className="point-title">Industrial Line Overview:</strong>{' '}
-                  <span className="point-content">
-                    {product.description ||
-                      `${product.name} is engineered for industrial heavy-throughput operations with minimum downtime, high thermal endurance, and seamless line synchronization.`}
-                  </span>
-                </li>
-              </ul>
-            </div>
           </div>
 
           {/* ========================================================= */}
@@ -826,6 +751,80 @@ export default function ProductDetailPage() {
                 <span>Secure Industrial Transaction • GST Input Credit Guaranteed</span>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* ========================================================= */}
+        {/* SECTION 2B: SPECIFICATIONS & ABOUT THIS ITEM (AUTO-ADJUST) */}
+        {/* ========================================================= */}
+        <div className="specs-and-features-section">
+          {/* Key Machinery Specifications */}
+          <div className="quick-specs-table-wrap">
+            <h3 className="section-heading-sm">Key Machinery Specifications</h3>
+            <div className="specs-table">
+              <div className="spec-row-item">
+                <span className="spec-key">Brand</span>
+                <span className="spec-value">BizBein Innovations</span>
+              </div>
+              <div className="spec-row-item">
+                <span className="spec-key">Machinery Model</span>
+                <span className="spec-value">{product.model || product.name}</span>
+              </div>
+              <div className="spec-row-item">
+                <span className="spec-key">Category</span>
+                <span className="spec-value">{category?.name || product.category}</span>
+              </div>
+              <div className="spec-row-item">
+                <span className="spec-key">Factory Warranty</span>
+                <span className="spec-value">12 Months Comprehensive Coverage</span>
+              </div>
+              <div className="spec-row-item">
+                <span className="spec-key">Origin / Works</span>
+                <span className="spec-value">Zirakpur, SAS Nagar, Punjab</span>
+              </div>
+
+              {/* Additional Specs from product object */}
+              {product.specs &&
+                product.specs
+                  .slice(0, showAllSpecs ? product.specs.length : 3)
+                  .map((s, idx) => (
+                    <div key={idx} className="spec-row-item">
+                      <span className="spec-key">{s.label}</span>
+                      <span className="spec-value">{s.value}</span>
+                    </div>
+                  ))}
+            </div>
+
+            {product.specs && product.specs.length > 3 && (
+              <button
+                type="button"
+                className="toggle-specs-btn"
+                onClick={() => setShowAllSpecs(!showAllSpecs)}
+              >
+                <span>{showAllSpecs ? 'See less specifications' : 'See more technical specifications'}</span>
+                {showAllSpecs ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+              </button>
+            )}
+          </div>
+
+          {/* About this item */}
+          <div className="about-item-section">
+            <h2 className="about-item-heading">About this item</h2>
+            <ul className="about-item-list">
+              {enriched?.aboutPoints.map((pt, idx) => (
+                <li key={idx} className="about-bullet-point">
+                  <strong className="point-title">{pt.title}:</strong>{' '}
+                  <span className="point-content">{pt.content}</span>
+                </li>
+              ))}
+              <li className="about-bullet-point">
+                <strong className="point-title">Industrial Line Overview:</strong>{' '}
+                <span className="point-content">
+                  {product.description ||
+                    `${product.name} is engineered for industrial heavy-throughput operations with minimum downtime, high thermal endurance, and seamless line synchronization.`}
+                </span>
+              </li>
+            </ul>
           </div>
         </div>
 
@@ -1115,6 +1114,23 @@ export default function ProductDetailPage() {
           }
           .col-buy-box {
             display: none !important;
+          }
+          .specs-and-features-section {
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-top: 18px;
+            padding-top: 0;
+            border-top: none;
+          }
+          .quick-specs-table-wrap,
+          .about-item-section {
+            padding: 16px;
+            border-radius: 10px;
+          }
+          .spec-row-item {
+            grid-template-columns: 140px 1fr;
+            padding: 7px 4px;
+            font-size: 12.5px;
           }
         }
 
@@ -1627,11 +1643,29 @@ export default function ProductDetailPage() {
           box-shadow: 0 0 0 1px #007185;
         }
 
-        /* Quick Specs Table */
+        /* Section 2B: Full-Width Specifications & About Features (Desktop auto-adjust) */
+        .specs-and-features-section {
+          margin-top: 36px;
+          padding-top: 28px;
+          border-top: 1px solid #e7e7e7;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 32px;
+          align-items: start;
+        }
+
+        .quick-specs-table-wrap {
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 22px 24px;
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+        }
+
         .section-heading-sm {
-          font-size: 15px;
+          font-size: 16px;
           font-weight: 700;
-          margin-bottom: 10px;
+          margin-bottom: 14px;
           color: #0f1111;
         }
 
@@ -1643,10 +1677,15 @@ export default function ProductDetailPage() {
 
         .spec-row-item {
           display: grid;
-          grid-template-columns: 180px 1fr;
-          padding: 7px 0;
+          grid-template-columns: 190px 1fr;
+          padding: 8px 10px;
           border-bottom: 1px solid #f1f5f9;
           font-size: 13px;
+          border-radius: 4px;
+        }
+
+        .spec-row-item:nth-child(even) {
+          background: #f8fafc;
         }
 
         .spec-key {
@@ -1668,7 +1707,7 @@ export default function ProductDetailPage() {
           font-size: 13px;
           font-weight: 600;
           cursor: pointer;
-          margin-top: 8px;
+          margin-top: 12px;
           padding: 0;
         }
 
@@ -1678,11 +1717,19 @@ export default function ProductDetailPage() {
         }
 
         /* About This Item */
+        .about-item-section {
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          padding: 22px 24px;
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+        }
+
         .about-item-heading {
-          font-size: 18px;
+          font-size: 16px;
           font-weight: 700;
           color: #0f1111;
-          margin-bottom: 10px;
+          margin-bottom: 14px;
         }
 
         .about-item-list {
@@ -1690,7 +1737,7 @@ export default function ProductDetailPage() {
           padding-left: 18px;
           display: flex;
           flex-direction: column;
-          gap: 8px;
+          gap: 10px;
         }
 
         .about-bullet-point {
