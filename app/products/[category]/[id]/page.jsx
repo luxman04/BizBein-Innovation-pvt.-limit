@@ -588,7 +588,7 @@ export default function ProductDetailPage() {
                       className={`mob-btn-cart ${isAdded ? 'btn-action-success' : ''}`}
                       onClick={handleAddToCart}
                     >
-                      <ShoppingCart size={15} />
+                      <ShoppingCart size={16} strokeWidth={2.2} />
                       <span>{isAdded ? 'Added!' : `Add to Cart (${quantity})`}</span>
                     </button>
 
@@ -597,7 +597,6 @@ export default function ProductDetailPage() {
                       className="mob-btn-buynow"
                       onClick={handleBuyNow}
                     >
-                      <Zap size={15} fill="#ffffff" />
                       <span>Buy Now</span>
                     </button>
                   </div>
@@ -700,7 +699,7 @@ export default function ProductDetailPage() {
                   className={`btn-action-primary ${isAdded ? 'btn-action-success' : ''}`}
                   onClick={handleAddToCart}
                 >
-                  <ShoppingCart size={17} />
+                  <ShoppingCart size={18} strokeWidth={2.2} />
                   <span>{isAdded ? 'Added to Cart!' : `Add to Cart (${quantity})`}</span>
                 </button>
 
@@ -710,7 +709,6 @@ export default function ProductDetailPage() {
                   className="btn-action-buynow"
                   onClick={handleBuyNow}
                 >
-                  <Zap size={17} fill="#ffffff" />
                   <span>Buy Now</span>
                 </button>
 

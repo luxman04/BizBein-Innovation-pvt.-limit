@@ -340,12 +340,12 @@ export default function CategoryProductsPage() {
                       >
                         {isAdded ? (
                           <>
-                            <Check size={14} />
+                            <Check size={15} strokeWidth={2.2} />
                             <span>Added!</span>
                           </>
                         ) : (
                           <>
-                            <ShoppingCart size={14} />
+                            <ShoppingCart size={15} strokeWidth={2.2} />
                             <span>Add to Cart</span>
                           </>
                         )}
@@ -357,7 +357,6 @@ export default function CategoryProductsPage() {
                         onClick={() => handleBuyNow(product)}
                         title="Buy Now"
                       >
-                        <Zap size={14} fill="#ffffff" />
                         <span>Buy Now</span>
                       </button>
                     </div>
@@ -819,6 +818,7 @@ export default function CategoryProductsPage() {
 
         .spec-label {
           color: #64748b;
+          font-family: inherit;
         }
 
         .spec-value {
@@ -828,6 +828,7 @@ export default function CategoryProductsPage() {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          font-family: inherit;
         }
 
         .price-container {
@@ -867,7 +868,7 @@ export default function CategoryProductsPage() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          gap: 5px;
+          gap: 6px;
           background-color: #F8B50E;
           color: #0f172a;
           border: 1px solid #F8B50E;
@@ -879,6 +880,12 @@ export default function CategoryProductsPage() {
           font-family: inherit;
           transition: all 0.15s ease;
           white-space: nowrap;
+        }
+
+        .btn-add-to-cart svg {
+          flex-shrink: 0;
+          display: inline-block;
+          vertical-align: middle;
         }
 
         .btn-add-to-cart:hover {

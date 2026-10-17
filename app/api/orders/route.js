@@ -11,8 +11,8 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
     }
 
-    // Customers only access their own orders
-    const orders = await findOrdersByUserId(user.id);
+    // Customers access their own orders (by ID and registered email)
+    const orders = await findOrdersByUserId(user.id, user.email);
     return NextResponse.json({
       success: true,
       orders

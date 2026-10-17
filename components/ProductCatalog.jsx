@@ -242,7 +242,6 @@ export default function ProductCatalog({
                     className="btn action-btn-buynow"
                     onClick={() => handleBuyNow(product)}
                   >
-                    <Zap size={15} fill="#ffffff" />
                     <span>Buy Now</span>
                   </button>
 

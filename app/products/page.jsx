@@ -345,12 +345,12 @@ function ProductsContent() {
                         >
                           {isAdded ? (
                             <>
-                              <Check size={14} />
+                              <Check size={15} strokeWidth={2.2} />
                               <span>Added!</span>
                             </>
                           ) : (
                             <>
-                              <ShoppingCart size={14} />
+                              <ShoppingCart size={15} strokeWidth={2.2} />
                               <span>Add to Cart</span>
                             </>
                           )}
@@ -362,7 +362,6 @@ function ProductsContent() {
                           onClick={() => handleBuyNow(product)}
                           title="Buy Now"
                         >
-                          <Zap size={14} fill="#ffffff" />
                           <span>Buy Now</span>
                         </button>
                       </div>
@@ -985,6 +984,7 @@ function ProductsContent() {
 
         .spec-lbl {
           color: #64748b;
+          font-family: inherit;
         }
 
         .spec-val {
@@ -994,6 +994,7 @@ function ProductsContent() {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          font-family: inherit;
         }
 
         .price-row {
@@ -1033,7 +1034,7 @@ function ProductsContent() {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          gap: 5px;
+          gap: 6px;
           background-color: #F8B50E;
           color: #0f172a;
           border: 1px solid #F8B50E;
@@ -1045,6 +1046,12 @@ function ProductsContent() {
           font-family: inherit;
           transition: all 0.15s ease;
           white-space: nowrap;
+        }
+
+        .btn-add-cart svg {
+          flex-shrink: 0;
+          display: inline-block;
+          vertical-align: middle;
         }
 
         .btn-add-cart:hover {

@@ -160,12 +160,12 @@ export default function FeaturedProducts({
                         >
                           {isAdded ? (
                             <>
-                              <Check size={14} />
+                              <Check size={15} strokeWidth={2.2} />
                               <span>Added!</span>
                             </>
                           ) : (
                             <>
-                              <ShoppingCart size={14} />
+                              <ShoppingCart size={15} strokeWidth={2.2} />
                               <span>Add to Cart</span>
                             </>
                           )}
@@ -177,7 +177,6 @@ export default function FeaturedProducts({
                           onClick={() => handleBuyNow(product)}
                           title="Buy Now"
                         >
-                          <Zap size={14} fill="#ffffff" />
                           <span>Buy Now</span>
                         </button>
                       </div>
@@ -460,6 +459,12 @@ export default function FeaturedProducts({
           font-family: inherit;
           transition: all 0.15s ease;
           white-space: nowrap;
+        }
+
+        .add-to-cart-btn svg {
+          flex-shrink: 0;
+          display: inline-block;
+          vertical-align: middle;
         }
 
         .add-to-cart-btn:hover {

@@ -491,7 +491,7 @@ a.dropdown-link:hover {
 .spec-val {
   color: var(--color-text-primary);
   font-weight: 600;
-  font-family: 'JetBrains Mono', monospace;
+  font-family: inherit;
   font-size: 12px;
 }
 

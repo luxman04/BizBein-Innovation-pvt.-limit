@@ -59,8 +59,8 @@
   /* ==========================================================================
      2. TYPOGRAPHY
      ========================================================================== */
-  --font-family-primary: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-  --font-family-mono: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+  --font-family-primary: var(--font-plus-jakarta-sans), var(--font-inter), 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   --font-size-xs: 12px;
   --font-size-sm: 13px;

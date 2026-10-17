@@ -87,6 +87,10 @@ export default function Header({
           </div>
 
           <div className="top-bar-right">
+            <Link href="/orders" className="top-btn-link" title="My Equipment Orders">
+              My Orders
+            </Link>
+            <span className="top-divider">|</span>
             <button type="button" onClick={onOpenTrack} className="top-btn-link">
               Track Order
             </button>
@@ -507,6 +511,14 @@ export default function Header({
                     <FileText size={16} />
                     <span>Request Custom Quote</span>
                   </button>
+                  <Link
+                    href="/orders"
+                    className="drawer-btn drawer-btn-outline"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Package size={16} />
+                    <span>My Equipment Orders</span>
+                  </Link>
                   <button
                     type="button"
                     className="drawer-btn drawer-btn-outline"
