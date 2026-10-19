@@ -347,7 +347,45 @@ export function StoreProvider({ children }) {
     return data;
   };
 
+  const loginWithGoogle = async () => {
+    const { auth, googleProvider, isFirebaseConfigured } = await import('../lib/firebase');
+    if (!isFirebaseConfigured || !auth) {
+      throw new Error('Firebase configuration missing. Please add your NEXT_PUBLIC_FIREBASE_* keys to .env.local.');
+    }
+    const { signInWithPopup } = await import('firebase/auth');
+    const result = await signInWithPopup(auth, googleProvider);
+    const fbUser = result.user;
+
+    const res = await fetch('/api/auth/firebase-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: fbUser.email,
+        name: fbUser.displayName,
+        phone: fbUser.phoneNumber,
+        uid: fbUser.uid
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to sync Firebase session.');
+    }
+
+    setUser(data.user);
+    showToast(`Welcome, ${data.user.name}! Signed in with Google.`, 'success');
+    executePendingAddToCart(data.user);
+    return data.user;
+  };
+
   const logout = async () => {
+    try {
+      const { auth } = await import('../lib/firebase');
+      if (auth) {
+        const { signOut } = await import('firebase/auth');
+        await signOut(auth).catch(() => {});
+      }
+    } catch (e) {}
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
     } catch (e) {}
@@ -381,6 +419,7 @@ export function StoreProvider({ children }) {
     authLoading,
     login,
     register,
+    loginWithGoogle,
     verifyOtp,
     resendOtp,
     logout,
