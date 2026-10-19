@@ -90,12 +90,14 @@ export async function POST(request) {
     await saveOtpChallenge(challenge);
 
     // Dispatch OTP email
-    await sendOtpEmail({
+    const emailResult = await sendOtpEmail({
       to: cleanEmail,
       otp: plainOtp,
       purpose: 'register',
       userName: name.trim()
     });
+
+    const isDev = process.env.NODE_ENV !== 'production' || emailResult?.status === 'simulated';
 
     // NOTE: Authenticated session is NOT granted until OTP verification succeeds.
     return NextResponse.json({
@@ -108,7 +110,11 @@ export async function POST(request) {
         email: cleanEmail
       },
       cooldownSeconds: 60,
-      message: 'A 6-digit verification code has been sent to your email to complete registration.'
+      devOtp: isDev ? plainOtp : undefined,
+      emailSent: emailResult?.status === 'sent',
+      message: emailResult?.status === 'sent'
+        ? 'A 6-digit verification code has been sent to your email to complete registration.'
+        : 'Verification code generated. (Email simulated in development mode).'
     });
   } catch (err) {
     console.error('[API Register Error]:', err);

@@ -88,19 +88,25 @@ export async function POST(request) {
     const userName = existingUser?.name || pendingUserData?.name || '';
 
     // Dispatch fresh OTP email
-    await sendOtpEmail({
+    const emailResult = await sendOtpEmail({
       to: cleanEmail,
       otp: plainOtp,
       purpose,
       userName
     });
 
+    const isDev = process.env.NODE_ENV !== 'production' || emailResult?.status === 'simulated';
+
     return NextResponse.json({
       success: true,
       challengeId: newChallenge.challengeId,
       email: cleanEmail,
       cooldownSeconds: 60,
-      message: 'A new 6-digit verification code has been sent to your email.'
+      devOtp: isDev ? plainOtp : undefined,
+      emailSent: emailResult?.status === 'sent',
+      message: emailResult?.status === 'sent'
+        ? 'A new 6-digit verification code has been sent to your email.'
+        : 'A new 6-digit verification code has been generated.'
     });
   } catch (err) {
     console.error('[API Resend OTP Error]:', err);
