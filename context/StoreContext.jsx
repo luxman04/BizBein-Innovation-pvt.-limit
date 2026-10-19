@@ -280,10 +280,12 @@ export function StoreProvider({ children }) {
       return data;
     }
 
-    setUser(data.user);
-    showToast(`Welcome back, ${data.user.name}!`, 'success');
-    executePendingAddToCart(data.user);
-    return data.user;
+    if (data.user) {
+      setUser(data.user);
+      showToast(`Welcome back, ${data.user?.name || 'User'}!`, 'success');
+      executePendingAddToCart(data.user);
+    }
+    return data.user || data;
   };
 
   const register = async (name, email, phone, password) => {
@@ -302,10 +304,12 @@ export function StoreProvider({ children }) {
       return data;
     }
 
-    setUser(data.user);
-    showToast(`Welcome to BizBein, ${data.user.name}! Account created.`, 'success');
-    executePendingAddToCart(data.user);
-    return data.user;
+    if (data.user) {
+      setUser(data.user);
+      showToast(`Welcome to BizBein, ${data.user?.name || 'User'}! Account created.`, 'success');
+      executePendingAddToCart(data.user);
+    }
+    return data.user || data;
   };
 
   const verifyOtp = async (challengeId, email, otp) => {
@@ -324,7 +328,7 @@ export function StoreProvider({ children }) {
     }
 
     setUser(data.user);
-    showToast(`Welcome, ${data.user.name}! Identity verified.`, 'success');
+    showToast(`Welcome, ${data.user?.name || 'User'}! Identity verified.`, 'success');
     executePendingAddToCart(data.user);
     return data.user;
   };

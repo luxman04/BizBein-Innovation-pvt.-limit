@@ -87,6 +87,10 @@ export async function POST(request) {
       otpRequired: true,
       challengeId: challenge.challengeId,
       email: cleanEmail,
+      user: {
+        name: user.name,
+        email: cleanEmail
+      },
       cooldownSeconds: 60,
       message: 'A 6-digit verification code has been sent to your email.'
     });
