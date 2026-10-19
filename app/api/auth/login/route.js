@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
-import { findUserByEmail } from '../../../../lib/db';
-import { verifyPassword, signAuthToken, createSessionCookie } from '../../../../lib/auth';
+import { findUserByEmail, saveOtpChallenge, checkRateLimit, getOtpCooldownSeconds } from '../../../../lib/db';
+import { verifyPassword, getClientIp } from '../../../../lib/auth';
+import { createOtpChallenge } from '../../../../lib/otp';
+import { sendOtpEmail } from '../../../../lib/notifications';
 
 export async function POST(request) {
   try {
@@ -11,7 +13,37 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Email and password are required.' }, { status: 400 });
     }
 
-    const user = await findUserByEmail(email);
+    const cleanEmail = email.toLowerCase().trim();
+    const ip = getClientIp(request);
+
+    // Rate limiting: IP level
+    const ipLimit = await checkRateLimit({
+      key: `login_ip:${ip}`,
+      limit: 15,
+      windowMs: 15 * 60 * 1000
+    });
+    if (!ipLimit.allowed) {
+      return NextResponse.json(
+        { error: `Too many login requests from this device. Please try again in ${ipLimit.retryAfterSeconds} seconds.` },
+        { status: 429 }
+      );
+    }
+
+    // Rate limiting: Email level
+    const emailLimit = await checkRateLimit({
+      key: `login_email:${cleanEmail}`,
+      limit: 8,
+      windowMs: 15 * 60 * 1000
+    });
+    if (!emailLimit.allowed) {
+      return NextResponse.json(
+        { error: `Too many login attempts for this account. Please try again in ${emailLimit.retryAfterSeconds} seconds.` },
+        { status: 429 }
+      );
+    }
+
+    // Account enumeration prevention: consistent response for missing user or bad password
+    const user = await findUserByEmail(cleanEmail);
     if (!user) {
       return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
     }
@@ -21,23 +53,43 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
     }
 
-    const token = signAuthToken(user);
-    const safeUser = {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      role: user.role
-    };
+    // Enforce 60-second cooldown if an OTP was recently sent
+    const cooldownRemaining = await getOtpCooldownSeconds(cleanEmail);
+    if (cooldownRemaining > 0) {
+      return NextResponse.json(
+        {
+          error: `Please wait ${cooldownRemaining} seconds before requesting a new verification code.`,
+          cooldownRemaining
+        },
+        { status: 429 }
+      );
+    }
 
-    const response = NextResponse.json({
-      success: true,
-      user: safeUser,
-      message: 'Signed in successfully.'
+    // Generate secure 6-digit OTP challenge (invalidates previous OTPs for this email)
+    const { plainOtp, challenge } = createOtpChallenge({
+      email: cleanEmail,
+      purpose: 'login'
     });
 
-    response.headers.set('Set-Cookie', createSessionCookie(token));
-    return response;
+    await saveOtpChallenge(challenge);
+
+    // Dispatch OTP via email
+    await sendOtpEmail({
+      to: cleanEmail,
+      otp: plainOtp,
+      purpose: 'login',
+      userName: user.name
+    });
+
+    // NOTE: Authenticated session is NOT granted until OTP verification succeeds.
+    return NextResponse.json({
+      success: true,
+      otpRequired: true,
+      challengeId: challenge.challengeId,
+      email: cleanEmail,
+      cooldownSeconds: 60,
+      message: 'A 6-digit verification code has been sent to your email.'
+    });
   } catch (err) {
     console.error('[API Login Error]:', err);
     return NextResponse.json({ error: 'An unexpected error occurred during login.' }, { status: 500 });

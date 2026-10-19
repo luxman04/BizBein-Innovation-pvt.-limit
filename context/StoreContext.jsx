@@ -276,6 +276,10 @@ export function StoreProvider({ children }) {
       throw new Error(data.error || 'Login failed. Please check your credentials.');
     }
 
+    if (data.otpRequired) {
+      return data;
+    }
+
     setUser(data.user);
     showToast(`Welcome back, ${data.user.name}!`, 'success');
     executePendingAddToCart(data.user);
@@ -294,10 +298,53 @@ export function StoreProvider({ children }) {
       throw new Error(data.error || 'Registration failed.');
     }
 
+    if (data.otpRequired) {
+      return data;
+    }
+
     setUser(data.user);
     showToast(`Welcome to BizBein, ${data.user.name}! Account created.`, 'success');
     executePendingAddToCart(data.user);
     return data.user;
+  };
+
+  const verifyOtp = async (challengeId, email, otp) => {
+    const res = await fetch('/api/auth/verify-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ challengeId, email, otp })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      const err = new Error(data.error || 'Verification failed.');
+      err.attemptsRemaining = data.attemptsRemaining;
+      err.expired = data.expired;
+      throw err;
+    }
+
+    setUser(data.user);
+    showToast(`Welcome, ${data.user.name}! Identity verified.`, 'success');
+    executePendingAddToCart(data.user);
+    return data.user;
+  };
+
+  const resendOtp = async (challengeId, email) => {
+    const res = await fetch('/api/auth/resend-otp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ challengeId, email })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      const err = new Error(data.error || 'Failed to resend verification code.');
+      err.cooldownRemaining = data.cooldownRemaining;
+      throw err;
+    }
+
+    showToast('A new 6-digit verification code has been sent.', 'success');
+    return data;
   };
 
   const logout = async () => {
@@ -334,6 +381,8 @@ export function StoreProvider({ children }) {
     authLoading,
     login,
     register,
+    verifyOtp,
+    resendOtp,
     logout,
     refreshUser,
     executePendingAddToCart,
