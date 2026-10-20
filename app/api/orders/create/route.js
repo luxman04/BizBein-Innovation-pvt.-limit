@@ -102,7 +102,7 @@ export async function POST(request) {
       orderStatus: 'Confirmed',
       orderNotes: orderNotes || '',
       notificationStatus: {
-        resend: 'pending',
+        email: 'pending',
         whatsapp: 'pending'
       },
       createdAt: new Date().toISOString()

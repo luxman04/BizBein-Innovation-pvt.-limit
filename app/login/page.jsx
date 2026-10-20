@@ -535,9 +535,9 @@ function LoginContent() {
             {devOtp && (
               <div className="dev-otp-banner">
                 <div className="dev-otp-header">
-                  <span className="dev-otp-badge">{deliveryNotice ? 'RESEND SANDBOX' : 'TEST MODE'}</span>
+                  <span className="dev-otp-badge">{deliveryNotice ? 'NOTICE' : 'TEST MODE'}</span>
                   <span className="dev-otp-sub">
-                    {deliveryNotice || 'Email delivery simulated (no SMTP/Resend key)'}
+                    {deliveryNotice || 'Email delivery simulated (no Supabase / SMTP key)'}
                   </span>
                 </div>
                 <div className="dev-otp-body">

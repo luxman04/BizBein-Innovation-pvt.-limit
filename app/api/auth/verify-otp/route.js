@@ -10,6 +10,7 @@ import {
 } from '../../../../lib/db';
 import { signAuthToken, createSessionCookie, getClientIp } from '../../../../lib/auth';
 import { verifyOtpHash } from '../../../../lib/otp';
+import { verifySupabaseOtp } from '../../../../lib/supabase';
 
 export async function POST(request) {
   try {
@@ -78,8 +79,11 @@ export async function POST(request) {
     // Increment attempt counter atomically before comparison
     const updatedChallenge = await recordOtpAttempt(challengeId);
 
-    // Verify hash using timing-safe comparison
-    const isValid = verifyOtpHash(cleanOtp, challenge.salt, challenge.otpHash);
+    // Verify via Supabase Auth if configured, or fallback to timing-safe OTP hash
+    const supabaseRes = await verifySupabaseOtp(cleanEmail, cleanOtp);
+    const isValid = supabaseRes.configured
+      ? (supabaseRes.success || verifyOtpHash(cleanOtp, challenge.salt, challenge.otpHash))
+      : verifyOtpHash(cleanOtp, challenge.salt, challenge.otpHash);
 
     if (!isValid) {
       const attemptsRemaining = Math.max(0, (challenge.maxAttempts || 5) - updatedChallenge.attempts);

@@ -97,12 +97,12 @@ export async function POST(request) {
       cooldownSeconds: 60,
       devOtp: isSimulated ? plainOtp : undefined,
       emailSent,
-      deliveryNotice: emailResult?.isSandboxRestriction
-        ? 'Resend Free Sandbox: Real email can only be delivered to your registered Resend email (luxmankumar534@gmail.com). For all other domains, verify your domain at resend.com/domains or use Gmail SMTP.'
+      deliveryNotice: emailResult?.provider === 'supabase'
+        ? 'Verification code dispatched via Supabase Email Service.'
         : undefined,
       message: emailSent
         ? 'A 6-digit verification code has been sent to your email.'
-        : (emailResult?.isSandboxRestriction ? 'Resend sandbox restricted recipient. Use code below to continue.' : 'Verification code generated.')
+        : 'Verification code generated.'
     });
   } catch (err) {
     console.error('[API Login Error]:', err);
