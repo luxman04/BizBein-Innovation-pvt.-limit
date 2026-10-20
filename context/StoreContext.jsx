@@ -347,6 +347,11 @@ export function StoreProvider({ children }) {
     });
 
     if (error) {
+      if (error.message?.toLowerCase().includes('confirmation email')) {
+        throw new Error(
+          'Email delivery rejected by SMTP: Resend test mode (onboarding@resend.dev) only allows sending to your account email (bizbein8@gmail.com). To send to ' + cleanEmail + ', configure Gmail SMTP in Supabase Dashboard or verify your custom domain in Resend.'
+        );
+      }
       throw new Error(error.message || 'Registration failed.');
     }
 
