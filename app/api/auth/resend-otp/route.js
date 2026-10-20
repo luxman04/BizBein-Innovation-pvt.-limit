@@ -9,7 +9,7 @@ import {
 } from '../../../../lib/db';
 import { getClientIp } from '../../../../lib/auth';
 import { createOtpChallenge } from '../../../../lib/otp';
-import { sendSupabaseOtp } from '../../../../lib/supabase';
+import { sendOtpEmail } from '../../../../lib/notifications';
 
 export async function POST(request) {
   try {
@@ -64,33 +64,46 @@ export async function POST(request) {
     // Invalidate previous challenge if provided
     let purpose = 'login';
     let pendingUserData = null;
+    let userName = '';
 
     if (challengeId) {
       const oldChallenge = await findOtpChallenge(challengeId, cleanEmail);
       if (oldChallenge) {
         purpose = oldChallenge.purpose || 'login';
         pendingUserData = oldChallenge.pendingUserData || null;
+        if (pendingUserData?.name) {
+          userName = pendingUserData.name;
+        }
         await invalidateOtpChallenge(challengeId);
       }
     }
 
-    // Dispatch fresh real OTP via Supabase Auth
-    const emailResult = await sendSupabaseOtp(cleanEmail);
-    if (!emailResult?.success) {
-      const errText = emailResult?.error || 'Failed to dispatch verification email.';
-      const isRateLimit = errText.toLowerCase().includes('rate limit');
-      const userMessage = isRateLimit
-        ? 'Supabase email rate limit exceeded (3 emails/hr on default service). Please wait before requesting another code, or enable Custom SMTP in Supabase Dashboard.'
-        : errText;
-      return NextResponse.json({ error: userMessage }, { status: isRateLimit ? 429 : 500 });
+    if (!userName) {
+      const user = await findUserByEmail(cleanEmail);
+      if (user?.name) userName = user.name;
     }
 
-    // Create and save fresh challenge session
-    const { challenge: newChallenge } = createOtpChallenge({
+    // Generate secure 6-digit OTP challenge (stores hash, returns plainOtp for email dispatch)
+    const { plainOtp, challenge: newChallenge } = createOtpChallenge({
       email: cleanEmail,
       purpose,
       pendingUserData
     });
+
+    // Dispatch fresh real OTP via Resend
+    const emailResult = await sendOtpEmail({
+      to: cleanEmail,
+      otp: plainOtp,
+      purpose,
+      userName
+    });
+
+    if (!emailResult?.success) {
+      const errText = emailResult?.error || 'Failed to dispatch verification email.';
+      return NextResponse.json({ error: errText }, { status: 400 });
+    }
+
+    // Create and save fresh challenge session
     await saveOtpChallenge(newChallenge);
 
     return NextResponse.json({

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { findUserByEmail, saveOtpChallenge, checkRateLimit, getOtpCooldownSeconds } from '../../../../lib/db';
 import { verifyPassword, getClientIp } from '../../../../lib/auth';
 import { createOtpChallenge } from '../../../../lib/otp';
-import { sendSupabaseOtp } from '../../../../lib/supabase';
+import { sendOtpEmail } from '../../../../lib/notifications';
 
 export async function POST(request) {
   try {
@@ -65,22 +65,26 @@ export async function POST(request) {
       );
     }
 
-    // Dispatch real email OTP via Supabase Auth
-    const emailResult = await sendSupabaseOtp(cleanEmail);
-    if (!emailResult?.success) {
-      const errText = emailResult?.error || 'Failed to dispatch verification email.';
-      const isRateLimit = errText.toLowerCase().includes('rate limit');
-      const userMessage = isRateLimit
-        ? 'Supabase email rate limit exceeded (3 emails/hr on default service). Please wait before requesting another code, or enable Custom SMTP in Supabase Dashboard.'
-        : errText;
-      return NextResponse.json({ error: userMessage }, { status: isRateLimit ? 429 : 500 });
-    }
-
-    // Save session tracking challenge
-    const { challenge } = createOtpChallenge({
+    // Generate secure 6-digit OTP challenge (stores hash, returns plainOtp for email dispatch)
+    const { plainOtp, challenge } = createOtpChallenge({
       email: cleanEmail,
       purpose: 'login'
     });
+
+    // Dispatch real email OTP via Resend
+    const emailResult = await sendOtpEmail({
+      to: cleanEmail,
+      otp: plainOtp,
+      purpose: 'login',
+      userName: user.name
+    });
+
+    if (!emailResult?.success) {
+      const errText = emailResult?.error || 'Failed to dispatch verification email.';
+      return NextResponse.json({ error: errText }, { status: 400 });
+    }
+
+    // Save session tracking challenge
     await saveOtpChallenge(challenge);
 
     // NOTE: Authenticated session is NOT granted until OTP verification succeeds.

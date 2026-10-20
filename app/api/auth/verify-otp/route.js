@@ -9,7 +9,7 @@ import {
   checkRateLimit
 } from '../../../../lib/db';
 import { signAuthToken, createSessionCookie, getClientIp } from '../../../../lib/auth';
-import { verifySupabaseOtp } from '../../../../lib/supabase';
+import { verifyOtpHash } from '../../../../lib/otp';
 
 export async function POST(request) {
   try {
@@ -78,16 +78,10 @@ export async function POST(request) {
     // Increment attempt counter atomically before comparison
     const updatedChallenge = await recordOtpAttempt(challengeId);
 
-    // Strictly verify OTP via Supabase Auth
-    const supabaseRes = await verifySupabaseOtp(cleanEmail, cleanOtp);
-    if (!supabaseRes.configured) {
-      return NextResponse.json(
-        { error: 'Supabase authentication is not configured in environment variables.' },
-        { status: 500 }
-      );
-    }
+    // Cryptographically verify OTP with timing-safe comparison against stored salt and hash
+    const isValid = verifyOtpHash(cleanOtp, challenge.salt, challenge.otpHash);
 
-    if (!supabaseRes.success) {
+    if (!isValid) {
       const attemptsRemaining = Math.max(0, (challenge.maxAttempts || 5) - updatedChallenge.attempts);
       if (attemptsRemaining <= 0) {
         await invalidateOtpChallenge(challengeId);
@@ -101,7 +95,7 @@ export async function POST(request) {
       }
       return NextResponse.json(
         {
-          error: supabaseRes.error || `Incorrect verification code. ${attemptsRemaining} attempt${attemptsRemaining === 1 ? '' : 's'} remaining.`,
+          error: `Incorrect verification code. ${attemptsRemaining} attempt${attemptsRemaining === 1 ? '' : 's'} remaining.`,
           attemptsRemaining
         },
         { status: 400 }
