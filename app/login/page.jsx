@@ -54,7 +54,13 @@ function LoginContent() {
       await loginWithGoogle();
       router.push(redirectUrl);
     } catch (err) {
-      setError(err.message || 'Google sign-in failed. Please try again.');
+      if (err.code === 'auth/unauthorized-domain' || err.message?.includes('unauthorized-domain')) {
+        setError(
+          'Google sign-in is not authorized for this domain yet. Please add this domain to Firebase Console > Authentication > Settings > Authorized domains, or sign in below with your email & password.'
+        );
+      } else {
+        setError(err.message || 'Google sign-in failed. Please try again.');
+      }
     } finally {
       setGoogleLoading(false);
     }
