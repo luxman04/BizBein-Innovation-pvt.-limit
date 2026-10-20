@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { featuredProducts, products as initialProducts } from '../data/products';
-import { createClient } from '../utils/supabase/client';
 
 const StoreContext = createContext(null);
 
@@ -265,62 +264,24 @@ export function StoreProvider({ children }) {
   };
 
   // ---------------- AUTH OPERATIONS ----------------
-  const supabase = createClient();
-
   const login = async (email, password) => {
     const cleanEmail = email.trim().toLowerCase();
 
-    // 1. Try local DB login first (direct password authentication)
-    try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail, password })
-      });
-      const localData = await res.json();
-      if (res.ok && localData.user) {
-        setUser(localData.user);
-        showToast(`Welcome back, ${localData.user.name || 'User'}!`, 'success');
-        executePendingAddToCart(localData.user);
-        return { user: localData.user };
-      }
-    } catch (e) {}
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: cleanEmail, password })
+    });
 
-    // 2. Try Supabase Auth (for Supabase registered accounts)
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: cleanEmail,
-        password
-      });
+    const data = await res.json();
+    if (!res.ok || !data.user) {
+      throw new Error(data.error || 'Invalid email or password.');
+    }
 
-      if (!error && data?.user) {
-        const res = await fetch('/api/auth/supabase-session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: data.user.id,
-            email: data.user.email,
-            name: data.user.user_metadata?.name || '',
-            phone: data.user.user_metadata?.phone || ''
-          })
-        });
-        const sessionData = await res.json();
-        const appUser = sessionData.user || {
-          id: data.user.id,
-          name: data.user.user_metadata?.name || cleanEmail.split('@')[0],
-          email: data.user.email,
-          phone: data.user.user_metadata?.phone || '',
-          role: 'customer'
-        };
-
-        setUser(appUser);
-        showToast(`Welcome back, ${appUser.name}!`, 'success');
-        executePendingAddToCart(appUser);
-        return { user: appUser };
-      }
-    } catch (e) {}
-
-    throw new Error('Invalid email or password.');
+    setUser(data.user);
+    showToast(`Welcome back, ${data.user.name || 'User'}!`, 'success');
+    executePendingAddToCart(data.user);
+    return { user: data.user };
   };
 
   const register = async (name, email, phone, password) => {
@@ -388,9 +349,6 @@ export function StoreProvider({ children }) {
   };
 
   const logout = async () => {
-    try {
-      await supabase.auth.signOut().catch(() => {});
-    } catch (e) {}
     try {
       const { auth } = await import('../lib/firebase');
       if (auth) {
