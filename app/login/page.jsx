@@ -55,8 +55,6 @@ function LoginContent() {
   const [attemptsRemaining, setAttemptsRemaining] = useState(null);
   const [cooldownSeconds, setCooldownSeconds] = useState(60);
   const [expirySeconds, setExpirySeconds] = useState(300); // 5 minutes
-  const [devOtp, setDevOtp] = useState('');
-  const [deliveryNotice, setDeliveryNotice] = useState('');
 
   const digitRefs = [
     useRef(null),
@@ -152,8 +150,6 @@ function LoginContent() {
         setExpirySeconds(300); // 5 minutes
         setAttemptsRemaining(null);
         setOtpDigits(['', '', '', '', '', '']);
-        setDevOtp(result.devOtp || '');
-        setDeliveryNotice(result.deliveryNotice || '');
         setStep('otp');
       } else {
         router.push(redirectUrl);
@@ -263,8 +259,6 @@ function LoginContent() {
         setExpirySeconds(300); // Reset 5m countdown
         setAttemptsRemaining(null);
         setOtpDigits(['', '', '', '', '', '']);
-        if (res.devOtp) setDevOtp(res.devOtp);
-        if (res.deliveryNotice) setDeliveryNotice(res.deliveryNotice);
         digitRefs[0]?.current?.focus();
       }
     } catch (err) {
@@ -531,32 +525,6 @@ function LoginContent() {
               </div>
             )}
 
-            {/* Security Notice: Dev / Test OTP Display */}
-            {devOtp && (
-              <div className="dev-otp-banner">
-                <div className="dev-otp-header">
-                  <span className="dev-otp-badge">{deliveryNotice ? 'NOTICE' : 'TEST MODE'}</span>
-                  <span className="dev-otp-sub">
-                    {deliveryNotice || 'Email delivery simulated (no Supabase / SMTP key)'}
-                  </span>
-                </div>
-                <div className="dev-otp-body">
-                  <span>Code: <strong className="dev-otp-code">{devOtp}</strong></span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const chars = devOtp.split('').slice(0, 6);
-                      setOtpDigits(chars);
-                      setError('');
-                      digitRefs[5]?.current?.focus();
-                    }}
-                    className="btn-autofill-otp"
-                  >
-                    Click to Auto-fill
-                  </button>
-                </div>
-              </div>
-            )}
 
             <form onSubmit={handleVerifyOtp} className="otp-form" noValidate>
               <label className="otp-input-label">Enter 6-Digit Verification Code</label>
@@ -1046,69 +1014,6 @@ function LoginContent() {
           cursor: not-allowed;
         }
 
-        .dev-otp-banner {
-          background: #eff6ff;
-          border: 1px solid #bfdbfe;
-          border-left: 4px solid #3b82f6;
-          border-radius: 8px;
-          padding: 12px 14px;
-          margin-bottom: 18px;
-        }
-
-        .dev-otp-header {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 11.5px;
-          color: #1e40af;
-          margin-bottom: 6px;
-        }
-
-        .dev-otp-badge {
-          background: #2563eb;
-          color: #ffffff;
-          padding: 1px 6px;
-          border-radius: 4px;
-          font-weight: 700;
-          font-size: 10px;
-          letter-spacing: 0.05em;
-        }
-
-        .dev-otp-sub {
-          color: #3b82f6;
-        }
-
-        .dev-otp-body {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          font-size: 13.5px;
-          color: #1e3a8a;
-        }
-
-        .dev-otp-code {
-          font-family: monospace;
-          font-size: 16px;
-          letter-spacing: 2px;
-          color: #1d4ed8;
-          margin-left: 4px;
-        }
-
-        .btn-autofill-otp {
-          background: #1d4ed8;
-          color: #ffffff;
-          border: none;
-          padding: 4px 10px;
-          border-radius: 5px;
-          font-size: 12px;
-          font-weight: 600;
-          cursor: pointer;
-          transition: background 0.15s ease;
-        }
-
-        .btn-autofill-otp:hover {
-          background: #1e40af;
-        }
 
         .otp-back-row {
           display: flex;

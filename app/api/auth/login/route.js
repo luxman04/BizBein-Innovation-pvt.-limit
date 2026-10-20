@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { findUserByEmail, saveOtpChallenge, checkRateLimit, getOtpCooldownSeconds } from '../../../../lib/db';
 import { verifyPassword, getClientIp } from '../../../../lib/auth';
 import { createOtpChallenge } from '../../../../lib/otp';
-import { sendOtpEmail } from '../../../../lib/notifications';
+import { sendSupabaseOtp } from '../../../../lib/supabase';
 
 export async function POST(request) {
   try {
@@ -65,24 +65,23 @@ export async function POST(request) {
       );
     }
 
-    // Generate secure 6-digit OTP challenge (invalidates previous OTPs for this email)
-    const { plainOtp, challenge } = createOtpChallenge({
+    // Dispatch real email OTP via Supabase Auth
+    const emailResult = await sendSupabaseOtp(cleanEmail);
+    if (!emailResult?.success) {
+      const errText = emailResult?.error || 'Failed to dispatch verification email.';
+      const isRateLimit = errText.toLowerCase().includes('rate limit');
+      const userMessage = isRateLimit
+        ? 'Supabase email rate limit exceeded (3 emails/hr on default service). Please wait before requesting another code, or enable Custom SMTP in Supabase Dashboard.'
+        : errText;
+      return NextResponse.json({ error: userMessage }, { status: isRateLimit ? 429 : 500 });
+    }
+
+    // Save session tracking challenge
+    const { challenge } = createOtpChallenge({
       email: cleanEmail,
       purpose: 'login'
     });
-
     await saveOtpChallenge(challenge);
-
-    // Dispatch OTP via email
-    const emailResult = await sendOtpEmail({
-      to: cleanEmail,
-      otp: plainOtp,
-      purpose: 'login',
-      userName: user.name
-    });
-
-    const emailSent = emailResult?.status === 'sent';
-    const isSimulated = !emailSent;
 
     // NOTE: Authenticated session is NOT granted until OTP verification succeeds.
     return NextResponse.json({
@@ -95,14 +94,7 @@ export async function POST(request) {
         email: cleanEmail
       },
       cooldownSeconds: 60,
-      devOtp: isSimulated ? plainOtp : undefined,
-      emailSent,
-      deliveryNotice: emailResult?.provider === 'supabase'
-        ? 'Verification code dispatched via Supabase Email Service.'
-        : undefined,
-      message: emailSent
-        ? 'A 6-digit verification code has been sent to your email.'
-        : 'Verification code generated.'
+      message: 'A 6-digit verification code has been sent to your email.'
     });
   } catch (err) {
     console.error('[API Login Error]:', err);

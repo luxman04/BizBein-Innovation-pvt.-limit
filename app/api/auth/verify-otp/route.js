@@ -9,7 +9,6 @@ import {
   checkRateLimit
 } from '../../../../lib/db';
 import { signAuthToken, createSessionCookie, getClientIp } from '../../../../lib/auth';
-import { verifyOtpHash } from '../../../../lib/otp';
 import { verifySupabaseOtp } from '../../../../lib/supabase';
 
 export async function POST(request) {
@@ -79,15 +78,19 @@ export async function POST(request) {
     // Increment attempt counter atomically before comparison
     const updatedChallenge = await recordOtpAttempt(challengeId);
 
-    // Verify via Supabase Auth if configured, or fallback to timing-safe OTP hash
+    // Strictly verify OTP via Supabase Auth
     const supabaseRes = await verifySupabaseOtp(cleanEmail, cleanOtp);
-    const isValid = supabaseRes.configured
-      ? (supabaseRes.success || verifyOtpHash(cleanOtp, challenge.salt, challenge.otpHash))
-      : verifyOtpHash(cleanOtp, challenge.salt, challenge.otpHash);
+    if (!supabaseRes.configured) {
+      return NextResponse.json(
+        { error: 'Supabase authentication is not configured in environment variables.' },
+        { status: 500 }
+      );
+    }
 
-    if (!isValid) {
+    if (!supabaseRes.success) {
       const attemptsRemaining = Math.max(0, (challenge.maxAttempts || 5) - updatedChallenge.attempts);
       if (attemptsRemaining <= 0) {
+        await invalidateOtpChallenge(challengeId);
         return NextResponse.json(
           {
             error: 'Maximum attempts exceeded. This code has been invalidated. Please request a new code.',
@@ -98,7 +101,7 @@ export async function POST(request) {
       }
       return NextResponse.json(
         {
-          error: `Incorrect verification code. ${attemptsRemaining} attempt${attemptsRemaining === 1 ? '' : 's'} remaining.`,
+          error: supabaseRes.error || `Incorrect verification code. ${attemptsRemaining} attempt${attemptsRemaining === 1 ? '' : 's'} remaining.`,
           attemptsRemaining
         },
         { status: 400 }

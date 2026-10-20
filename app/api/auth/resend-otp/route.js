@@ -9,7 +9,7 @@ import {
 } from '../../../../lib/db';
 import { getClientIp } from '../../../../lib/auth';
 import { createOtpChallenge } from '../../../../lib/otp';
-import { sendOtpEmail } from '../../../../lib/notifications';
+import { sendSupabaseOtp } from '../../../../lib/supabase';
 
 export async function POST(request) {
   try {
@@ -74,43 +74,31 @@ export async function POST(request) {
       }
     }
 
-    // Create fresh challenge (5-minute expiry, 5 new attempts)
-    const { plainOtp, challenge: newChallenge } = createOtpChallenge({
+    // Dispatch fresh real OTP via Supabase Auth
+    const emailResult = await sendSupabaseOtp(cleanEmail);
+    if (!emailResult?.success) {
+      const errText = emailResult?.error || 'Failed to dispatch verification email.';
+      const isRateLimit = errText.toLowerCase().includes('rate limit');
+      const userMessage = isRateLimit
+        ? 'Supabase email rate limit exceeded (3 emails/hr on default service). Please wait before requesting another code, or enable Custom SMTP in Supabase Dashboard.'
+        : errText;
+      return NextResponse.json({ error: userMessage }, { status: isRateLimit ? 429 : 500 });
+    }
+
+    // Create and save fresh challenge session
+    const { challenge: newChallenge } = createOtpChallenge({
       email: cleanEmail,
       purpose,
       pendingUserData
     });
-
     await saveOtpChallenge(newChallenge);
-
-    // Get user name for personalized email
-    const existingUser = await findUserByEmail(cleanEmail);
-    const userName = existingUser?.name || pendingUserData?.name || '';
-
-    // Dispatch fresh OTP email
-    const emailResult = await sendOtpEmail({
-      to: cleanEmail,
-      otp: plainOtp,
-      purpose,
-      userName
-    });
-
-    const emailSent = emailResult?.status === 'sent';
-    const isSimulated = !emailSent;
 
     return NextResponse.json({
       success: true,
       challengeId: newChallenge.challengeId,
       email: cleanEmail,
       cooldownSeconds: 60,
-      devOtp: isSimulated ? plainOtp : undefined,
-      emailSent,
-      deliveryNotice: emailResult?.provider === 'supabase'
-        ? 'Verification code dispatched via Supabase Email Service.'
-        : undefined,
-      message: emailSent
-        ? 'A new 6-digit verification code has been sent to your email.'
-        : 'A new 6-digit verification code has been generated.'
+      message: 'A new 6-digit verification code has been sent to your email.'
     });
   } catch (err) {
     console.error('[API Resend OTP Error]:', err);
