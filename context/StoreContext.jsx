@@ -270,65 +270,64 @@ export function StoreProvider({ children }) {
   const login = async (email, password) => {
     const cleanEmail = email.trim().toLowerCase();
 
-    // 1. Try Supabase Auth password login
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: cleanEmail,
-        password
-      });
+    // 1. Log in directly using registered email and password through supabase.auth.signInWithPassword()
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: cleanEmail,
+      password
+    });
 
-      if (!error && data?.user) {
-        // Sync verified session to cookie
-        const res = await fetch('/api/auth/supabase-session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: data.user.id,
-            email: data.user.email,
-            name: data.user.user_metadata?.name || '',
-            phone: data.user.user_metadata?.phone || ''
-          })
-        });
-        const sessionData = await res.json();
-        const appUser = sessionData.user || {
+    if (!error && data?.user) {
+      // Sync verified session to cookie
+      const res = await fetch('/api/auth/supabase-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           id: data.user.id,
-          name: data.user.user_metadata?.name || cleanEmail.split('@')[0],
           email: data.user.email,
-          phone: data.user.user_metadata?.phone || '',
-          role: 'customer'
-        };
+          name: data.user.user_metadata?.name || '',
+          phone: data.user.user_metadata?.phone || ''
+        })
+      });
+      const sessionData = await res.json();
+      const appUser = sessionData.user || {
+        id: data.user.id,
+        name: data.user.user_metadata?.name || cleanEmail.split('@')[0],
+        email: data.user.email,
+        phone: data.user.user_metadata?.phone || '',
+        role: 'customer'
+      };
 
-        setUser(appUser);
-        showToast(`Welcome back, ${appUser.name}!`, 'success');
-        executePendingAddToCart(appUser);
-        return { user: appUser };
-      }
-    } catch (e) {
-      // Continue to local login
+      setUser(appUser);
+      showToast(`Welcome back, ${appUser.name}!`, 'success');
+      executePendingAddToCart(appUser);
+      return { user: appUser };
     }
 
-    // 2. Fallback to local DB login
+    // If Supabase returned "Email not confirmed", surface it directly (Requirement 8)
+    if (error && error.message?.toLowerCase().includes('email not confirmed')) {
+      throw new Error('Please verify your email address before signing in.');
+    }
+
+    // 2. Fallback to local DB login (for admin accounts e.g. bizbein8@gmail.com)
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: cleanEmail, password })
     });
 
-    const data = await res.json();
+    const localData = await res.json();
     if (!res.ok) {
-      throw new Error(data.error || 'Login failed. Please check your credentials.');
+      throw new Error('Invalid email or password.');
     }
 
-    if (data.otpRequired) {
-      return data;
+    if (localData.user) {
+      setUser(localData.user);
+      showToast(`Welcome back, ${localData.user?.name || 'User'}!`, 'success');
+      executePendingAddToCart(localData.user);
+      return { user: localData.user };
     }
 
-    if (data.user) {
-      setUser(data.user);
-      showToast(`Welcome back, ${data.user?.name || 'User'}!`, 'success');
-      executePendingAddToCart(data.user);
-    }
-    return data.user || data;
+    throw new Error('Invalid email or password.');
   };
 
   const register = async (name, email, phone, password) => {

@@ -45,6 +45,8 @@ function LoginContent() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Step 2: OTP State
   const [challengeId, setChallengeId] = useState('');
@@ -121,38 +123,40 @@ function LoginContent() {
     }
   };
 
-  // Submit Step 1: Request OTP Challenge
+  // Submit Credentials (Direct login or Registration)
   const handleCredentialsSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      let result;
       if (mode === 'login') {
         if (!email.trim() || !password) {
           throw new Error('Please enter both email and password.');
         }
-        result = await login(email, password);
-      } else {
-        if (!name.trim()) throw new Error('Please enter your full name.');
-        if (!email.trim() || !email.includes('@')) throw new Error('Please enter a valid email.');
-        if (!phone.trim()) throw new Error('Please enter your contact phone number.');
-        if (password.length < 6) throw new Error('Password must be at least 6 characters.');
-
-        result = await register(name, email, phone, password);
-      }
-
-      if (result && result.otpRequired) {
-        setChallengeId(result.challengeId);
-        setChallengeEmail(result.email || email.trim().toLowerCase());
-        setCooldownSeconds(result.cooldownSeconds || 60);
-        setExpirySeconds(300); // 5 minutes
-        setAttemptsRemaining(null);
-        setOtpDigits(['', '', '', '', '', '']);
-        setStep('otp');
-      } else {
+        await login(email, password);
         router.push(redirectUrl);
+        return;
+      } else {
+        if (!name.trim()) throw new Error('Please enter your full name / username.');
+        if (!email.trim() || !email.includes('@')) throw new Error('Please enter a valid email address.');
+        if (!phone.trim()) throw new Error('Please enter your contact phone number.');
+        if (!password || password.length < 6) throw new Error('Password must be at least 6 characters.');
+        if (password !== confirmPassword) throw new Error('Passwords do not match.');
+
+        const result = await register(name, email, phone, password);
+
+        if (result && result.otpRequired) {
+          setChallengeId(result.challengeId || 'supabase_signup');
+          setChallengeEmail(result.email || email.trim().toLowerCase());
+          setCooldownSeconds(result.cooldownSeconds || 60);
+          setExpirySeconds(300); // 5 minutes
+          setAttemptsRemaining(null);
+          setOtpDigits(['', '', '', '', '', '']);
+          setStep('otp');
+        } else {
+          router.push(redirectUrl);
+        }
       }
     } catch (err) {
       setError(err.message || 'Authentication failed. Please check your details.');
@@ -487,12 +491,38 @@ function LoginContent() {
                 </div>
               </div>
 
+              {mode === 'register' && (
+                <div className="form-group">
+                  <label htmlFor="auth-confirm-password">Confirm Password *</label>
+                  <div className="input-with-icon">
+                    <Lock size={16} className="input-icon" />
+                    <input
+                      id="auth-confirm-password"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      placeholder="Confirm your password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      autoComplete="new-password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="toggle-password-btn"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <button type="submit" disabled={loading} className="btn-auth-submit">
                 {loading ? (
-                  <span>Generating Secure Verification Code...</span>
+                  <span>{mode === 'login' ? 'Signing In...' : 'Registering Account...'}</span>
                 ) : mode === 'login' ? (
                   <>
-                    <span>Continue to Verification</span>
+                    <span>Sign In</span>
                     <ArrowRight size={17} />
                   </>
                 ) : (
