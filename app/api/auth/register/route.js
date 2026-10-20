@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
-import { findUserByEmail, saveOtpChallenge, checkRateLimit, getOtpCooldownSeconds } from '../../../../lib/db';
-import { hashPassword, getClientIp } from '../../../../lib/auth';
-import { createOtpChallenge } from '../../../../lib/otp';
-import { sendOtpEmail } from '../../../../lib/notifications';
+import { findUserByEmail, createUser, checkRateLimit } from '../../../../lib/db';
+import { hashPassword, signAuthToken, createSessionCookie, getClientIp } from '../../../../lib/auth';
 
 export async function POST(request) {
   try {
@@ -26,25 +24,12 @@ export async function POST(request) {
     // Rate limiting: IP level
     const ipLimit = await checkRateLimit({
       key: `register_ip:${ip}`,
-      limit: 10,
+      limit: 15,
       windowMs: 15 * 60 * 1000
     });
     if (!ipLimit.allowed) {
       return NextResponse.json(
-        { error: `Too many registration requests from this device. Please try again in ${ipLimit.retryAfterSeconds} seconds.` },
-        { status: 429 }
-      );
-    }
-
-    // Rate limiting: Email level
-    const emailLimit = await checkRateLimit({
-      key: `register_email:${cleanEmail}`,
-      limit: 5,
-      windowMs: 15 * 60 * 1000
-    });
-    if (!emailLimit.allowed) {
-      return NextResponse.json(
-        { error: `Too many registration attempts for this email. Please try again in ${emailLimit.retryAfterSeconds} seconds.` },
+        { error: `Too many registration requests. Please try again in ${ipLimit.retryAfterSeconds} seconds.` },
         { status: 429 }
       );
     }
@@ -58,64 +43,34 @@ export async function POST(request) {
       );
     }
 
-    // Enforce 60-second cooldown if an OTP was recently sent
-    const cooldownRemaining = await getOtpCooldownSeconds(cleanEmail);
-    if (cooldownRemaining > 0) {
-      return NextResponse.json(
-        {
-          error: `Please wait ${cooldownRemaining} seconds before requesting a new verification code.`,
-          cooldownRemaining
-        },
-        { status: 429 }
-      );
-    }
-
-    // Hash password and store pending user data safely inside the challenge
+    // Hash password and create user directly
     const passwordHash = await hashPassword(password);
-    const pendingUserData = {
+    const user = await createUser({
       name: name.trim(),
       email: cleanEmail,
       phone: phone ? phone.trim() : '',
       passwordHash,
       role: 'customer'
+    });
+
+    // Issue unified session token
+    const token = signAuthToken(user);
+    const safeUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role
     };
 
-    // Generate secure 6-digit OTP challenge (stores hash, returns plainOtp for email dispatch)
-    const { plainOtp, challenge } = createOtpChallenge({
-      email: cleanEmail,
-      purpose: 'register',
-      pendingUserData
-    });
-
-    // Dispatch real email OTP via Resend
-    const emailResult = await sendOtpEmail({
-      to: cleanEmail,
-      otp: plainOtp,
-      purpose: 'register',
-      userName: name.trim()
-    });
-
-    if (!emailResult?.success) {
-      const errText = emailResult?.error || 'Failed to dispatch verification email.';
-      return NextResponse.json({ error: errText }, { status: 400 });
-    }
-
-    // Save session tracking challenge
-    await saveOtpChallenge(challenge);
-
-    // NOTE: Authenticated session is NOT granted until OTP verification succeeds.
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
-      otpRequired: true,
-      challengeId: challenge.challengeId,
-      email: cleanEmail,
-      user: {
-        name: name.trim(),
-        email: cleanEmail
-      },
-      cooldownSeconds: 60,
-      message: 'A 6-digit verification code has been sent to your email.'
+      user: safeUser,
+      message: 'Account created and signed in successfully.'
     });
+
+    response.headers.set('Set-Cookie', createSessionCookie(token));
+    return response;
   } catch (err) {
     console.error('[API Register Error]:', err);
     return NextResponse.json({ error: err.message || 'Internal server error.' }, { status: 500 });

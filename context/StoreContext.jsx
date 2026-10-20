@@ -270,62 +270,55 @@ export function StoreProvider({ children }) {
   const login = async (email, password) => {
     const cleanEmail = email.trim().toLowerCase();
 
-    // 1. Log in directly using registered email and password through supabase.auth.signInWithPassword()
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: cleanEmail,
-      password
-    });
-
-    if (!error && data?.user) {
-      // Sync verified session to cookie
-      const res = await fetch('/api/auth/supabase-session', {
+    // 1. Try local DB login first (direct password authentication)
+    try {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.user_metadata?.name || '',
-          phone: data.user.user_metadata?.phone || ''
-        })
+        body: JSON.stringify({ email: cleanEmail, password })
       });
-      const sessionData = await res.json();
-      const appUser = sessionData.user || {
-        id: data.user.id,
-        name: data.user.user_metadata?.name || cleanEmail.split('@')[0],
-        email: data.user.email,
-        phone: data.user.user_metadata?.phone || '',
-        role: 'customer'
-      };
+      const localData = await res.json();
+      if (res.ok && localData.user) {
+        setUser(localData.user);
+        showToast(`Welcome back, ${localData.user.name || 'User'}!`, 'success');
+        executePendingAddToCart(localData.user);
+        return { user: localData.user };
+      }
+    } catch (e) {}
 
-      setUser(appUser);
-      showToast(`Welcome back, ${appUser.name}!`, 'success');
-      executePendingAddToCart(appUser);
-      return { user: appUser };
-    }
+    // 2. Try Supabase Auth (for Supabase registered accounts)
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password
+      });
 
-    // If Supabase returned "Email not confirmed", surface it directly (Requirement 8)
-    if (error && error.message?.toLowerCase().includes('email not confirmed')) {
-      throw new Error('Please verify your email address before signing in.');
-    }
+      if (!error && data?.user) {
+        const res = await fetch('/api/auth/supabase-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: data.user.id,
+            email: data.user.email,
+            name: data.user.user_metadata?.name || '',
+            phone: data.user.user_metadata?.phone || ''
+          })
+        });
+        const sessionData = await res.json();
+        const appUser = sessionData.user || {
+          id: data.user.id,
+          name: data.user.user_metadata?.name || cleanEmail.split('@')[0],
+          email: data.user.email,
+          phone: data.user.user_metadata?.phone || '',
+          role: 'customer'
+        };
 
-    // 2. Fallback to local DB login (for admin accounts e.g. bizbein8@gmail.com)
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: cleanEmail, password })
-    });
-
-    const localData = await res.json();
-    if (!res.ok) {
-      throw new Error('Invalid email or password.');
-    }
-
-    if (localData.user) {
-      setUser(localData.user);
-      showToast(`Welcome back, ${localData.user?.name || 'User'}!`, 'success');
-      executePendingAddToCart(localData.user);
-      return { user: localData.user };
-    }
+        setUser(appUser);
+        showToast(`Welcome back, ${appUser.name}!`, 'success');
+        executePendingAddToCart(appUser);
+        return { user: appUser };
+      }
+    } catch (e) {}
 
     throw new Error('Invalid email or password.');
   };
@@ -333,99 +326,35 @@ export function StoreProvider({ children }) {
   const register = async (name, email, phone, password) => {
     const cleanEmail = email.trim().toLowerCase();
 
-    // Requirement 3: Use the existing Supabase client to call supabase.auth.signUp()
-    const { data, error } = await supabase.auth.signUp({
-      email: cleanEmail,
-      password,
-      options: {
-        data: {
-          name: name ? name.trim() : '',
-          phone: phone ? phone.trim() : ''
-        }
-      }
-    });
-
-    if (error) {
-      if (error.message?.toLowerCase().includes('confirmation email')) {
-        throw new Error(
-          'Email delivery rejected by SMTP: Resend test mode (onboarding@resend.dev) only allows sending to your account email (bizbein8@gmail.com). To send to ' + cleanEmail + ', configure Gmail SMTP in Supabase Dashboard or verify your custom domain in Resend.'
-        );
-      }
-      throw new Error(error.message || 'Registration failed.');
-    }
-
-    // Supabase Auth sends OTP to email. Session is null until verified.
-    return {
-      otpRequired: true,
-      email: cleanEmail,
-      cooldownSeconds: 60,
-      user: data?.user
-    };
-  };
-
-  const verifyOtp = async (arg1, arg2, arg3) => {
-    const email = ((arg3 !== undefined ? arg2 : arg1) || '').trim().toLowerCase();
-    const token = ((arg3 !== undefined ? arg3 : arg2) || '').trim();
-
-    // Requirement 6: Verify the OTP using supabase.auth.verifyOtp({ email, token, type: "signup" })
-    const { data, error } = await supabase.auth.verifyOtp({
-      email,
-      token,
-      type: 'signup'
-    });
-
-    if (error) {
-      throw new Error(error.message || 'Verification failed. Please check the code.');
-    }
-
-    const verifiedUser = data?.user;
-    if (!verifiedUser) {
-      throw new Error('Verification failed. No verified user returned.');
-    }
-
-    // Sync verified Supabase user to application session (cookie) so middleware & pages work
-    const res = await fetch('/api/auth/supabase-session', {
+    // Direct registration: create user and establish session immediately without OTP
+    const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        id: verifiedUser.id,
-        email: verifiedUser.email,
-        name: verifiedUser.user_metadata?.name || '',
-        phone: verifiedUser.user_metadata?.phone || ''
+        name: name ? name.trim() : '',
+        email: cleanEmail,
+        phone: phone ? phone.trim() : '',
+        password
       })
     });
 
-    const sessionData = await res.json();
-    const appUser = sessionData.user || {
-      id: verifiedUser.id,
-      name: verifiedUser.user_metadata?.name || email.split('@')[0],
-      email: verifiedUser.email,
-      phone: verifiedUser.user_metadata?.phone || '',
-      role: 'customer'
-    };
-
-    setUser(appUser);
-    showToast(`Welcome to BizBein, ${appUser.name}! Account verified.`, 'success');
-    executePendingAddToCart(appUser);
-    return appUser;
-  };
-
-  const resendOtp = async (arg1, arg2) => {
-    const email = ((arg2 !== undefined ? arg2 : arg1) || '').trim().toLowerCase();
-
-    // Requirement 7: Add a resend OTP button with a 60-second countdown and appropriate cooldown handling.
-    const { error } = await supabase.auth.resend({
-      type: 'signup',
-      email
-    });
-
-    if (error) {
-      throw new Error(error.message || 'Failed to resend verification code.');
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Registration failed.');
     }
 
-    showToast('A new 6-digit verification code has been sent.', 'success');
-    return { success: true, cooldownSeconds: 60 };
+    if (data.user) {
+      setUser(data.user);
+      showToast(`Welcome to BizBein, ${data.user.name || 'User'}! Account created successfully.`, 'success');
+      executePendingAddToCart(data.user);
+      return { user: data.user };
+    }
+
+    return data;
   };
+
+  const verifyOtp = async () => ({ success: true });
+  const resendOtp = async () => ({ success: true });
 
   const loginWithGoogle = async () => {
     const { auth, googleProvider, isFirebaseConfigured } = await import('../lib/firebase');
