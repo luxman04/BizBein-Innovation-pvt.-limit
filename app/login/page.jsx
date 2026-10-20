@@ -253,8 +253,8 @@ function LoginContent() {
 
     try {
       const res = await resendOtp(challengeId, challengeEmail);
-      if (res && res.challengeId) {
-        setChallengeId(res.challengeId);
+      if (res && (res.challengeId || res.success)) {
+        if (res.challengeId) setChallengeId(res.challengeId);
         setCooldownSeconds(res.cooldownSeconds || 60);
         setExpirySeconds(300); // Reset 5m countdown
         setAttemptsRemaining(null);
