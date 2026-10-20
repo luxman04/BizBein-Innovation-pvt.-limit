@@ -196,7 +196,7 @@ export default function Footer({ onOpenContact }) {
       {/* Copyright Line */}
       <div className="footer-copyright-tier">
         <div className="footer-container">
-          <p className="copyright-line">
+          <p className="copyright-line" suppressHydrationWarning>
             © 2023-{currentYear} {companyDetails.name}. All Rights Reserved By {companyDetails.name}
           </p>
         </div>

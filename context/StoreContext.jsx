@@ -33,13 +33,8 @@ export function StoreProvider({ children }) {
     refreshProducts();
   }, [refreshProducts]);
 
-  // Cart State (Hydrated from localStorage)
-  const [cartItems, setCartItems] = useState([
-    {
-      ...featuredProducts[0],
-      qty: 1
-    }
-  ]);
+  // Cart State (Hydrated from localStorage on mount)
+  const [cartItems, setCartItems] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Authentication State

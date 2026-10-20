@@ -40,6 +40,14 @@ export default function Header({
   const { user, logout } = useStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const currentUser = mounted ? user : null;
+  const displayCartCount = mounted ? cartCount : 0;
 
   const handleCategoryClick = (catId) => {
     setSelectedCategory(catId);
@@ -95,13 +103,13 @@ export default function Header({
               Track Order
             </button>
             <span className="top-divider">|</span>
-            {user ? (
+            {currentUser ? (
               <div className="user-auth-pill-group">
                 <Link href="/account/orders" className="top-btn-link user-profile-link">
                   <User size={13} className="top-icon user-icon" />
-                  <span>{user.name.split(' ')[0]}</span>
+                  <span>{currentUser.name.split(' ')[0]}</span>
                 </Link>
-                {user.role === 'admin' && (
+                {currentUser.role === 'admin' && (
                   <>
                     <span className="top-divider">|</span>
                     <Link href="/admin/products" className="top-btn-link admin-badge-link" title="Manage Products & Images">
@@ -221,11 +229,11 @@ export default function Header({
               type="button"
               className="cart-action-btn"
               onClick={onOpenCart}
-              aria-label={`View Cart, ${cartCount} items`}
+              aria-label={`View Cart, ${displayCartCount} items`}
             >
               <div className="cart-icon-box">
                 <ShoppingCart size={19} />
-                <span className="cart-badge-circle">{cartCount}</span>
+                <span className="cart-badge-circle">{displayCartCount}</span>
               </div>
               <span className="cart-text">Cart</span>
             </button>
@@ -243,14 +251,14 @@ export default function Header({
           {/* Mobile Actions: Account, Cart, Menu */}
           <div className="mobile-header-right">
             <Link
-              href={user ? "/orders" : "/login"}
+              href={currentUser ? "/orders" : "/login"}
               className="mobile-account-btn"
-              aria-label={user ? `Account (${user.name})` : "Login or Register"}
-              title={user ? user.name : "Login / Register"}
+              aria-label={currentUser ? `Account (${currentUser.name})` : "Login or Register"}
+              title={currentUser ? currentUser.name : "Login / Register"}
             >
-              {user ? (
+              {currentUser ? (
                 <div className="mobile-avatar-circle">
-                  {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
                 </div>
               ) : (
                 <User size={20} />
@@ -264,7 +272,7 @@ export default function Header({
               aria-label="Cart"
             >
               <ShoppingCart size={20} />
-              {cartCount > 0 && <span className="mobile-cart-badge">{cartCount}</span>}
+              {displayCartCount > 0 && <span className="mobile-cart-badge">{displayCartCount}</span>}
             </button>
 
             <button
@@ -427,17 +435,17 @@ export default function Header({
             <div className="drawer-scroll-body">
               {/* User Account / Auth Section */}
               <div className="drawer-user-section">
-                {user ? (
+                {currentUser ? (
                   <div className="drawer-user-card logged-in">
                     <div className="drawer-user-header">
                       <div className="drawer-user-avatar">
-                        {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                        {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
                       </div>
                       <div className="drawer-user-details">
-                        <strong className="drawer-user-name">{user.name}</strong>
-                        <span className="drawer-user-email">{user.email}</span>
+                        <strong className="drawer-user-name">{currentUser.name}</strong>
+                        <span className="drawer-user-email">{currentUser.email}</span>
                         <span className="drawer-user-role-badge">
-                          {user.role === 'admin' ? '🛡️ Operations Admin' : '✓ Verified Client Account'}
+                          {currentUser.role === 'admin' ? '🛡️ Operations Admin' : '✓ Verified Client Account'}
                         </span>
                       </div>
                     </div>
@@ -452,7 +460,7 @@ export default function Header({
                         <span>My Equipment Orders</span>
                       </Link>
 
-                      {user.role === 'admin' && (
+                      {currentUser.role === 'admin' && (
                         <>
                           <Link
                             href="/admin/products"

@@ -14,6 +14,15 @@ export default function MobileBottomNav({
 }) {
   const pathname = usePathname();
   const { user } = useStore();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const currentUser = mounted ? user : null;
+  const displayCartCount = mounted ? cartCount : 0;
+
   const isProductDetailPage =
     pathname &&
     pathname.startsWith('/products/') &&
@@ -45,11 +54,11 @@ export default function MobileBottomNav({
         type="button"
         onClick={onOpenCart}
         className="bottom-nav-item bottom-nav-cart"
-        aria-label={`View Cart. ${cartCount} items`}
+        aria-label={`View Cart. ${displayCartCount} items`}
       >
         <div className="cart-badge-wrap">
           <ShoppingCart size={20} />
-          {cartCount > 0 && <span className="bottom-badge">{cartCount}</span>}
+          {displayCartCount > 0 && <span className="bottom-badge">{displayCartCount}</span>}
         </div>
         <span>Inquiry</span>
       </button>
@@ -64,16 +73,16 @@ export default function MobileBottomNav({
       </Link>
 
       <Link
-        href={user ? "/orders" : "/login"}
-        className={`bottom-nav-item bottom-nav-account ${user ? 'logged-in' : ''}`}
-        aria-label={user ? `My Account (${user.name})` : "Sign In to Account"}
-        title={user ? user.name : "Sign In"}
+        href={currentUser ? "/orders" : "/login"}
+        className={`bottom-nav-item bottom-nav-account ${currentUser ? 'logged-in' : ''}`}
+        aria-label={currentUser ? `My Account (${currentUser.name})` : "Sign In to Account"}
+        title={currentUser ? currentUser.name : "Sign In"}
       >
         <div className="account-icon-wrap">
           <User size={20} />
-          {user && <span className="account-avatar-dot" />}
+          {currentUser && <span className="account-avatar-dot" />}
         </div>
-        <span>{user ? 'Account' : 'Sign In'}</span>
+        <span>{currentUser ? 'Account' : 'Sign In'}</span>
       </Link>
 
       <style jsx>{`

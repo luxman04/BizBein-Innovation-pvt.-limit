@@ -55,11 +55,11 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable}`}>
+    <html lang="en" className={`${plusJakartaSans.variable} ${inter.variable}`} suppressHydrationWarning>
       <head>
         <link rel="icon" href="/bizbein-innovations-logo.png" />
       </head>
-      <body>
+      <body suppressHydrationWarning>
         <StyledJsxRegistry>
           <StoreProvider>
             <StoreLayout>{children}</StoreLayout>
