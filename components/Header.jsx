@@ -240,8 +240,23 @@ export default function Header({
             </button>
           </div>
 
-          {/* Mobile Hamburger & Cart */}
+          {/* Mobile Actions: Account, Cart, Menu */}
           <div className="mobile-header-right">
+            <Link
+              href={user ? "/orders" : "/login"}
+              className="mobile-account-btn"
+              aria-label={user ? `Account (${user.name})` : "Login or Register"}
+              title={user ? user.name : "Login / Register"}
+            >
+              {user ? (
+                <div className="mobile-avatar-circle">
+                  {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                </div>
+              ) : (
+                <User size={20} />
+              )}
+            </Link>
+
             <button
               type="button"
               className="mobile-cart-btn"
@@ -410,30 +425,89 @@ export default function Header({
             </div>
 
             <div className="drawer-scroll-body">
-              {user?.role === 'admin' && (
-                <div className="drawer-section" style={{ background: '#fef3c7', padding: '12px', borderRadius: '8px' }}>
-                  <div className="drawer-heading" style={{ color: '#92400e', marginBottom: '8px' }}>Administrator Controls</div>
-                  <div className="drawer-actions-grid">
+              {/* User Account / Auth Section */}
+              <div className="drawer-user-section">
+                {user ? (
+                  <div className="drawer-user-card logged-in">
+                    <div className="drawer-user-header">
+                      <div className="drawer-user-avatar">
+                        {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                      <div className="drawer-user-details">
+                        <strong className="drawer-user-name">{user.name}</strong>
+                        <span className="drawer-user-email">{user.email}</span>
+                        <span className="drawer-user-role-badge">
+                          {user.role === 'admin' ? '🛡️ Operations Admin' : '✓ Verified Client Account'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="drawer-user-links">
+                      <Link
+                        href="/orders"
+                        className="drawer-user-link-btn"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Package size={15} />
+                        <span>My Equipment Orders</span>
+                      </Link>
+
+                      {user.role === 'admin' && (
+                        <>
+                          <Link
+                            href="/admin/products"
+                            className="drawer-user-link-btn admin"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <ShieldAlert size={15} />
+                            <span>Manage Products</span>
+                          </Link>
+                          <Link
+                            href="/admin/orders"
+                            className="drawer-user-link-btn admin"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            <FileText size={15} />
+                            <span>Orders Dispatch Desk</span>
+                          </Link>
+                        </>
+                      )}
+
+                      <button
+                        type="button"
+                        className="drawer-logout-btn"
+                        onClick={() => {
+                          setMobileMenuOpen(false);
+                          logout();
+                        }}
+                      >
+                        <LogOut size={15} />
+                        <span>Sign Out / Logout</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="drawer-user-card guest">
+                    <div className="drawer-guest-header">
+                      <div className="drawer-guest-icon">
+                        <User size={20} className="text-gold" />
+                      </div>
+                      <div className="drawer-guest-details">
+                        <strong>Client Procurement Portal</strong>
+                        <span>Sign in for factory pricing, live orders & quotes.</span>
+                      </div>
+                    </div>
                     <Link
-                      href="/admin/products"
-                      className="drawer-btn drawer-btn-yellow"
+                      href="/login"
+                      className="drawer-auth-btn"
                       onClick={() => setMobileMenuOpen(false)}
-                      style={{ textDecoration: 'none' }}
                     >
-                      <ShieldAlert size={16} />
-                      <span>Manage Products</span>
-                    </Link>
-                    <Link
-                      href="/admin/orders"
-                      className="drawer-btn drawer-btn-outline"
-                      onClick={() => setMobileMenuOpen(false)}
-                      style={{ textDecoration: 'none' }}
-                    >
-                      <span>Orders Dispatch Desk</span>
+                      <User size={15} />
+                      <span>Sign In / Register</span>
                     </Link>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
               <div className="drawer-section">
                 <div className="drawer-heading">Direct Contact & Orders</div>
@@ -1368,6 +1442,229 @@ export default function Header({
           background: #ffffff;
           border: 1px solid #cbd5e1;
           color: #1e293b;
+        }
+
+        .mobile-account-btn {
+          background: #f1f5f9;
+          border: none;
+          padding: 8px;
+          border-radius: 8px;
+          color: #1e293b;
+          text-decoration: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          transition: background 0.15s ease;
+        }
+
+        .mobile-account-btn:hover {
+          background: #e2e8f0;
+        }
+
+        .mobile-avatar-circle {
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          background: #F8B50E;
+          color: #0f172a;
+          font-weight: 800;
+          font-size: 11px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        /* Drawer User Account Section */
+        .drawer-user-section {
+          margin-bottom: 4px;
+        }
+
+        .drawer-user-card {
+          border-radius: 10px;
+          padding: 12px;
+          border: 1px solid #e2e8f0;
+        }
+
+        .drawer-user-card.logged-in {
+          background: #f8fafc;
+          border-color: #cbd5e1;
+        }
+
+        .drawer-user-card.guest {
+          background: #fef7ea;
+          border-color: #fde68a;
+        }
+
+        .drawer-user-header {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 10px;
+          padding-bottom: 10px;
+          border-bottom: 1px solid #e2e8f0;
+        }
+
+        .drawer-user-avatar {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: #F8B50E;
+          color: #0f172a;
+          font-size: 17px;
+          font-weight: 800;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .drawer-user-details {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          min-width: 0;
+        }
+
+        .drawer-user-name {
+          font-size: 13.5px;
+          font-weight: 700;
+          color: #0f172a;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .drawer-user-email {
+          font-size: 11.5px;
+          color: #64748b;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .drawer-user-role-badge {
+          display: inline-block;
+          font-size: 10px;
+          font-weight: 700;
+          color: #047857;
+          background: #ecfdf5;
+          padding: 1px 6px;
+          border-radius: 4px;
+          margin-top: 2px;
+          width: fit-content;
+        }
+
+        .drawer-user-links {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+
+        .drawer-user-link-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          border-radius: 6px;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          color: #1e293b;
+          text-decoration: none;
+          font-size: 12.5px;
+          font-weight: 600;
+          transition: background 0.15s ease;
+        }
+
+        .drawer-user-link-btn:hover {
+          background: #f1f5f9;
+        }
+
+        .drawer-user-link-btn.admin {
+          background: #fffbeb;
+          border-color: #fde68a;
+          color: #92400e;
+        }
+
+        .drawer-logout-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          width: 100%;
+          padding: 9px;
+          border-radius: 6px;
+          background: #fee2e2;
+          color: #b91c1c;
+          border: 1px solid #fecaca;
+          font-size: 12px;
+          font-weight: 700;
+          cursor: pointer;
+          font-family: inherit;
+          margin-top: 4px;
+          transition: background 0.15s ease;
+        }
+
+        .drawer-logout-btn:hover {
+          background: #fca5a5;
+        }
+
+        .drawer-guest-header {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 10px;
+        }
+
+        .drawer-guest-icon {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          background: #ffffff;
+          border: 1.5px solid #F8B50E;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .drawer-guest-details {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .drawer-guest-details strong {
+          font-size: 13px;
+          color: #78350f;
+        }
+
+        .drawer-guest-details span {
+          font-size: 11.5px;
+          color: #92400e;
+          line-height: 1.3;
+        }
+
+        .drawer-auth-btn {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          width: 100%;
+          padding: 10px;
+          border-radius: 6px;
+          background: #F8B50E;
+          color: #0f172a;
+          text-decoration: none;
+          font-size: 13px;
+          font-weight: 700;
+          box-shadow: 0 2px 4px rgba(248, 181, 14, 0.25);
+          transition: transform 0.1s ease;
+        }
+
+        .drawer-auth-btn:hover {
+          background: #e5a407;
+          transform: translateY(-1px);
         }
       `}</style>
     </header>

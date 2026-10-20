@@ -3,7 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Phone, MapPin, ShoppingCart, Mail } from 'lucide-react';
+import { Home, Phone, MapPin, ShoppingCart, User } from 'lucide-react';
+import { useStore } from '../context/StoreContext';
 import { companyDetails } from '../data/products';
 
 export default function MobileBottomNav({
@@ -12,6 +13,7 @@ export default function MobileBottomNav({
   onOpenContact
 }) {
   const pathname = usePathname();
+  const { user } = useStore();
   const isProductDetailPage =
     pathname &&
     pathname.startsWith('/products/') &&
@@ -61,14 +63,14 @@ export default function MobileBottomNav({
         <span>Contact</span>
       </Link>
 
-      <a
-        href={`mailto:${companyDetails.salesEmail}`}
-        className="bottom-nav-item"
-        aria-label="Send Sales RFQ Email"
+      <Link
+        href={user ? "/orders" : "/login"}
+        className="bottom-nav-item bottom-nav-account"
+        aria-label={user ? "My Account & Orders" : "Sign In to Account"}
       >
-        <Mail size={20} />
-        <span>Email</span>
-      </a>
+        <User size={20} />
+        <span>{user ? (user.name ? user.name.split(' ')[0] : 'Account') : 'Sign In'}</span>
+      </Link>
 
       <style jsx>{`
         .mobile-bottom-nav {
