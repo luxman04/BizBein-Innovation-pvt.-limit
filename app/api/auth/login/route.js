@@ -81,7 +81,8 @@ export async function POST(request) {
       userName: user.name
     });
 
-    const isDev = process.env.NODE_ENV !== 'production' || emailResult?.status === 'simulated';
+    const emailSent = emailResult?.status === 'sent';
+    const isSimulated = !emailSent;
 
     // NOTE: Authenticated session is NOT granted until OTP verification succeeds.
     return NextResponse.json({
@@ -94,11 +95,14 @@ export async function POST(request) {
         email: cleanEmail
       },
       cooldownSeconds: 60,
-      devOtp: isDev ? plainOtp : undefined,
-      emailSent: emailResult?.status === 'sent',
-      message: emailResult?.status === 'sent'
+      devOtp: isSimulated ? plainOtp : undefined,
+      emailSent,
+      deliveryNotice: emailResult?.isSandboxRestriction
+        ? 'Resend Free Sandbox: Real email can only be delivered to your registered Resend email (luxmankumar534@gmail.com). For all other domains, verify your domain at resend.com/domains or use Gmail SMTP.'
+        : undefined,
+      message: emailSent
         ? 'A 6-digit verification code has been sent to your email.'
-        : 'Verification code generated. (Email simulated in development mode).'
+        : (emailResult?.isSandboxRestriction ? 'Resend sandbox restricted recipient. Use code below to continue.' : 'Verification code generated.')
     });
   } catch (err) {
     console.error('[API Login Error]:', err);

@@ -56,6 +56,7 @@ function LoginContent() {
   const [cooldownSeconds, setCooldownSeconds] = useState(60);
   const [expirySeconds, setExpirySeconds] = useState(300); // 5 minutes
   const [devOtp, setDevOtp] = useState('');
+  const [deliveryNotice, setDeliveryNotice] = useState('');
 
   const digitRefs = [
     useRef(null),
@@ -152,6 +153,7 @@ function LoginContent() {
         setAttemptsRemaining(null);
         setOtpDigits(['', '', '', '', '', '']);
         setDevOtp(result.devOtp || '');
+        setDeliveryNotice(result.deliveryNotice || '');
         setStep('otp');
       } else {
         router.push(redirectUrl);
@@ -262,6 +264,7 @@ function LoginContent() {
         setAttemptsRemaining(null);
         setOtpDigits(['', '', '', '', '', '']);
         if (res.devOtp) setDevOtp(res.devOtp);
+        if (res.deliveryNotice) setDeliveryNotice(res.deliveryNotice);
         digitRefs[0]?.current?.focus();
       }
     } catch (err) {
@@ -532,11 +535,13 @@ function LoginContent() {
             {devOtp && (
               <div className="dev-otp-banner">
                 <div className="dev-otp-header">
-                  <span className="dev-otp-badge">⚡ SIMULATED MODE</span>
-                  <span className="dev-otp-sub">Email delivery simulated (no SMTP/Resend key)</span>
+                  <span className="dev-otp-badge">{deliveryNotice ? 'RESEND SANDBOX' : 'TEST MODE'}</span>
+                  <span className="dev-otp-sub">
+                    {deliveryNotice || 'Email delivery simulated (no SMTP/Resend key)'}
+                  </span>
                 </div>
                 <div className="dev-otp-body">
-                  <span>Your Code: <strong className="dev-otp-code">{devOtp}</strong></span>
+                  <span>Code: <strong className="dev-otp-code">{devOtp}</strong></span>
                   <button
                     type="button"
                     onClick={() => {
