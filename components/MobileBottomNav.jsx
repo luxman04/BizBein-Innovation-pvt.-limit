@@ -35,7 +35,9 @@ export default function MobileBottomNav({
   return (
     <nav className="mobile-bottom-nav" aria-label="Mobile Quick Actions">
       <a href="#machinery-catalog" className="bottom-nav-item">
-        <Home size={20} />
+        <div className="item-icon-box">
+          <Home size={20} />
+        </div>
         <span>Catalog</span>
       </a>
 
@@ -56,7 +58,7 @@ export default function MobileBottomNav({
         className="bottom-nav-item bottom-nav-cart"
         aria-label={`View Cart. ${displayCartCount} items`}
       >
-        <div className="cart-badge-wrap">
+        <div className="item-icon-box">
           <ShoppingCart size={20} />
           {displayCartCount > 0 && <span className="bottom-badge">{displayCartCount}</span>}
         </div>
@@ -68,7 +70,9 @@ export default function MobileBottomNav({
         className="bottom-nav-item"
         aria-label="View Plant Location and Contact Page"
       >
-        <MapPin size={20} />
+        <div className="item-icon-box">
+          <MapPin size={20} />
+        </div>
         <span>Contact</span>
       </Link>
 
@@ -78,7 +82,7 @@ export default function MobileBottomNav({
         aria-label={currentUser ? `My Account (${currentUser.name})` : "Sign In to Account"}
         title={currentUser ? currentUser.name : "Sign In"}
       >
-        <div className="account-icon-wrap">
+        <div className="item-icon-box">
           <User size={20} />
           {currentUser && <span className="account-avatar-dot" />}
         </div>
@@ -94,10 +98,10 @@ export default function MobileBottomNav({
           right: 0;
           background: #ffffff;
           border-top: 1px solid #e2e8f0;
-          box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.1);
+          box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08);
           z-index: 250;
-          padding: 6px 2px calc(6px + env(safe-area-inset-bottom, 0px));
-          grid-template-columns: repeat(5, minmax(0, 1fr));
+          padding: 6px 0 calc(6px + env(safe-area-inset-bottom, 0px));
+          grid-template-columns: repeat(5, 1fr);
           align-items: flex-end;
           gap: 0;
         }
@@ -106,34 +110,34 @@ export default function MobileBottomNav({
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: center;
-          gap: 3px;
-          color: #475569;
+          justify-content: flex-end;
+          gap: 4px;
+          color: #64748b;
           text-decoration: none;
           background: transparent;
           border: none;
           font-family: inherit;
-          font-size: 11px;
-          font-weight: 600;
-          padding: 3px 1px;
+          padding: 2px 2px 4px;
           cursor: pointer;
           min-width: 0;
           width: 100%;
           text-align: center;
           box-sizing: border-box;
           transition: color 0.15s ease;
+          -webkit-tap-highlight-color: transparent;
         }
 
         .bottom-nav-item span {
           display: block;
           width: 100%;
-          max-width: 100%;
           text-align: center;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
-          font-size: 10.5px;
+          font-size: 11px;
+          font-weight: 600;
           line-height: 1.2;
+          color: inherit;
         }
 
         .bottom-nav-item:active {
@@ -147,7 +151,8 @@ export default function MobileBottomNav({
         .call-icon-wrap {
           background-color: #F8B50E;
           color: #0f172a;
-          padding: 8px;
+          width: 38px;
+          height: 38px;
           border-radius: 50%;
           display: flex;
           align-items: center;
@@ -156,18 +161,19 @@ export default function MobileBottomNav({
           box-shadow: 0 4px 10px rgba(248, 181, 14, 0.45);
         }
 
-        .cart-badge-wrap,
-        .account-icon-wrap {
+        .item-icon-box {
           position: relative;
-          display: flex;
+          display: inline-flex;
           align-items: center;
           justify-content: center;
+          width: 24px;
+          height: 24px;
         }
 
         .bottom-badge {
           position: absolute;
-          top: -6px;
-          right: -8px;
+          top: -5px;
+          right: -9px;
           background-color: #F8B50E;
           color: #0f172a;
           font-size: 10px;
@@ -175,12 +181,16 @@ export default function MobileBottomNav({
           border-radius: 10px;
           padding: 1px 5px;
           min-width: 16px;
-          text-align: center;
+          height: 15px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 1;
         }
 
         .account-avatar-dot {
           position: absolute;
-          top: -2px;
+          top: -1px;
           right: -2px;
           width: 7px;
           height: 7px;
