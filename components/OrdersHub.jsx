@@ -4,6 +4,14 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useStore } from '../context/StoreContext';
+
+function useIsMounted() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  return mounted;
+}
 import {
   Package,
   Calendar,
@@ -177,6 +185,8 @@ const SAMPLE_DEMO_ORDERS = [
 export default function OrdersHub() {
   const router = useRouter();
   const { user, authLoading, showToast } = useStore();
+  const isMounted = useIsMounted();
+  const currentUser = isMounted ? user : null;
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -422,37 +432,6 @@ export default function OrdersHub() {
     return list;
   }, [orders, activeTab, searchQuery]);
 
-  if (authLoading || (loading && user)) {
-    return (
-      <div className="orders-loading-state">
-        <div className="spinner"></div>
-        <p>Loading your procurement orders & dispatch records...</p>
-        <style jsx>{`
-          .orders-loading-state {
-            padding: 100px 20px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 16px;
-            color: #64748b;
-          }
-          .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3.5px solid #e2e8f0;
-            border-top-color: #F8B50E;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-          }
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
-      </div>
-    );
-  }
-
   return (
     <div className="orders-hub-page">
       <div className="orders-hub-container">
@@ -474,7 +453,7 @@ export default function OrdersHub() {
         </div>
 
         {/* Guest prompt if not logged in */}
-        {!user && (
+        {!currentUser && (
           <div className="guest-lookup-card">
             <div className="lookup-info">
               <h3>Track Order Consignment</h3>
@@ -619,7 +598,12 @@ export default function OrdersHub() {
         )}
 
         {/* Orders List */}
-        {filteredOrders.length === 0 ? (
+        {!isMounted || authLoading || (loading && user) ? (
+          <div className="orders-loading-state">
+            <div className="spinner"></div>
+            <p>Loading your procurement orders & dispatch records...</p>
+          </div>
+        ) : filteredOrders.length === 0 ? (
           <div className="empty-orders-state">
             <ShoppingBag size={52} className="empty-icon text-gold" />
             <h3>No Orders Found</h3>

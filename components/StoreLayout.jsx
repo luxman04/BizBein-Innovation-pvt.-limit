@@ -3,13 +3,15 @@
 import React, { useState } from 'react';
 import Header from './Header';
 import Footer from './Footer';
-import MobileBottomNav from './MobileBottomNav';
 import WhatsAppButton from './WhatsAppButton';
-import RequestQuoteModal from './RequestQuoteModal';
-import QuickInquiryDrawer from './QuickInquiryDrawer';
+import MobileBottomNav from './MobileBottomNav';
 import ExpertCallModal from './ExpertCallModal';
 import TrackOrderModal from './TrackOrderModal';
 import LocationAndContactModal from './LocationAndContactModal';
+import RequestQuoteModal from './RequestQuoteModal';
+import QuickInquiryDrawer from './QuickInquiryDrawer';
+import CookieConsentBanner from './CookieConsentBanner';
+import CookieSettingsModal from './CookieSettingsModal';
 import { useStore } from '../context/StoreContext';
 import { CheckCircle, AlertCircle, Info, X } from 'lucide-react';
 
@@ -121,6 +123,10 @@ export default function StoreLayout({ children }) {
         isOpen={contactModalOpen}
         onClose={closeContactModal}
       />
+
+      {/* Cookie Consent Banner & Settings Modal */}
+      <CookieConsentBanner />
+      <CookieSettingsModal />
 
       <style jsx>{`
         .store-shell {

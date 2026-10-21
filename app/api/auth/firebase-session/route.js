@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { findUserByEmail, createUser } from '../../../../lib/db';
+import { findUserByEmail, findUserByPhone, createUser } from '../../../../lib/db';
 import { signAuthToken, createSessionCookie } from '../../../../lib/auth';
 
 export async function POST(request) {
@@ -7,21 +7,30 @@ export async function POST(request) {
     const body = await request.json();
     const { email, name, phone, uid } = body;
 
-    if (!email || !email.includes('@')) {
-      return NextResponse.json({ error: 'Valid email address is required.' }, { status: 400 });
+    const cleanPhone = (phone || '').trim();
+    const cleanEmail = email && email.includes('@')
+      ? email.toLowerCase().trim()
+      : (cleanPhone ? `${cleanPhone.replace(/[^0-9]/g, '')}@bizbein-phone.internal` : '');
+
+    if (!cleanEmail && !cleanPhone) {
+      return NextResponse.json({ error: 'Valid email address or contact number is required.' }, { status: 400 });
     }
 
-    const cleanEmail = email.toLowerCase().trim();
-
-    // Check if user already exists in database
-    let user = await findUserByEmail(cleanEmail);
+    // Check if user already exists in database by phone or email
+    let user = null;
+    if (cleanPhone) {
+      user = await findUserByPhone(cleanPhone);
+    }
+    if (!user && cleanEmail) {
+      user = await findUserByEmail(cleanEmail);
+    }
 
     if (!user) {
       // Create account automatically from Firebase verified profile
       user = await createUser({
-        name: (name || cleanEmail.split('@')[0] || 'Industrial Client').trim(),
+        name: (name || cleanEmail.split('@')[0] || `Client ${cleanPhone.slice(-4)}` || 'Industrial Client').trim(),
         email: cleanEmail,
-        phone: (phone || '').trim(),
+        phone: cleanPhone,
         passwordHash: `firebase_auth_${uid || Date.now()}`,
         role: 'customer'
       });

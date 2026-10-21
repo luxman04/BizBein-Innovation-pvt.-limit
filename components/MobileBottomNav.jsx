@@ -1,11 +1,19 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Phone, MapPin, ShoppingCart, User } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { companyDetails } from '../data/products';
+
+function useIsMounted() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  return mounted;
+}
 
 export default function MobileBottomNav({
   cartCount,
@@ -14,11 +22,7 @@ export default function MobileBottomNav({
 }) {
   const pathname = usePathname();
   const { user } = useStore();
-  const [mounted, setMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsMounted();
 
   const currentUser = mounted ? user : null;
   const displayCartCount = mounted ? cartCount : 0;
@@ -35,9 +39,9 @@ export default function MobileBottomNav({
   return (
     <nav className="mobile-bottom-nav" aria-label="Mobile Quick Actions">
       <a href="#machinery-catalog" className="bottom-nav-item">
-        <div className="item-icon-box">
+        <span className="item-icon-box">
           <Home size={20} />
-        </div>
+        </span>
         <span>Catalog</span>
       </a>
 
@@ -46,9 +50,9 @@ export default function MobileBottomNav({
         className="bottom-nav-item bottom-nav-call"
         aria-label="Direct Factory Call"
       >
-        <div className="call-icon-wrap">
+        <span className="call-icon-wrap">
           <Phone size={18} />
-        </div>
+        </span>
         <span>Call Desk</span>
       </a>
 
@@ -58,10 +62,10 @@ export default function MobileBottomNav({
         className="bottom-nav-item bottom-nav-cart"
         aria-label={`View Cart. ${displayCartCount} items`}
       >
-        <div className="item-icon-box">
+        <span className="item-icon-box">
           <ShoppingCart size={20} />
-          {displayCartCount > 0 && <span className="bottom-badge">{displayCartCount}</span>}
-        </div>
+          {mounted && displayCartCount > 0 && <span className="bottom-badge">{displayCartCount}</span>}
+        </span>
         <span>Inquiry</span>
       </button>
 
@@ -70,23 +74,23 @@ export default function MobileBottomNav({
         className="bottom-nav-item"
         aria-label="View Plant Location and Contact Page"
       >
-        <div className="item-icon-box">
+        <span className="item-icon-box">
           <MapPin size={20} />
-        </div>
+        </span>
         <span>Contact</span>
       </Link>
 
       <Link
-        href={currentUser ? "/orders" : "/login"}
-        className={`bottom-nav-item bottom-nav-account ${currentUser ? 'logged-in' : ''}`}
-        aria-label={currentUser ? `My Account (${currentUser.name})` : "Sign In to Account"}
-        title={currentUser ? currentUser.name : "Sign In"}
+        href={mounted && currentUser ? "/orders" : "/login"}
+        className={`bottom-nav-item bottom-nav-account ${mounted && currentUser ? 'logged-in' : ''}`}
+        aria-label={mounted && currentUser ? `My Account (${currentUser.name})` : "Sign In to Account"}
+        title={mounted && currentUser ? currentUser.name : "Sign In"}
       >
-        <div className="item-icon-box">
+        <span className="item-icon-box">
           <User size={20} />
-          {currentUser && <span className="account-avatar-dot" />}
-        </div>
-        <span>{currentUser ? 'Account' : 'Sign In'}</span>
+          {mounted && currentUser && <span className="account-avatar-dot" />}
+        </span>
+        <span>{mounted && currentUser ? 'Account' : 'Sign In'}</span>
       </Link>
 
       <style jsx>{`

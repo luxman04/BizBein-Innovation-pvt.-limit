@@ -3,8 +3,54 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { featuredProducts, products as initialProducts } from '../data/products';
+import {
+  getCookie,
+  setCookie,
+  getStoredConsent,
+  saveStoredConsent,
+  getStoredPreferences,
+  saveStoredPreferences,
+  DEFAULT_CONSENT,
+  DEFAULT_PREFERENCES,
+  CART_COOKIE_KEY
+} from '../lib/cookies';
+import {
+  initAnalytics,
+  trackAddToCart as sendAnalyticsAddToCart,
+  trackQuoteRequest as sendAnalyticsQuoteRequest,
+  trackSearch as sendAnalyticsSearch
+} from '../lib/analytics';
 
 const StoreContext = createContext(null);
+
+// ---------------- TRUSTED PRODUCT CART VALIDATION ----------------
+// Validates product IDs, quantities, and prices against authoritative catalog data
+function validateAndSanitizeCart(rawList, catalog) {
+  if (!Array.isArray(rawList)) return [];
+  const sanitized = [];
+
+  for (const raw of rawList) {
+    if (!raw || !raw.id) continue;
+
+    // Must match a genuine catalog product
+    const trusted = catalog.find(
+      (p) => p.id?.toString().toLowerCase() === raw.id?.toString().toLowerCase()
+    );
+    if (!trusted) continue;
+
+    // Enforce integer quantity bounds (1 to 99)
+    const validQty = Math.min(99, Math.max(1, parseInt(raw.qty, 10) || 1));
+
+    // Overwrite any manipulated price, name, or metadata with trusted product data
+    sanitized.push({
+      ...trusted,
+      qty: validQty,
+      variant: raw.variant || null
+    });
+  }
+
+  return sanitized;
+}
 
 export function StoreProvider({ children }) {
   const router = useRouter();
@@ -33,7 +79,7 @@ export function StoreProvider({ children }) {
     refreshProducts();
   }, [refreshProducts]);
 
-  // Cart State (Hydrated from localStorage on mount)
+  // Cart State
   const [cartItems, setCartItems] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -53,6 +99,12 @@ export function StoreProvider({ children }) {
   const [trackModalOpen, setTrackModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // ---------------- USER PREFERENCES & COOKIE CONSENT ----------------
+  const [consent, setConsent] = useState(DEFAULT_CONSENT);
+  const [cookieBannerOpen, setCookieBannerOpen] = useState(false);
+  const [cookieSettingsOpen, setCookieSettingsOpen] = useState(false);
+  const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
+
   // ---------------- TOAST NOTIFICATIONS ----------------
   const showToast = useCallback((message, type = 'success') => {
     setToast({ message, type });
@@ -71,7 +123,7 @@ export function StoreProvider({ children }) {
     }
   }, [toast]);
 
-  // ---------------- AUTHENTICATION CHECK ----------------
+  // ---------------- AUTHENTICATION & FIREBASE SESSION ----------------
   const refreshUser = useCallback(async () => {
     try {
       setAuthLoading(true);
@@ -93,34 +145,165 @@ export function StoreProvider({ children }) {
     }
   }, []);
 
-  // Hydrate user and cart on mount
+  // Listen to Firebase Auth state with browserLocalPersistence & onAuthStateChanged
   useEffect(() => {
-    refreshUser();
+    let unsubscribe = null;
+    let isCancelled = false;
 
+    async function initAuthListener() {
+      try {
+        const { auth, ensureAuthPersistence, isFirebaseConfigured } = await import('../lib/firebase');
+        if (isFirebaseConfigured && auth) {
+          await ensureAuthPersistence();
+          const { onAuthStateChanged } = await import('firebase/auth');
+
+          unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+            if (isCancelled) return;
+
+            if (fbUser) {
+              // Firebase session found in browser persistence: sync session cookie for middleware protection
+              try {
+                const res = await fetch('/api/auth/firebase-session', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    email: fbUser.email,
+                    name: fbUser.displayName,
+                    phone: fbUser.phoneNumber,
+                    uid: fbUser.uid
+                  })
+                });
+
+                if (res.ok) {
+                  const data = await res.json();
+                  if (data.user) {
+                    setUser(data.user);
+                    setAuthLoading(false);
+                    return;
+                  }
+                }
+              } catch (e) {
+                console.warn('[StoreContext] Firebase session sync error:', e);
+              }
+
+              // Direct user representation fallback if backend sync was delayed
+              setUser({
+                id: fbUser.uid,
+                name: fbUser.displayName || fbUser.email?.split('@')[0] || 'User',
+                email: fbUser.email,
+                phone: fbUser.phoneNumber || '',
+                role: 'customer'
+              });
+              setAuthLoading(false);
+            } else {
+              // No active Firebase session: check for direct email/password cookie session
+              try {
+                const res = await fetch('/api/auth/me', { cache: 'no-store' });
+                if (res.ok) {
+                  const data = await res.json();
+                  if (data.authenticated && data.user) {
+                    setUser(data.user);
+                    setAuthLoading(false);
+                    return;
+                  }
+                }
+              } catch (e) {}
+
+              setUser(null);
+              setAuthLoading(false);
+            }
+          });
+
+          return;
+        }
+      } catch (err) {
+        console.warn('[StoreContext] Firebase auth listener setup failed:', err);
+      }
+
+      // Fallback to cookie check if Firebase not configured
+      refreshUser();
+    }
+
+    initAuthListener();
+
+    return () => {
+      isCancelled = true;
+      if (unsubscribe) unsubscribe();
+    };
+  }, [refreshUser]);
+
+  // Hydrate cart, consent, preferences, and analytics on mount
+  useEffect(() => {
+    initAnalytics();
+
+    // 1. Consent Hydration
+    const storedConsent = getStoredConsent();
+    setConsent(storedConsent);
+    if (!storedConsent.consentGiven) {
+      setCookieBannerOpen(true);
+    }
+
+    // 2. Preferences Hydration
+    const storedPrefs = getStoredPreferences();
+    setPreferences(storedPrefs);
+    if (storedPrefs.theme && typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', storedPrefs.theme);
+    }
+
+    // 3. Cart Hydration with Product Catalog Validation
     try {
-      const saved = localStorage.getItem('bizbein_cart');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setCartItems(parsed);
+      let rawCart = null;
+      const localCart = localStorage.getItem('bizbein_cart');
+      if (localCart) {
+        rawCart = JSON.parse(localCart);
+      } else {
+        const cookieCart = getCookie(CART_COOKIE_KEY);
+        if (cookieCart) {
+          rawCart = JSON.parse(cookieCart);
         }
       }
-    } catch (e) {}
+
+      if (rawCart && Array.isArray(rawCart) && rawCart.length > 0) {
+        const validated = validateAndSanitizeCart(rawCart, initialProducts);
+        setCartItems(validated);
+      }
+    } catch (e) {
+      console.warn('[StoreContext] Cart hydration warning:', e);
+    }
 
     setIsLoaded(true);
   }, [refreshUser]);
 
-  // Sync cart to localStorage whenever it changes
+  // Sync cart to localStorage and cookie whenever it changes
   useEffect(() => {
     if (isLoaded) {
       try {
-        localStorage.setItem('bizbein_cart', JSON.stringify(cartItems));
+        const validated = validateAndSanitizeCart(cartItems, products);
+        const serialized = JSON.stringify(validated);
+        localStorage.setItem('bizbein_cart', serialized);
+
+        // Store minimal representation in cookie for persistence across browser sessions
+        const minimalCart = validated.map((it) => ({
+          id: it.id,
+          qty: it.qty,
+          variant: it.variant || null
+        }));
+        setCookie(CART_COOKIE_KEY, JSON.stringify(minimalCart), { days: 180 });
       } catch (e) {}
     }
-  }, [cartItems, isLoaded]);
+  }, [cartItems, isLoaded, products]);
+
+  // Re-verify cart against updated dynamic products catalog
+  useEffect(() => {
+    if (isLoaded && products.length > 0) {
+      setCartItems((prev) => {
+        if (prev.length === 0) return prev;
+        return validateAndSanitizeCart(prev, products);
+      });
+    }
+  }, [products, isLoaded]);
 
   // ---------------- PENDING ADD TO CART EXECUTION ----------------
-  // Executes pending item addition after user registers or logs in
   const executePendingAddToCart = useCallback((currentUser) => {
     if (!currentUser) return;
 
@@ -130,7 +313,6 @@ export function StoreProvider({ children }) {
 
       const pending = JSON.parse(raw);
       if (pending && pending.product) {
-        // Prevent duplicate items while allowing quantity increment
         const qtyToAdd = Math.max(1, parseInt(pending.qty, 10) || 1);
 
         setCartItems((prev) => {
@@ -145,9 +327,7 @@ export function StoreProvider({ children }) {
           return [...prev, { ...pending.product, qty: qtyToAdd }];
         });
 
-        // Clear pending item immediately to avoid duplicate addition on page reloads
         localStorage.removeItem('bizbein_pending_add');
-
         showToast(`"${pending.product.name}" was added to your cart!`, 'success');
         setCartDrawerOpen(true);
       }
@@ -156,7 +336,6 @@ export function StoreProvider({ children }) {
     }
   }, [showToast]);
 
-  // When user signs in, trigger pending action if any
   useEffect(() => {
     if (user && isLoaded) {
       executePendingAddToCart(user);
@@ -167,7 +346,6 @@ export function StoreProvider({ children }) {
   const addToCart = (product, qty = 1, options = {}) => {
     const quantity = Math.max(1, parseInt(qty, 10) || 1);
 
-    // Requirement 1: Check active authenticated session
     if (!user) {
       try {
         const pendingData = {
@@ -180,14 +358,12 @@ export function StoreProvider({ children }) {
       } catch (e) {}
 
       showToast('Please sign in or create an account to add items to your cart.', 'info');
-
-      // Preserve existing cart contents and current path during redirection
       const returnUrl = encodeURIComponent(window.location.pathname || '/products');
       router.push(`/login?redirect=${returnUrl}&pendingAdd=1`);
       return false;
     }
 
-    // Authenticated user: add to cart immediately
+    // Authenticated user: add and sanitize immediately
     setCartItems((prev) => {
       const existing = prev.find((item) => item.id === product.id);
       if (existing) {
@@ -198,6 +374,7 @@ export function StoreProvider({ children }) {
       return [...prev, { ...product, qty: quantity }];
     });
 
+    sendAnalyticsAddToCart(product, quantity);
     showToast(`"${product.name}" added to cart!`, 'success');
     setCartDrawerOpen(true);
     return true;
@@ -232,6 +409,7 @@ export function StoreProvider({ children }) {
       return [...prev, { ...product, qty: quantity }];
     });
 
+    sendAnalyticsAddToCart(product, quantity);
     setCartDrawerOpen(false);
     router.push('/checkout');
     return true;
@@ -242,8 +420,9 @@ export function StoreProvider({ children }) {
       removeItem(id);
       return;
     }
+    const safeQty = Math.min(99, Math.max(1, parseInt(newQty, 10) || 1));
     setCartItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, qty: newQty } : item))
+      prev.map((item) => (item.id === id ? { ...item, qty: safeQty } : item))
     );
   };
 
@@ -255,6 +434,7 @@ export function StoreProvider({ children }) {
     setCartItems([]);
     try {
       localStorage.removeItem('bizbein_cart');
+      setCookie(CART_COOKIE_KEY, '[]', { days: 0 });
     } catch (e) {}
   };
 
@@ -282,7 +462,6 @@ export function StoreProvider({ children }) {
   const register = async (name, email, phone, password) => {
     const cleanEmail = email.trim().toLowerCase();
 
-    // Direct registration: create user and establish session immediately without OTP
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -313,10 +492,13 @@ export function StoreProvider({ children }) {
   const resendOtp = async () => ({ success: true });
 
   const loginWithGoogle = async () => {
-    const { auth, googleProvider, isFirebaseConfigured } = await import('../lib/firebase');
+    const { auth, googleProvider, isFirebaseConfigured, ensureAuthPersistence } = await import('../lib/firebase');
     if (!isFirebaseConfigured || !auth) {
       throw new Error('Firebase configuration missing. Please add your NEXT_PUBLIC_FIREBASE_* keys to .env.local.');
     }
+    // Ensure Firebase browserLocalPersistence is ready
+    await ensureAuthPersistence();
+
     const { signInWithPopup } = await import('firebase/auth');
     const result = await signInWithPopup(auth, googleProvider);
     const fbUser = result.user;
@@ -343,6 +525,45 @@ export function StoreProvider({ children }) {
     return data.user;
   };
 
+  const sendPhoneOtp = async (phoneNumber, appVerifier) => {
+    const { auth, isFirebaseConfigured, ensureAuthPersistence } = await import('../lib/firebase');
+    if (!isFirebaseConfigured || !auth) {
+      throw new Error('Firebase configuration missing. Please check .env.local.');
+    }
+    await ensureAuthPersistence();
+    const { signInWithPhoneNumber } = await import('firebase/auth');
+    return signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+  };
+
+  const confirmPhoneOtp = async (confirmationResult, otpCode, name = '') => {
+    if (!confirmationResult || !confirmationResult.confirm) {
+      throw new Error('Verification session expired. Please request a new OTP.');
+    }
+    const result = await confirmationResult.confirm(otpCode);
+    const fbUser = result.user;
+
+    const res = await fetch('/api/auth/firebase-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: fbUser.email,
+        name: name || fbUser.displayName,
+        phone: fbUser.phoneNumber,
+        uid: fbUser.uid
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Failed to sync phone session.');
+    }
+
+    setUser(data.user);
+    showToast(`Welcome, ${data.user.name}! Signed in via Contact Number.`, 'success');
+    executePendingAddToCart(data.user);
+    return data.user;
+  };
+
   const logout = async () => {
     try {
       const { auth } = await import('../lib/firebase');
@@ -359,9 +580,66 @@ export function StoreProvider({ children }) {
     router.push('/');
   };
 
+  // ---------------- USER PREFERENCES HANDLERS ----------------
+  const updatePreference = useCallback((key, value) => {
+    setPreferences((prev) => {
+      const updated = saveStoredPreferences({ [key]: value });
+      if (key === 'theme' && typeof document !== 'undefined') {
+        document.documentElement.setAttribute('data-theme', value);
+      }
+      return updated;
+    });
+  }, []);
+
+  // ---------------- COOKIE CONSENT HANDLERS ----------------
+  const acceptAllCookies = useCallback(() => {
+    const updated = saveStoredConsent({
+      necessary: true,
+      analytics: true,
+      marketing: true
+    });
+    setConsent(updated);
+    setCookieBannerOpen(false);
+    showToast('All cookies accepted. Thank you for customizing your experience!', 'success');
+  }, [showToast]);
+
+  const rejectNonEssentialCookies = useCallback(() => {
+    const updated = saveStoredConsent({
+      necessary: true,
+      analytics: false,
+      marketing: false
+    });
+    setConsent(updated);
+    setCookieBannerOpen(false);
+    showToast('Non-essential cookies declined. Strictly necessary cookies remain active.', 'info');
+  }, [showToast]);
+
+  const saveCustomConsent = useCallback((choices) => {
+    const updated = saveStoredConsent({
+      necessary: true,
+      analytics: Boolean(choices.analytics),
+      marketing: Boolean(choices.marketing)
+    });
+    setConsent(updated);
+    setCookieBannerOpen(false);
+    showToast('Your cookie and privacy preferences have been saved.', 'success');
+  }, [showToast]);
+
+  const openCookieSettings = useCallback(() => setCookieSettingsOpen(true), []);
+  const closeCookieSettings = useCallback(() => setCookieSettingsOpen(false), []);
+
   const openQuoteModal = (product) => {
-    setActiveQuoteProduct(product || featuredProducts[0]);
+    const targetProduct = product || featuredProducts[0];
+    setActiveQuoteProduct(targetProduct);
     setQuoteModalOpen(true);
+    sendAnalyticsQuoteRequest(targetProduct);
+  };
+
+  const handleSetSearchQuery = (query) => {
+    setSearchQuery(query);
+    if (query && query.trim().length > 2) {
+      sendAnalyticsSearch(query.trim());
+    }
   };
 
   const totalCartCount = cartItems.reduce((acc, item) => acc + (item.qty || 1), 0);
@@ -385,6 +663,8 @@ export function StoreProvider({ children }) {
     login,
     register,
     loginWithGoogle,
+    sendPhoneOtp,
+    confirmPhoneOtp,
     verifyOtp,
     resendOtp,
     logout,
@@ -411,6 +691,20 @@ export function StoreProvider({ children }) {
     openTrackModal: () => setTrackModalOpen(true),
     closeTrackModal: () => setTrackModalOpen(false),
 
+    // User Preferences
+    preferences,
+    updatePreference,
+
+    // Cookie Consent Banner & Modal
+    consent,
+    cookieBannerOpen,
+    cookieSettingsOpen,
+    openCookieSettings,
+    closeCookieSettings,
+    acceptAllCookies,
+    rejectNonEssentialCookies,
+    saveCustomConsent,
+
     // Products Catalog
     products,
     refreshProducts,
@@ -419,7 +713,7 @@ export function StoreProvider({ children }) {
 
     // Search
     searchQuery,
-    setSearchQuery
+    setSearchQuery: handleSetSearchQuery
   };
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

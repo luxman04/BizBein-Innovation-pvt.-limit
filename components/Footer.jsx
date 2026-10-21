@@ -10,9 +10,15 @@ import {
   ShieldCheck
 } from 'lucide-react';
 import { companyDetails } from '../data/products';
+import { useStore } from '../context/StoreContext';
 
 export default function Footer({ onOpenContact }) {
-  const currentYear = new Date().getFullYear();
+  const { openCookieSettings } = useStore();
+  const [currentYear, setCurrentYear] = React.useState('2026');
+
+  React.useEffect(() => {
+    setCurrentYear(new Date().getFullYear().toString());
+  }, []);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -136,6 +142,15 @@ export default function Footer({ onOpenContact }) {
               <li>
                 <a href="#" className="footer-text-link">On-Site Engineer Support</a>
               </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={openCookieSettings}
+                  className="footer-text-link footer-btn-link"
+                >
+                  Cookie Settings
+                </button>
+              </li>
             </ul>
           </div>
 
@@ -193,11 +208,20 @@ export default function Footer({ onOpenContact }) {
         </div>
       </div>
 
-      {/* Copyright Line */}
+      {/* Copyright Line & Privacy Choices */}
       <div className="footer-copyright-tier">
         <div className="footer-container">
           <p className="copyright-line" suppressHydrationWarning>
-            © 2023-{currentYear} {companyDetails.name}. All Rights Reserved By {companyDetails.name}
+            {`© 2023-${currentYear} ${companyDetails.name}. All Rights Reserved By ${companyDetails.name}`}
+            <span className="copyright-divider"> • </span>
+            <button
+              type="button"
+              onClick={openCookieSettings}
+              className="footer-privacy-btn"
+              title="Manage Cookie and Data Protection Settings"
+            >
+              Cookie Settings
+            </button>
           </p>
         </div>
       </div>
@@ -450,6 +474,28 @@ export default function Footer({ onOpenContact }) {
           font-size: 13px;
           color: #666666;
           margin: 0;
+        }
+
+        .copyright-divider {
+          color: #94a3b8;
+          margin: 0 4px;
+        }
+
+        .footer-privacy-btn {
+          background: none;
+          border: none;
+          padding: 0;
+          font-family: inherit;
+          font-size: 13px;
+          color: #dc2626;
+          text-decoration: underline;
+          cursor: pointer;
+          font-weight: 500;
+          transition: color 0.15s ease;
+        }
+
+        .footer-privacy-btn:hover {
+          color: #991b1b;
         }
 
         /* 3. Payment Methods Tier */

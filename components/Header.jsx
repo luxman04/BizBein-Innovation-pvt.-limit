@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -24,6 +24,14 @@ import {
 import { companyDetails, categories } from '../data/products';
 import { useStore } from '../context/StoreContext';
 
+function useIsMounted() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  return mounted;
+}
+
 export default function Header({
   cartCount,
   onOpenCart,
@@ -40,11 +48,7 @@ export default function Header({
   const { user, logout } = useStore();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsMounted();
 
   const currentUser = mounted ? user : null;
   const displayCartCount = mounted ? cartCount : 0;
@@ -103,37 +107,41 @@ export default function Header({
               Track Order
             </button>
             <span className="top-divider">|</span>
-            {currentUser ? (
+            <div className="user-auth-wrap">
               <div className="user-auth-pill-group">
-                <Link href="/account/orders" className="top-btn-link user-profile-link">
-                  <User size={13} className="top-icon user-icon" />
-                  <span>{currentUser.name.split(' ')[0]}</span>
-                </Link>
-                {currentUser.role === 'admin' && (
+                {mounted && currentUser ? (
                   <>
-                    <span className="top-divider">|</span>
-                    <Link href="/admin/products" className="top-btn-link admin-badge-link" title="Manage Products & Images">
-                      <ShieldAlert size={12} className="top-icon text-gold" />
-                      <span>Manage Products</span>
+                    <Link href="/account/orders" className="top-btn-link user-profile-link">
+                      <User size={13} className="top-icon user-icon" />
+                      <span>{currentUser.name ? currentUser.name.split(' ')[0] : 'Account'}</span>
                     </Link>
+                    {currentUser.role === 'admin' && (
+                      <>
+                        <span className="top-divider">|</span>
+                        <Link href="/admin/products" className="top-btn-link admin-badge-link" title="Manage Products & Images">
+                          <ShieldAlert size={12} className="top-icon text-gold" />
+                          <span>Manage Products</span>
+                        </Link>
+                        <span className="top-divider">|</span>
+                        <Link href="/admin/orders" className="top-btn-link admin-badge-link" title="Commercial Orders Dispatch Desk">
+                          <span>Orders Desk</span>
+                        </Link>
+                      </>
+                    )}
                     <span className="top-divider">|</span>
-                    <Link href="/admin/orders" className="top-btn-link admin-badge-link" title="Commercial Orders Dispatch Desk">
-                      <span>Orders Desk</span>
-                    </Link>
+                    <button type="button" onClick={logout} className="top-btn-link logout-btn" title="Sign Out">
+                      <LogOut size={12} />
+                      <span>Logout</span>
+                    </button>
                   </>
+                ) : (
+                  <Link href="/login" className="top-btn-link user-login-btn">
+                    <span>Login / Register</span>
+                    <User size={13} className="top-icon user-icon" />
+                  </Link>
                 )}
-                <span className="top-divider">|</span>
-                <button type="button" onClick={logout} className="top-btn-link logout-btn" title="Sign Out">
-                  <LogOut size={12} />
-                  <span>Logout</span>
-                </button>
               </div>
-            ) : (
-              <Link href="/login" className="top-btn-link user-login-btn">
-                <span>Login / Register</span>
-                <User size={13} className="top-icon user-icon" />
-              </Link>
-            )}
+            </div>
           </div>
         </div>
       </div>
@@ -154,10 +162,10 @@ export default function Header({
                   if (fallback) fallback.style.display = 'flex';
                 }}
               />
-              <div id="header-fallback-logo" className="fallback-logo-pill" style={{ display: 'none' }}>
+              <span id="header-fallback-logo" className="fallback-logo-pill" style={{ display: 'none' }}>
                 <span className="fallback-top">BIZ BEIN</span>
                 <span className="fallback-sub">INNOVATIONS PVT. LTD.</span>
-              </div>
+              </span>
             </Link>
           </div>
 
@@ -230,10 +238,13 @@ export default function Header({
               className="cart-action-btn"
               onClick={onOpenCart}
               aria-label={`View Cart, ${displayCartCount} items`}
+              suppressHydrationWarning
             >
               <div className="cart-icon-box">
                 <ShoppingCart size={19} />
-                <span className="cart-badge-circle">{displayCartCount}</span>
+                {mounted && displayCartCount > 0 && (
+                  <span className="cart-badge-circle">{displayCartCount}</span>
+                )}
               </div>
               <span className="cart-text">Cart</span>
             </button>
@@ -249,17 +260,17 @@ export default function Header({
           </div>
 
           {/* Mobile Actions: Account, Cart, Menu */}
-          <div className="mobile-header-right">
+          <div className="mobile-header-right" suppressHydrationWarning>
             <Link
-              href={currentUser ? "/orders" : "/login"}
+              href={mounted && currentUser ? "/orders" : "/login"}
               className="mobile-account-btn"
-              aria-label={currentUser ? `Account (${currentUser.name})` : "Login or Register"}
-              title={currentUser ? currentUser.name : "Login / Register"}
+              aria-label={mounted && currentUser ? `Account (${currentUser.name})` : "Login or Register"}
+              title={mounted && currentUser ? currentUser.name : "Login / Register"}
             >
-              {currentUser ? (
-                <div className="mobile-avatar-circle">
+              {mounted && currentUser ? (
+                <span className="mobile-avatar-circle">
                   {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
-                </div>
+                </span>
               ) : (
                 <User size={20} />
               )}
@@ -270,9 +281,10 @@ export default function Header({
               className="mobile-cart-btn"
               onClick={onOpenCart}
               aria-label="Cart"
+              suppressHydrationWarning
             >
               <ShoppingCart size={20} />
-              {displayCartCount > 0 && <span className="mobile-cart-badge">{displayCartCount}</span>}
+              {mounted && displayCartCount > 0 && <span className="mobile-cart-badge">{displayCartCount}</span>}
             </button>
 
             <button
@@ -369,7 +381,8 @@ export default function Header({
             </li>
             <li className="nav-dropdown-parent">
               <Link href="/products" className="nav-link">
-                Products <ChevronDown size={13} className="inline-chevron" />
+                <span>Products</span>
+                <ChevronDown size={13} className="inline-chevron" />
               </Link>
               <div className="nav-simple-dropdown">
                 {categories.map((cat) => (
@@ -388,7 +401,8 @@ export default function Header({
             </li>
             <li className="nav-dropdown-parent">
               <Link href="/products" className="nav-link">
-                Solutions <ChevronDown size={13} className="inline-chevron" />
+                <span>Solutions</span>
+                <ChevronDown size={13} className="inline-chevron" />
               </Link>
               <div className="nav-simple-dropdown">
                 <Link href="/products/material-handling" className="dropdown-link">Material Handling Lines</Link>
