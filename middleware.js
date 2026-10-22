@@ -67,9 +67,9 @@ export async function middleware(request) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // If admin route, enforce admin role on the server
+  // If admin route, enforce admin or superadmin role on the server
   if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
-    if (payload.role !== 'admin') {
+    if (payload.role !== 'admin' && payload.role !== 'superadmin') {
       if (pathname.startsWith('/api/')) {
         return NextResponse.json(
           { error: 'Forbidden. Administrator privileges required.' },

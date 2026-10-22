@@ -68,6 +68,7 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
+    if (loading) return;
     setError('');
 
     if (cartItems.length === 0) {
@@ -88,7 +89,11 @@ export default function CheckoutPage() {
     setLoading(true);
 
     try {
+      const { auth } = await import('../../lib/firebase');
+      const activeUid = auth?.currentUser?.uid || user?.firebaseUid || user?.id;
+
       const payload = {
+        firebaseUid: activeUid,
         items: cartItems.map((item) => ({
           id: item.id,
           name: item.name,
@@ -110,6 +115,7 @@ export default function CheckoutPage() {
         orderNotes: orderNotes.trim()
       };
 
+      // 1. Authoritative server verification & local order creation
       const res = await fetch('/api/orders/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -121,7 +127,15 @@ export default function CheckoutPage() {
         throw new Error(data.error || 'Failed to place order.');
       }
 
-      // Clear customer's cart
+      // 2. Persist order into Cloud Firestore bound to authenticated Firebase user UID
+      try {
+        const { saveOrderToFirestore } = await import('../../lib/firestore-orders');
+        await saveOrderToFirestore(data.order, auth?.currentUser || user);
+      } catch (firestoreErr) {
+        console.warn('[Checkout] Cloud Firestore order write notice:', firestoreErr);
+      }
+
+      // 3. Clear customer's cart and navigate to order proforma tracking
       clearCart();
 
       showToast(`Order ${data.order.orderId} placed successfully!`, 'success');

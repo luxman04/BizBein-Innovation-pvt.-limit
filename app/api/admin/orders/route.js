@@ -11,7 +11,7 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Authentication required.' }, { status: 401 });
     }
 
-    if (user.role !== 'admin') {
+    if (user.role !== 'admin' && user.role !== 'superadmin') {
       return NextResponse.json(
         { error: 'Access denied. Administrator privileges required.' },
         { status: 403 }

@@ -36,10 +36,15 @@ export async function POST(request) {
       });
     }
 
+    if (uid && user) {
+      user.firebaseUid = uid;
+    }
+
     // Issue unified session token
     const token = signAuthToken(user);
     const safeUser = {
       id: user.id,
+      firebaseUid: uid || user.firebaseUid || user.id,
       name: user.name,
       email: user.email,
       phone: user.phone,

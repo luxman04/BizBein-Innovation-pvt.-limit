@@ -747,9 +747,9 @@ a.dropdown-link:hover {
   border-top: 1px solid #e2e8f0;
   box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08);
   z-index: 250;
-  padding: 6px 0 calc(6px + env(safe-area-inset-bottom, 0px));
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px));
   grid-template-columns: repeat(5, 1fr);
-  align-items: flex-end;
+  align-items: center;
   gap: 0;
   box-sizing: border-box;
 }
@@ -758,35 +758,35 @@ a.dropdown-link:hover {
   .mobile-bottom-nav {
     display: grid !important;
   }
+  .store-main-viewport {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+  }
 }
 
 .mobile-bottom-nav .bottom-nav-item {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  justify-content: flex-end !important;
-  gap: 4px !important;
+  justify-content: center !important;
+  gap: 3px !important;
   color: #64748b !important;
   text-decoration: none !important;
   background: transparent !important;
   border: none !important;
   font-family: inherit !important;
-  padding: 2px 2px 4px !important;
+  padding: 4px 2px !important;
   cursor: pointer !important;
   min-width: 0 !important;
   width: 100% !important;
   text-align: center !important;
   box-sizing: border-box !important;
-  transition: color 0.15s ease !important;
+  transition: all 0.15s ease !important;
   -webkit-tap-highlight-color: transparent !important;
 }
 
-.mobile-bottom-nav .bottom-nav-item:active {
+.mobile-bottom-nav .bottom-nav-item:active,
+.mobile-bottom-nav .bottom-nav-item.active {
   color: #d97706 !important;
-}
-
-.mobile-bottom-nav .bottom-nav-call {
-  color: #0f172a !important;
 }
 
 .mobile-bottom-nav .bottom-nav-item span {
@@ -797,22 +797,9 @@ a.dropdown-link:hover {
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   font-size: 11px !important;
-  font-weight: 600 !important;
+  font-weight: 500 !important;
   line-height: 1.2 !important;
   color: inherit !important;
-}
-
-.mobile-bottom-nav .call-icon-wrap {
-  background-color: #F8B50E !important;
-  color: #0f172a !important;
-  width: 38px !important;
-  height: 38px !important;
-  border-radius: 50% !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  margin-top: -12px !important;
-  box-shadow: 0 4px 10px rgba(248, 181, 14, 0.45) !important;
 }
 
 .mobile-bottom-nav .item-icon-box {
@@ -826,15 +813,15 @@ a.dropdown-link:hover {
 
 .mobile-bottom-nav .bottom-badge {
   position: absolute !important;
-  top: -5px !important;
-  right: -9px !important;
+  top: -3px !important;
+  right: -7px !important;
   background-color: #F8B50E !important;
   color: #0f172a !important;
   font-size: 10px !important;
   font-weight: 800 !important;
   border-radius: 10px !important;
   padding: 1px 5px !important;
-  min-width: 16px !important;
+  min-width: 15px !important;
   height: 15px !important;
   display: flex !important;
   align-items: center !important;

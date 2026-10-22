@@ -25,13 +25,22 @@ export default function LoginContent() {
   const redirectParam = searchParams.get('redirect');
   const redirectUrl = redirectParam || '/';
   const isPendingAdd = searchParams.get('pendingAdd') === '1';
-
   const [mode, setMode] = useState('login'); // 'login' | 'register'
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Sync mode with URL search params after mount
+  useEffect(() => {
+    const urlMode = searchParams.get('mode') || searchParams.get('tab');
+    if (urlMode === 'register' || urlMode === 'signup') {
+      setMode('register');
+    } else if (urlMode === 'login' || urlMode === 'signin') {
+      setMode('login');
+    }
+  }, [searchParams]);
 
   // Form fields
   const [name, setName] = useState('');
@@ -46,37 +55,8 @@ export default function LoginContent() {
     }
   }, [user, authLoading, redirectUrl, router]);
 
-  if (authLoading) {
-    return (
-      <div className="auth-loading-portal">
-        <div className="spinner"></div>
-        <p>Restoring authenticated session...</p>
-        <style jsx>{`
-          .auth-loading-portal {
-            min-height: 50vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 14px;
-            color: #64748b;
-            font-size: 14px;
-          }
-          .spinner {
-            width: 36px;
-            height: 36px;
-            border: 3.5px solid #e2e8f0;
-            border-top-color: #f8b50e;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-          }
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `}</style>
-      </div>
-    );
-  }
+  // Note: We do not block the login screen with an infinite loader.
+  // The login form is always accessible, and if a session is found, it automatically redirects.
 
   // Google Sign-In with Firebase
   const handleGoogleSignIn = async () => {
@@ -216,7 +196,7 @@ export default function LoginContent() {
               setError('');
             }}
           >
-            Email Sign In
+            Sign In
           </button>
           <button
             type="button"
@@ -228,7 +208,7 @@ export default function LoginContent() {
               setError('');
             }}
           >
-            Register
+            Register / Sign Up
           </button>
         </div>
 
@@ -366,6 +346,21 @@ export default function LoginContent() {
               )}
             </button>
         </form>
+
+        {/* Mode Switch Helper */}
+        <div className="auth-switch-prompt">
+          <span>{mode === 'login' ? "Don't have an industrial client account?" : 'Already registered with BizBein?'}</span>
+          <button
+            type="button"
+            className="switch-mode-btn"
+            onClick={() => {
+              setMode(mode === 'login' ? 'register' : 'login');
+              setError('');
+            }}
+          >
+            {mode === 'login' ? 'Register Now' : 'Sign In with Email'}
+          </button>
+        </div>
 
         {/* Security Footnote */}
         <div className="auth-security-footnote">
@@ -522,22 +517,26 @@ export default function LoginContent() {
         .auth-tab {
           background: transparent;
           border: none;
-          padding: 9px 6px;
+          padding: 10px 8px;
           border-radius: 6px;
-          font-size: 11.5px;
-          font-weight: 600;
+          font-size: 13px;
+          font-weight: 700;
           color: #64748b;
           cursor: pointer;
-          transition: all 0.15s ease;
+          transition: all 0.2s ease;
           font-family: inherit;
           text-align: center;
           white-space: nowrap;
         }
 
+        .auth-tab:hover:not(.active) {
+          color: #1e293b;
+        }
+
         .auth-tab.active {
           background: #ffffff;
-          color: #13192B;
-          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06);
+          color: #0f172a;
+          box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
         }
 
         .field-hint {
@@ -713,6 +712,36 @@ export default function LoginContent() {
           cursor: not-allowed;
         }
 
+        .auth-switch-prompt {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          flex-wrap: wrap;
+          font-size: 13px;
+          color: #64748b;
+          margin-top: 18px;
+          text-align: center;
+        }
+
+        .switch-mode-btn {
+          background: none;
+          border: none;
+          color: #d97706;
+          font-weight: 700;
+          font-size: 13px;
+          cursor: pointer;
+          font-family: inherit;
+          padding: 2px 4px;
+          text-decoration: underline;
+          text-underline-offset: 3px;
+          transition: color 0.15s ease;
+        }
+
+        .switch-mode-btn:hover {
+          color: #b45309;
+        }
+
         .auth-security-footnote {
           display: flex;
           align-items: center;
@@ -728,13 +757,17 @@ export default function LoginContent() {
 
         @media (max-width: 480px) {
           .auth-page-container {
-            padding: 24px 12px;
+            padding: 20px 12px;
           }
           .auth-card {
-            padding: 20px 14px;
+            padding: 22px 16px;
           }
           .auth-tabs {
-            grid-template-columns: 1fr;
+            grid-template-columns: repeat(2, 1fr);
+          }
+          .auth-tab {
+            padding: 9px 4px;
+            font-size: 12px;
           }
         }
       `}</style>

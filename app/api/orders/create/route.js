@@ -75,10 +75,12 @@ export async function POST(request) {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const randomSuffix = Math.floor(1000 + Math.random() * 9000);
     const orderId = `ORD-BIZ-${dateStr}-${randomSuffix}`;
+    const targetUid = body.firebaseUid || user.firebaseUid || user.id;
 
     const newOrder = {
       orderId,
-      userId: user.id,
+      userId: targetUid,
+      uid: targetUid,
       customerName: user.name,
       customerEmail: user.email,
       customerPhone: user.phone || shippingAddress.phone || '',

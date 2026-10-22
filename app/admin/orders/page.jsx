@@ -70,7 +70,7 @@ export default function AdminOrdersPage() {
     if (!authLoading) {
       if (!user) {
         router.push('/login?redirect=/admin/orders');
-      } else if (user.role !== 'admin') {
+      } else if (user.role !== 'admin' && user.role !== 'superadmin') {
         setError('Access Denied. You do not have administrator permissions.');
         setLoading(false);
       } else {
@@ -132,7 +132,7 @@ export default function AdminOrdersPage() {
     );
   }
 
-  if (error && (!user || user.role !== 'admin')) {
+  if (error && (!user || (user.role !== 'admin' && user.role !== 'superadmin'))) {
     return (
       <div className="admin-denied-container">
         <AlertTriangle size={48} className="text-red" />
@@ -213,6 +213,11 @@ export default function AdminOrdersPage() {
           <Link href="/admin/products" className="admin-tab">
             <span>Machinery & Product Catalog</span>
           </Link>
+          {user?.role === 'superadmin' && (
+            <Link href="/admin/admins" className="admin-tab">
+              <span>Admin & Access Control</span>
+            </Link>
+          )}
         </div>
 
         {/* KPI Cards */}

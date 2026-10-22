@@ -1,0 +1,70 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // =========================================================================
+    // ORDERS COLLECTION SECURITY RULES
+    // Project: bizbein-innovations
+    // =========================================================================
+    match /orders/{orderId} {
+      
+      // Helper: Verify caller is authenticated via Firebase Auth
+      function isAuthenticated() {
+        return request.auth != null;
+      }
+      
+      // Helper: Verify document ownership
+      function isOwner() {
+        return isAuthenticated() && (
+          resource.data.uid == request.auth.uid ||
+          resource.data.userId == request.auth.uid
+        );
+      }
+      
+      // Helper: Validate order creation schema, ownership, and integrity
+      function isValidOrderCreation() {
+        let incoming = request.resource.data;
+        return isAuthenticated() &&
+          // 1. Mandatory ownership: Bound to caller's Firebase UID
+          (incoming.uid == request.auth.uid || incoming.userId == request.auth.uid) &&
+          
+          // 2. Document ID match and format
+          incoming.orderId is string &&
+          incoming.orderId == orderId &&
+          
+          // 3. Structured product array validation
+          incoming.productIds is list &&
+          incoming.productIds.size() > 0 &&
+          incoming.productNames is list &&
+          incoming.productNames.size() == incoming.productIds.size() &&
+          incoming.quantities is list &&
+          incoming.quantities.size() == incoming.productIds.size() &&
+          incoming.prices is list &&
+          incoming.prices.size() == incoming.productIds.size() &&
+          
+          // 4. Financial verification
+          incoming.totalAmount is number &&
+          incoming.totalAmount > 0 &&
+          
+          // 5. Sensitive field protection: Client cannot forge 'Paid' or 'Delivered'
+          (incoming.orderStatus == 'Confirmed' || incoming.orderStatus == 'In Production') &&
+          (incoming.paymentStatus == 'Pending' || incoming.paymentStatus == 'Pending Verification');
+      }
+
+      // 1. READ: Users can query and read ONLY their own orders
+      allow read: if isOwner();
+      
+      // 2. CREATE: Authenticated users can create orders strictly matching their UID and validated schema
+      allow create: if isValidOrderCreation();
+      
+      // 3. UPDATE & DELETE: Client-side tampering or deletion of placed orders is forbidden
+      allow update, delete: if false;
+    }
+
+    // Default deny-all fallback for any other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

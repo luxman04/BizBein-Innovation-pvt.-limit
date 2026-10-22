@@ -96,7 +96,7 @@ export default function AdminProductsPage() {
 
   useEffect(() => {
     if (!authLoading) {
-      if (!user || user.role !== 'admin') {
+      if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
         setError('You must be signed in as an administrator to access the product management desk.');
         setLoading(false);
       } else {
@@ -218,7 +218,8 @@ export default function AdminProductsPage() {
         rating: parseFloat(formData.rating) || 4.9,
         reviews: parseInt(formData.reviews, 10) || 1,
         description: formData.description.trim(),
-        specs: formData.specs.filter((s) => s.label.trim() && s.value.trim())
+        specs: formData.specs.filter((s) => s.label.trim() && s.value.trim()),
+        ...(formData.image ? { image: formData.image.trim() } : {})
       };
 
       let res;
@@ -343,6 +344,11 @@ export default function AdminProductsPage() {
             <Boxes size={15} />
             <span>Machinery & Product Catalog ({products.length})</span>
           </Link>
+          {user?.role === 'superadmin' && (
+            <Link href="/admin/admins" className="admin-tab">
+              <span>Admin & Access Control</span>
+            </Link>
+          )}
         </div>
 
         {/* KPI Summary Cards */}

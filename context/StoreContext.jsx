@@ -157,7 +157,15 @@ export function StoreProvider({ children }) {
           await ensureAuthPersistence();
           const { onAuthStateChanged } = await import('firebase/auth');
 
+          // Liveness timer: Prevent UI hanging indefinitely on "Restoring authenticated session..."
+          const safetyTimer = setTimeout(() => {
+            if (!isCancelled) {
+              setAuthLoading(false);
+            }
+          }, 1500);
+
           unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+            clearTimeout(safetyTimer);
             if (isCancelled) return;
 
             if (fbUser) {

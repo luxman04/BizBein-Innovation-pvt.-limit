@@ -18,7 +18,7 @@ export async function POST(request) {
   try {
     // 1. Authenticate admin user
     const user = await getSessionUser(request);
-    if (!user || user.role !== 'admin') {
+    if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
       return NextResponse.json(
         { error: 'Forbidden. Administrative authorization required to add products.' },
         { status: 403 }
@@ -40,8 +40,10 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Valid product price is required.' }, { status: 400 });
     }
 
-    // Admin cannot change image - system locks image according to category
-    delete body.image;
+    // Only non-superadmins are restricted from custom images
+    if (user.role !== 'superadmin') {
+      delete body.image;
+    }
     const newProduct = await createDbProduct(body);
 
     return NextResponse.json({

@@ -81,19 +81,19 @@ export default function Header({
         <div className="top-bar-container">
           <div className="top-bar-left">
             <a href={`mailto:${companyDetails.salesEmail}`} className="top-link">
-              <Mail size={13} className="top-icon" />
+              <Mail size={17} className="top-icon" />
               <span>{companyDetails.salesEmail}</span>
             </a>
-            <a href={`mailto:${companyDetails.infoEmail}`} className="top-link">
-              <Mail size={13} className="top-icon" />
+            <a href={`mailto:${companyDetails.infoEmail}`} className="top-link top-link-secondary">
+              <Mail size={17} className="top-icon" />
               <span>{companyDetails.infoEmail}</span>
             </a>
             <a href={`tel:${companyDetails.phone1.replace(/[^0-9+]/g, '')}`} className="top-link">
-              <Phone size={13} className="top-icon" />
+              <Phone size={17} className="top-icon" />
               <span>{companyDetails.phone1}</span>
             </a>
-            <a href={`tel:${companyDetails.phone2.replace(/[^0-9+]/g, '')}`} className="top-link">
-              <Phone size={13} className="top-icon" />
+            <a href={`tel:${companyDetails.phone2.replace(/[^0-9+]/g, '')}`} className="top-link top-link-secondary">
+              <Phone size={17} className="top-icon" />
               <span>{companyDetails.phone2}</span>
             </a>
           </div>
@@ -107,37 +107,45 @@ export default function Header({
               Track Order
             </button>
             <span className="top-divider">|</span>
-            <div className="user-auth-wrap">
-              <div className="user-auth-pill-group">
+            <div className="user-auth-wrap" suppressHydrationWarning>
+              <div className="user-auth-pill-group" suppressHydrationWarning>
                 {mounted && currentUser ? (
                   <>
                     <Link href="/account/orders" className="top-btn-link user-profile-link">
-                      <User size={13} className="top-icon user-icon" />
+                      <User size={17} className="top-icon user-icon" />
                       <span>{currentUser.name ? currentUser.name.split(' ')[0] : 'Account'}</span>
                     </Link>
-                    {currentUser.role === 'admin' && (
+                    {(currentUser.role === 'admin' || currentUser.role === 'superadmin') && (
                       <>
                         <span className="top-divider">|</span>
                         <Link href="/admin/products" className="top-btn-link admin-badge-link" title="Manage Products & Images">
-                          <ShieldAlert size={12} className="top-icon text-gold" />
+                          <ShieldAlert size={15} className="top-icon text-gold" />
                           <span>Manage Products</span>
                         </Link>
                         <span className="top-divider">|</span>
                         <Link href="/admin/orders" className="top-btn-link admin-badge-link" title="Commercial Orders Dispatch Desk">
                           <span>Orders Desk</span>
                         </Link>
+                        {currentUser.role === 'superadmin' && (
+                          <>
+                            <span className="top-divider">|</span>
+                            <Link href="/admin/admins" className="top-btn-link admin-badge-link" title="Root Access Control & Admins">
+                              <span>Access Control</span>
+                            </Link>
+                          </>
+                        )}
                       </>
                     )}
                     <span className="top-divider">|</span>
                     <button type="button" onClick={logout} className="top-btn-link logout-btn" title="Sign Out">
-                      <LogOut size={12} />
+                      <LogOut size={15} />
                       <span>Logout</span>
                     </button>
                   </>
                 ) : (
                   <Link href="/login" className="top-btn-link user-login-btn">
                     <span>Login / Register</span>
-                    <User size={13} className="top-icon user-icon" />
+                    <User size={17} className="top-icon user-icon" />
                   </Link>
                 )}
               </div>
@@ -217,7 +225,11 @@ export default function Header({
               className="action-link-btn"
               onClick={() => {
                 const el = document.getElementById('machinery-catalog');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                  router.push('/#machinery-catalog');
+                }
               }}
             >
               <Lightbulb size={18} className="action-icon" />
@@ -459,7 +471,7 @@ export default function Header({
                         <strong className="drawer-user-name">{currentUser.name}</strong>
                         <span className="drawer-user-email">{currentUser.email}</span>
                         <span className="drawer-user-role-badge">
-                          {currentUser.role === 'admin' ? '🛡️ Operations Admin' : '✓ Verified Client Account'}
+                          {currentUser.role === 'superadmin' ? '👑 Root Super Admin' : currentUser.role === 'admin' ? '🛡️ Operations Admin' : '✓ Verified Client Account'}
                         </span>
                       </div>
                     </div>
@@ -474,7 +486,7 @@ export default function Header({
                         <span>My Equipment Orders</span>
                       </Link>
 
-                      {currentUser.role === 'admin' && (
+                      {(currentUser.role === 'admin' || currentUser.role === 'superadmin') && (
                         <>
                           <Link
                             href="/admin/products"
@@ -492,6 +504,16 @@ export default function Header({
                             <FileText size={15} />
                             <span>Orders Dispatch Desk</span>
                           </Link>
+                          {currentUser.role === 'superadmin' && (
+                            <Link
+                              href="/admin/admins"
+                              className="drawer-user-link-btn admin"
+                              onClick={() => setMobileMenuOpen(false)}
+                            >
+                              <ShieldAlert size={15} />
+                              <span>Admin & Access Control</span>
+                            </Link>
+                          )}
                         </>
                       )}
 
@@ -646,34 +668,50 @@ export default function Header({
         .top-bar {
           background-color: #0b1526;
           color: #e2e8f0;
-          font-size: 11.5px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          font-size: 14.5px;
+          font-weight: 500;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          min-height: 54px;
+          height: 54px;
+          display: flex;
+          align-items: center;
+          position: relative;
+          z-index: 40;
           line-height: 1.2;
         }
 
         .top-bar-container {
+          width: 100%;
           max-width: 1400px;
+          min-height: 54px;
+          height: 100%;
           margin: 0 auto;
-          padding: 6px 20px;
+          padding: 0 24px;
           display: flex;
           align-items: center;
           justify-content: space-between;
+          gap: 24px;
         }
 
         .top-bar-left {
           display: flex;
           align-items: center;
-          gap: 18px;
-          flex-wrap: wrap;
+          gap: 22px;
+          flex-shrink: 0;
+          flex-wrap: nowrap;
         }
 
         .top-link {
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          gap: 6px;
+          gap: 8px;
           color: #cbd5e1;
           text-decoration: none;
-          transition: color 0.15s ease;
+          font-size: 14.5px;
+          font-weight: 500;
+          line-height: 1;
+          white-space: nowrap;
+          transition: color 0.18s ease;
         }
 
         .top-link:hover {
@@ -682,23 +720,40 @@ export default function Header({
 
         .top-icon {
           color: #F8B50E;
+          flex-shrink: 0;
+          width: 17px;
+          height: 17px;
+          min-width: 17px;
+          min-height: 17px;
+          display: inline-block;
+          vertical-align: middle;
         }
 
         .top-bar-right {
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          gap: 12px;
+          gap: 14px;
+          flex-shrink: 0;
+          white-space: nowrap;
         }
 
         .top-btn-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
           background: none;
           border: none;
           color: #cbd5e1;
-          font-size: 11.5px;
+          font-size: 14.5px;
+          font-weight: 500;
+          line-height: 1;
           cursor: pointer;
           font-family: inherit;
-          padding: 0;
-          transition: color 0.15s ease;
+          padding: 4px 6px;
+          border-radius: 4px;
+          text-decoration: none;
+          transition: color 0.18s ease;
+          white-space: nowrap;
         }
 
         .top-btn-link:hover {
@@ -706,42 +761,55 @@ export default function Header({
         }
 
         .user-login-btn {
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          gap: 5px;
+          gap: 8px;
+          color: #cbd5e1;
+          font-size: 14.5px;
+          font-weight: 500;
+          text-decoration: none;
+        }
+
+        .user-login-btn:hover {
+          color: #F8B50E;
         }
 
         .user-auth-pill-group {
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          gap: 10px;
+          gap: 12px;
+          white-space: nowrap;
         }
 
         .user-profile-link {
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          gap: 5px;
+          gap: 8px;
+          font-size: 14.5px;
           font-weight: 600;
           color: #ffffff !important;
         }
 
         .admin-badge-link {
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          gap: 4px;
+          gap: 6px;
           background: rgba(248, 181, 14, 0.15);
           color: #F8B50E !important;
-          padding: 2px 7px;
+          padding: 3px 8px;
           border-radius: 4px;
-          font-weight: 700;
-          font-size: 10.5px;
+          font-weight: 600;
+          font-size: 12px;
           text-transform: uppercase;
+          letter-spacing: 0.3px;
         }
 
         .logout-btn {
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          gap: 4px;
+          gap: 6px;
+          font-size: 14.5px;
+          font-weight: 500;
           color: #94a3b8 !important;
         }
 
@@ -751,10 +819,22 @@ export default function Header({
 
         .user-icon {
           color: #F8B50E;
+          flex-shrink: 0;
+          width: 17px;
+          height: 17px;
+          min-width: 17px;
+          min-height: 17px;
+          display: inline-block;
+          vertical-align: middle;
         }
 
         .top-divider {
-          color: rgba(255, 255, 255, 0.2);
+          color: rgba(255, 255, 255, 0.28);
+          font-size: 14px;
+          font-weight: 400;
+          user-select: none;
+          margin: 0 4px;
+          display: inline-block;
         }
 
         /* 2. MAIN HEADER */
@@ -1189,10 +1269,17 @@ export default function Header({
           color: #d97706;
         }
 
-        /* Mobile Responsive */
-        @media (max-width: 1180px) {
+        /* Responsive Adjustments */
+        @media (max-width: 1200px) {
+          .top-bar-container {
+            padding: 0 16px;
+            gap: 16px;
+          }
           .top-bar-left {
-            gap: 12px;
+            gap: 16px;
+          }
+          .top-bar-right {
+            gap: 10px;
           }
           .action-link-btn span {
             display: none;
@@ -1211,10 +1298,13 @@ export default function Header({
           }
         }
 
-        @media (max-width: 920px) {
-          .top-bar {
+        @media (max-width: 1024px) {
+          .top-link-secondary {
             display: none;
           }
+        }
+
+        @media (max-width: 920px) {
           .search-bar-module {
             display: none;
           }
@@ -1236,7 +1326,42 @@ export default function Header({
           .mobile-header-right {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+          }
+
+          .mobile-account-btn {
+            position: relative;
+            background: #f1f5f9;
+            border: none;
+            padding: 8px;
+            border-radius: 8px;
+            color: #1e293b;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            width: 36px;
+            height: 36px;
+            transition: all 0.15s ease;
+          }
+
+          .mobile-account-btn:active {
+            background: #e2e8f0;
+            transform: scale(0.96);
+          }
+
+          .mobile-avatar-circle {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #F8B50E;
+            color: #0f172a;
+            font-size: 11px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
           }
 
           .mobile-cart-btn {
@@ -1249,6 +1374,15 @@ export default function Header({
             cursor: pointer;
             display: flex;
             align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            transition: all 0.15s ease;
+          }
+
+          .mobile-cart-btn:active {
+            background: #e2e8f0;
+            transform: scale(0.96);
           }
 
           .mobile-cart-badge {
@@ -1276,6 +1410,15 @@ export default function Header({
             cursor: pointer;
             display: flex;
             align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            transition: all 0.15s ease;
+          }
+
+          .mobile-menu-toggle:active {
+            background: #e2e8f0;
+            transform: scale(0.96);
           }
 
           .mobile-search-row {
@@ -1312,13 +1455,47 @@ export default function Header({
           }
         }
 
+        @media (max-width: 640px) {
+          .top-bar {
+            min-height: 48px;
+            height: 48px;
+            font-size: 13.5px;
+          }
+          .top-bar-container {
+            min-height: 48px;
+            padding: 0 12px;
+            gap: 12px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            -webkit-overflow-scrolling: touch;
+            justify-content: flex-start;
+          }
+          .top-bar-container::-webkit-scrollbar {
+            display: none;
+          }
+          .top-bar-left {
+            gap: 12px;
+          }
+          .top-bar-right {
+            gap: 10px;
+            margin-left: auto;
+          }
+          .top-link,
+          .top-btn-link,
+          .user-login-btn,
+          .user-profile-link {
+            font-size: 13.5px;
+          }
+        }
+
         /* Mobile Drawer */
         .mobile-drawer-overlay {
           position: fixed;
           inset: 0;
           background: rgba(15, 23, 42, 0.7);
           backdrop-filter: blur(4px);
-          z-index: 500;
+          z-index: 99999;
           display: flex;
           animation: fadeIn 0.2s ease-out;
         }

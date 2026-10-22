@@ -21,7 +21,7 @@ export async function GET(request, { params }) {
 export async function PATCH(request, { params }) {
   try {
     const user = await getSessionUser(request);
-    if (!user || user.role !== 'admin') {
+    if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
       return NextResponse.json(
         { error: 'Forbidden. Administrative authorization required to update products.' },
         { status: 403 }
@@ -31,8 +31,10 @@ export async function PATCH(request, { params }) {
     const { id } = await Promise.resolve(params);
     const body = await request.json();
     
-    // Explicitly prohibit changing images - images are permanently locked
-    delete body.image;
+    // Non-superadmins cannot modify images
+    if (user.role !== 'superadmin') {
+      delete body.image;
+    }
 
     const updated = await updateDbProduct(id, body);
 
@@ -50,7 +52,7 @@ export async function PATCH(request, { params }) {
 export async function DELETE(request, { params }) {
   try {
     const user = await getSessionUser(request);
-    if (!user || user.role !== 'admin') {
+    if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) {
       return NextResponse.json(
         { error: 'Forbidden. Administrative authorization required to delete products.' },
         { status: 403 }

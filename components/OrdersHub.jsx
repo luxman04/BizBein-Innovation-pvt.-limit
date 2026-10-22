@@ -207,28 +207,120 @@ export default function OrdersHub() {
   const [guestLookupError, setGuestLookupError] = useState('');
 
   useEffect(() => {
-    if (!authLoading && user) {
-      fetchOrders();
-    } else if (!authLoading && !user) {
-      setOrders(SAMPLE_DEMO_ORDERS);
-      setLoading(false);
+    let unsubscribeFirestore = null;
+
+    async function loadUserOrders() {
+      if (!authLoading && user) {
+        setLoading(true);
+        setError('');
+
+        // 1. Fetch from local backend API
+        let apiOrders = [];
+        try {
+          const res = await fetch('/api/orders');
+          if (res.ok) {
+            const data = await res.json();
+            apiOrders = data.orders || [];
+          }
+        } catch (e) {
+          console.warn('[OrdersHub] Backend API orders fetch notice:', e);
+        }
+
+        // 2. Fetch and Subscribe to Cloud Firestore orders for authenticated user
+        try {
+          const { auth } = await import('../lib/firebase');
+          const { getUserOrdersFromFirestore, subscribeToUserOrders, saveOrderToFirestore } = await import('../lib/firestore-orders');
+          const activeUid = auth?.currentUser?.uid || user?.firebaseUid || user?.id;
+
+          if (activeUid) {
+            const firestoreOrders = await getUserOrdersFromFirestore(activeUid);
+
+            // Merge orders by orderId (Firestore orders take priority)
+            const orderMap = new Map();
+            firestoreOrders.forEach((o) => orderMap.set(o.orderId, o));
+            apiOrders.forEach((o) => {
+              if (!orderMap.has(o.orderId)) {
+                orderMap.set(o.orderId, o);
+                // Background sync any existing local backend order into Firestore
+                if (auth?.currentUser) {
+                  saveOrderToFirestore(o, auth.currentUser).catch(() => {});
+                }
+              }
+            });
+
+            const merged = Array.from(orderMap.values());
+            merged.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+            setOrders(merged);
+            setLoading(false);
+
+            // Realtime listener for live status updates in Firestore
+            unsubscribeFirestore = subscribeToUserOrders(activeUid, (updatedFirestoreOrders) => {
+              setOrders((prev) => {
+                const liveMap = new Map();
+                updatedFirestoreOrders.forEach((o) => liveMap.set(o.orderId, o));
+                prev.forEach((o) => {
+                  if (!liveMap.has(o.orderId)) liveMap.set(o.orderId, o);
+                });
+                const liveList = Array.from(liveMap.values());
+                liveList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                return liveList;
+              });
+            });
+            return;
+          }
+        } catch (firestoreErr) {
+          console.warn('[OrdersHub] Firestore sync notice:', firestoreErr);
+        }
+
+        // Fallback to API orders if Firestore client query was not applicable
+        setOrders(apiOrders);
+        setLoading(false);
+      } else if (!authLoading && !user) {
+        setOrders(SAMPLE_DEMO_ORDERS);
+        setLoading(false);
+      }
     }
+
+    loadUserOrders();
+
+    return () => {
+      if (unsubscribeFirestore) unsubscribeFirestore();
+    };
   }, [user, authLoading]);
 
   const fetchOrders = async () => {
     try {
       setLoading(true);
       setError('');
-      const res = await fetch('/api/orders');
-      if (!res.ok) {
-        if (res.status === 401) {
-          setOrders([]);
-          return;
+
+      let apiOrders = [];
+      try {
+        const res = await fetch('/api/orders');
+        if (res.ok) {
+          const data = await res.json();
+          apiOrders = data.orders || [];
         }
-        throw new Error('Failed to fetch your orders.');
-      }
-      const data = await res.json();
-      setOrders(data.orders || []);
+      } catch (e) {}
+
+      let firestoreOrders = [];
+      try {
+        const { auth } = await import('../lib/firebase');
+        const { getUserOrdersFromFirestore } = await import('../lib/firestore-orders');
+        const activeUid = auth?.currentUser?.uid || user?.firebaseUid || user?.id;
+        if (activeUid) {
+          firestoreOrders = await getUserOrdersFromFirestore(activeUid);
+        }
+      } catch (e) {}
+
+      const orderMap = new Map();
+      firestoreOrders.forEach((o) => orderMap.set(o.orderId, o));
+      apiOrders.forEach((o) => {
+        if (!orderMap.has(o.orderId)) orderMap.set(o.orderId, o);
+      });
+
+      const merged = Array.from(orderMap.values());
+      merged.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setOrders(merged);
     } catch (err) {
       setError(err.message);
     } finally {

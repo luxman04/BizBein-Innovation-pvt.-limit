@@ -222,6 +222,12 @@ export default function StoreLayout({ children }) {
           color: #ffffff;
         }
 
+        @media (max-width: 768px) {
+          .store-main-viewport {
+            padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+          }
+        }
+
         @media (max-width: 640px) {
           .store-toast-banner {
             left: 16px;

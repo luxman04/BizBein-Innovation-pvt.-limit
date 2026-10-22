@@ -32,23 +32,40 @@ export default function OrderDetailPage() {
   useEffect(() => {
     if (!orderId) return;
 
-    fetch(`/api/orders/${orderId}`)
-      .then(async (res) => {
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error || 'Failed to load order details.');
+    async function loadOrder() {
+      try {
+        setLoading(true);
+        setError('');
+
+        // 1. Fetch from local backend API
+        const res = await fetch(`/api/orders/${orderId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.order) {
+            setOrder(data.order);
+            setLoading(false);
+            return;
+          }
         }
-        return res.json();
-      })
-      .then((data) => {
-        setOrder(data.order);
-      })
-      .catch((err) => {
-        setError(err.message);
-      })
-      .finally(() => {
+
+        // 2. Fallback to Cloud Firestore
+        const { getOrderFromFirestore } = await import('../../../lib/firestore-orders');
+        const firestoreOrder = await getOrderFromFirestore(orderId);
+        if (firestoreOrder) {
+          setOrder(firestoreOrder);
+          setLoading(false);
+          return;
+        }
+
+        throw new Error('Order could not be located in our records.');
+      } catch (err) {
+        setError(err.message || 'Failed to retrieve order details.');
+      } finally {
         setLoading(false);
-      });
+      }
+    }
+
+    loadOrder();
   }, [orderId]);
 
   const handlePrint = () => {

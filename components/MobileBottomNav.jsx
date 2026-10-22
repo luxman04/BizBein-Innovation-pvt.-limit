@@ -38,20 +38,20 @@ export default function MobileBottomNav({
 
   return (
     <nav className="mobile-bottom-nav" aria-label="Mobile Quick Actions">
-      <a href="#machinery-catalog" className="bottom-nav-item">
+      <Link href="/#machinery-catalog" className="bottom-nav-item">
         <span className="item-icon-box">
           <Home size={20} />
         </span>
         <span>Catalog</span>
-      </a>
+      </Link>
 
       <a
         href={`tel:${companyDetails.primaryPhone.replace(/[^0-9+]/g, '')}`}
         className="bottom-nav-item bottom-nav-call"
         aria-label="Direct Factory Call"
       >
-        <span className="call-icon-wrap">
-          <Phone size={18} />
+        <span className="item-icon-box">
+          <Phone size={20} />
         </span>
         <span>Call Desk</span>
       </a>
@@ -85,6 +85,7 @@ export default function MobileBottomNav({
         className={`bottom-nav-item bottom-nav-account ${mounted && currentUser ? 'logged-in' : ''}`}
         aria-label={mounted && currentUser ? `My Account (${currentUser.name})` : "Sign In to Account"}
         title={mounted && currentUser ? currentUser.name : "Sign In"}
+        suppressHydrationWarning
       >
         <span className="item-icon-box">
           <User size={20} />
@@ -102,32 +103,33 @@ export default function MobileBottomNav({
           right: 0;
           background: #ffffff;
           border-top: 1px solid #e2e8f0;
-          box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.08);
+          box-shadow: 0 -3px 12px rgba(15, 23, 42, 0.06);
           z-index: 250;
           padding: 6px 0 calc(6px + env(safe-area-inset-bottom, 0px));
           grid-template-columns: repeat(5, 1fr);
-          align-items: flex-end;
+          align-items: center;
           gap: 0;
+          box-sizing: border-box;
         }
 
         .bottom-nav-item {
           display: flex;
           flex-direction: column;
           align-items: center;
-          justify-content: flex-end;
-          gap: 4px;
+          justify-content: center;
+          gap: 3px;
           color: #64748b;
           text-decoration: none;
           background: transparent;
           border: none;
           font-family: inherit;
-          padding: 2px 2px 4px;
+          padding: 4px 2px;
           cursor: pointer;
           min-width: 0;
           width: 100%;
           text-align: center;
           box-sizing: border-box;
-          transition: color 0.15s ease;
+          transition: all 0.15s ease;
           -webkit-tap-highlight-color: transparent;
         }
 
@@ -139,30 +141,18 @@ export default function MobileBottomNav({
           overflow: hidden;
           text-overflow: ellipsis;
           font-size: 11px;
-          font-weight: 600;
+          font-weight: 500;
           line-height: 1.2;
           color: inherit;
         }
 
-        .bottom-nav-item:active {
+        .bottom-nav-item:active,
+        .bottom-nav-item.active {
           color: #d97706;
         }
 
-        .bottom-nav-call {
-          color: #0f172a;
-        }
-
-        .call-icon-wrap {
-          background-color: #F8B50E;
-          color: #0f172a;
-          width: 38px;
-          height: 38px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          margin-top: -12px;
-          box-shadow: 0 4px 10px rgba(248, 181, 14, 0.45);
+        .bottom-nav-item:active .item-icon-box {
+          transform: scale(0.92);
         }
 
         .item-icon-box {
@@ -170,21 +160,23 @@ export default function MobileBottomNav({
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          width: 24px;
-          height: 24px;
+          width: 22px;
+          height: 22px;
+          color: inherit;
+          transition: transform 0.15s ease;
         }
 
         .bottom-badge {
           position: absolute;
-          top: -5px;
-          right: -9px;
+          top: -3px;
+          right: -7px;
           background-color: #F8B50E;
           color: #0f172a;
           font-size: 10px;
           font-weight: 800;
           border-radius: 10px;
           padding: 1px 5px;
-          min-width: 16px;
+          min-width: 15px;
           height: 15px;
           display: flex;
           align-items: center;
@@ -205,6 +197,10 @@ export default function MobileBottomNav({
 
         .bottom-nav-account.logged-in {
           color: #0f172a;
+        }
+
+        .bottom-nav-account.logged-in span {
+          font-weight: 600;
         }
 
         @media (max-width: 768px) {

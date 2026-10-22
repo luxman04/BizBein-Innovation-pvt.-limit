@@ -41,13 +41,21 @@ export async function POST(request) {
     }
 
     // Verify user credentials
-    const user = await findUserByEmail(cleanEmail);
-    if (!user) {
-      return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
+    let user = await findUserByEmail(cleanEmail);
+    const superAdminEmail = (process.env.SUPERADMIN_EMAIL || '').toLowerCase().trim();
+    const superAdminPassword = process.env.SUPERADMIN_PASSWORD;
+
+    let isValid = false;
+    if (superAdminEmail && cleanEmail === superAdminEmail && superAdminPassword && password === superAdminPassword) {
+      isValid = true;
+      if (!user) {
+        user = await findUserByEmail(cleanEmail);
+      }
+    } else if (user) {
+      isValid = await verifyPassword(password, user.passwordHash);
     }
 
-    const isValid = await verifyPassword(password, user.passwordHash);
-    if (!isValid) {
+    if (!user || !isValid) {
       return NextResponse.json({ error: 'Invalid email or password.' }, { status: 401 });
     }
 
