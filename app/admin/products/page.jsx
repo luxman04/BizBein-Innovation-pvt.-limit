@@ -235,25 +235,82 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleImageFileUpload = (e) => {
+  // Client-side image compression to ensure fast uploads & prevent 413 Payload Too Large
+  const compressImageFile = (file, maxWidth = 1200, maxHeight = 1200, quality = 0.82) => {
+    return new Promise((resolve) => {
+      if (!file) {
+        resolve(null);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxWidth || height > maxHeight) {
+            const ratio = Math.min(maxWidth / width, maxHeight / height);
+            width = Math.round(width * ratio);
+            height = Math.round(height * ratio);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => resolve(event.target.result);
+        img.src = event.target.result;
+      };
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const compressDataUrlIfNeeded = async (dataUrl) => {
+    if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:image/')) {
+      return dataUrl;
+    }
+    if (dataUrl.length < 250000) return dataUrl; // Already compressed (<250KB)
+
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        const maxWidth = 1200;
+        const maxHeight = 1200;
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.82));
+      };
+      img.onerror = () => resolve(dataUrl);
+      img.src = dataUrl;
+    });
+  };
+
+  const handleImageFileUpload = async (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      setFormError('Uploaded image exceeds 5MB limit. Please select a smaller photo or compress it.');
-      return;
+    try {
+      const dataUrl = await compressImageFile(file);
+      if (dataUrl) {
+        setSlotImage(activeSlot, dataUrl);
+        setFormError('');
+      } else {
+        setFormError('Failed to process image file.');
+      }
+    } catch (_) {
+      setFormError('Error processing image file.');
     }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target.result;
-      setSlotImage(activeSlot, dataUrl);
-      setFormError('');
-    };
-    reader.onerror = () => {
-      setFormError('Failed to read image file.');
-    };
-    reader.readAsDataURL(file);
     e.target.value = '';
   };
 
@@ -261,43 +318,33 @@ export default function AdminProductsPage() {
     const files = Array.from(e.target.files || []).slice(0, 5);
     if (files.length === 0) return;
 
-    const oversized = files.some((f) => f.size > 5 * 1024 * 1024);
-    if (oversized) {
-      setFormError('One or more selected files exceed the 5MB size limit.');
-      return;
-    }
+    try {
+      const readPromises = files.map((file) => compressImageFile(file));
+      const results = await Promise.all(readPromises);
+      const validResults = results.filter(Boolean);
 
-    const readPromises = files.map((file) => {
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = (ev) => resolve(ev.target.result);
-        reader.onerror = () => resolve(null);
-        reader.readAsDataURL(file);
-      });
-    });
-
-    const results = await Promise.all(readPromises);
-    const validResults = results.filter(Boolean);
-
-    if (validResults.length === 0) {
-      setFormError('Failed to read image files.');
-      return;
-    }
-
-    setFormData((prev) => {
-      const nextExtras = [...(prev.additionalImages || ['', '', '', ''])];
-      const mainImage = validResults[0] || prev.image;
-      for (let i = 1; i < validResults.length && i < 5; i++) {
-        nextExtras[i - 1] = validResults[i];
+      if (validResults.length === 0) {
+        setFormError('Failed to read image files.');
+        return;
       }
-      return {
-        ...prev,
-        image: mainImage,
-        additionalImages: nextExtras
-      };
-    });
-    setFormError('');
-    setActiveSlot(0);
+
+      setFormData((prev) => {
+        const nextExtras = [...(prev.additionalImages || ['', '', '', ''])];
+        const mainImage = validResults[0] || prev.image;
+        for (let i = 1; i < validResults.length && i < 5; i++) {
+          nextExtras[i - 1] = validResults[i];
+        }
+        return {
+          ...prev,
+          image: mainImage,
+          additionalImages: nextExtras
+        };
+      });
+      setFormError('');
+      setActiveSlot(0);
+    } catch (_) {
+      setFormError('Error processing images.');
+    }
     e.target.value = '';
   };
 
@@ -342,10 +389,13 @@ export default function AdminProductsPage() {
 
     setIsSubmitting(true);
     try {
-      const validAdditional = Array.isArray(formData.additionalImages)
+      let rawMain = formData.image && formData.image.trim() ? formData.image.trim() : getCategoryImage(formData.categoryId);
+      const mainImg = await compressDataUrlIfNeeded(rawMain);
+
+      const rawAdditional = Array.isArray(formData.additionalImages)
         ? formData.additionalImages.map((s) => (typeof s === 'string' ? s.trim() : '')).filter(Boolean).slice(0, 4)
         : [];
-      const mainImg = formData.image && formData.image.trim() ? formData.image.trim() : getCategoryImage(formData.categoryId);
+      const validAdditional = await Promise.all(rawAdditional.map((img) => compressDataUrlIfNeeded(img)));
       const allImages = [mainImg, ...validAdditional].slice(0, 5);
 
       const payload = {
@@ -380,7 +430,14 @@ export default function AdminProductsPage() {
         });
       }
 
-      const result = await res.json();
+      let result;
+      const resText = await res.text();
+      try {
+        result = JSON.parse(resText);
+      } catch (_) {
+        result = { error: res.status === 413 ? 'Image size is too large for the server. Compressing...' : resText };
+      }
+
       if (!res.ok) {
         throw new Error(result.error || 'Failed to save product.');
       }
