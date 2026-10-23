@@ -35,7 +35,8 @@ import {
   Phone,
   MessageCircle,
   FileText,
-  Copy
+  Copy,
+  RefreshCw
 } from 'lucide-react';
 
 const CANCELLATION_REASONS = [
@@ -187,8 +188,32 @@ export default function OrdersHub() {
   const { user, authLoading, showToast } = useStore();
   const isMounted = useIsMounted();
   const currentUser = isMounted ? user : null;
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+
+  // Ultra-fast instant cached initial orders state (0ms load latency)
+  const [orders, setOrders] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = sessionStorage.getItem('bizbein_orders_cache');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {}
+    }
+    return [];
+  });
+
+  const [loading, setLoading] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = sessionStorage.getItem('bizbein_orders_cache');
+        if (cached && JSON.parse(cached)?.length > 0) return false;
+      } catch (e) {}
+    }
+    return true;
+  });
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'not-received' | 'received' | 'cancelled'
   const [searchQuery, setSearchQuery] = useState('');
@@ -206,111 +231,33 @@ export default function OrdersHub() {
   const [guestLookupLoading, setGuestLookupLoading] = useState(false);
   const [guestLookupError, setGuestLookupError] = useState('');
 
-  useEffect(() => {
-    let unsubscribeFirestore = null;
+  // High-performance parallel order fetch
+  const fetchOrders = async (silent = false) => {
+    if (!silent) setIsRefreshing(true);
+    setError('');
 
-    async function loadUserOrders() {
-      if (!authLoading && user) {
-        setLoading(true);
-        setError('');
+    try {
+      const activeUid = user?.firebaseUid || user?.id;
 
-        // 1. Fetch from local backend API
-        let apiOrders = [];
-        try {
-          const res = await fetch('/api/orders');
-          if (res.ok) {
-            const data = await res.json();
-            apiOrders = data.orders || [];
-          }
-        } catch (e) {
-          console.warn('[OrdersHub] Backend API orders fetch notice:', e);
-        }
+      // 1. Fetch from local backend API and Cloud Firestore in PARALLEL
+      const apiPromise = fetch('/api/orders', { cache: 'no-store' })
+        .then((res) => (res.ok ? res.json() : { orders: [] }))
+        .then((d) => d.orders || [])
+        .catch(() => []);
 
-        // 2. Fetch and Subscribe to Cloud Firestore orders for authenticated user
+      const firestorePromise = (async () => {
         try {
           const { auth } = await import('../lib/firebase');
-          const { getUserOrdersFromFirestore, subscribeToUserOrders, saveOrderToFirestore } = await import('../lib/firestore-orders');
-          const activeUid = auth?.currentUser?.uid || user?.firebaseUid || user?.id;
-
-          if (activeUid) {
-            const firestoreOrders = await getUserOrdersFromFirestore(activeUid);
-
-            // Merge orders by orderId (Firestore orders take priority)
-            const orderMap = new Map();
-            firestoreOrders.forEach((o) => orderMap.set(o.orderId, o));
-            apiOrders.forEach((o) => {
-              if (!orderMap.has(o.orderId)) {
-                orderMap.set(o.orderId, o);
-                // Background sync any existing local backend order into Firestore
-                if (auth?.currentUser) {
-                  saveOrderToFirestore(o, auth.currentUser).catch(() => {});
-                }
-              }
-            });
-
-            const merged = Array.from(orderMap.values());
-            merged.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-            setOrders(merged);
-            setLoading(false);
-
-            // Realtime listener for live status updates in Firestore
-            unsubscribeFirestore = subscribeToUserOrders(activeUid, (updatedFirestoreOrders) => {
-              setOrders((prev) => {
-                const liveMap = new Map();
-                updatedFirestoreOrders.forEach((o) => liveMap.set(o.orderId, o));
-                prev.forEach((o) => {
-                  if (!liveMap.has(o.orderId)) liveMap.set(o.orderId, o);
-                });
-                const liveList = Array.from(liveMap.values());
-                liveList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-                return liveList;
-              });
-            });
-            return;
+          const { getUserOrdersFromFirestore } = await import('../lib/firestore-orders');
+          const uid = auth?.currentUser?.uid || activeUid;
+          if (uid) {
+            return await getUserOrdersFromFirestore(uid);
           }
-        } catch (firestoreErr) {
-          console.warn('[OrdersHub] Firestore sync notice:', firestoreErr);
-        }
+        } catch (e) {}
+        return [];
+      })();
 
-        // Fallback to API orders if Firestore client query was not applicable
-        setOrders(apiOrders);
-        setLoading(false);
-      } else if (!authLoading && !user) {
-        setOrders(SAMPLE_DEMO_ORDERS);
-        setLoading(false);
-      }
-    }
-
-    loadUserOrders();
-
-    return () => {
-      if (unsubscribeFirestore) unsubscribeFirestore();
-    };
-  }, [user, authLoading]);
-
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      setError('');
-
-      let apiOrders = [];
-      try {
-        const res = await fetch('/api/orders');
-        if (res.ok) {
-          const data = await res.json();
-          apiOrders = data.orders || [];
-        }
-      } catch (e) {}
-
-      let firestoreOrders = [];
-      try {
-        const { auth } = await import('../lib/firebase');
-        const { getUserOrdersFromFirestore } = await import('../lib/firestore-orders');
-        const activeUid = auth?.currentUser?.uid || user?.firebaseUid || user?.id;
-        if (activeUid) {
-          firestoreOrders = await getUserOrdersFromFirestore(activeUid);
-        }
-      } catch (e) {}
+      const [apiOrders, firestoreOrders] = await Promise.all([apiPromise, firestorePromise]);
 
       const orderMap = new Map();
       firestoreOrders.forEach((o) => orderMap.set(o.orderId, o));
@@ -320,13 +267,71 @@ export default function OrdersHub() {
 
       const merged = Array.from(orderMap.values());
       merged.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      setOrders(merged);
+
+      if (merged.length > 0) {
+        setOrders(merged);
+        try {
+          sessionStorage.setItem('bizbein_orders_cache', JSON.stringify(merged));
+        } catch (e) {}
+      } else if (!user) {
+        setOrders(SAMPLE_DEMO_ORDERS);
+      } else {
+        setOrders([]);
+      }
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Failed to refresh orders.');
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   };
+
+  useEffect(() => {
+    let unsubscribeFirestore = null;
+
+    if (!authLoading) {
+      if (user) {
+        // Run parallel fetch (silent background refresh if initial cache is already present)
+        const hasInitialData = orders.length > 0;
+        fetchOrders(hasInitialData);
+
+        // Immediate realtime listener for instant live status updates from Cloud Firestore
+        (async () => {
+          try {
+            const { auth } = await import('../lib/firebase');
+            const { subscribeToUserOrders } = await import('../lib/firestore-orders');
+            const uid = auth?.currentUser?.uid || user?.firebaseUid || user?.id;
+            if (uid) {
+              unsubscribeFirestore = subscribeToUserOrders(uid, (updated) => {
+                setOrders((prev) => {
+                  const liveMap = new Map();
+                  updated.forEach((o) => liveMap.set(o.orderId, o));
+                  prev.forEach((o) => {
+                    if (!liveMap.has(o.orderId)) liveMap.set(o.orderId, o);
+                  });
+                  const liveList = Array.from(liveMap.values());
+                  liveList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+                  try {
+                    sessionStorage.setItem('bizbein_orders_cache', JSON.stringify(liveList));
+                  } catch (e) {}
+                  return liveList;
+                });
+              });
+            }
+          } catch (e) {}
+        })();
+      } else {
+        if (orders.length === 0) {
+          setOrders(SAMPLE_DEMO_ORDERS);
+        }
+        setLoading(false);
+      }
+    }
+
+    return () => {
+      if (unsubscribeFirestore) unsubscribeFirestore();
+    };
+  }, [user, authLoading]);
 
   const handleGuestLookup = async (e) => {
     e.preventDefault();
@@ -665,20 +670,33 @@ export default function OrdersHub() {
             </button>
           </div>
 
-          <div className="search-wrap">
-            <Search size={15} className="search-icon" />
-            <input
-              type="text"
-              placeholder="Filter by Order ID or item name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="search-input"
-            />
-            {searchQuery && (
-              <button type="button" onClick={() => setSearchQuery('')} className="clear-search">
-                ✕
-              </button>
-            )}
+          <div className="toolbar-actions">
+            <div className="search-wrap">
+              <Search size={15} className="search-icon" />
+              <input
+                type="text"
+                placeholder="Filter by Order ID or item..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input"
+              />
+              {searchQuery && (
+                <button type="button" onClick={() => setSearchQuery('')} className="clear-search">
+                  ✕
+                </button>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => fetchOrders(false)}
+              disabled={isRefreshing}
+              className="hub-refresh-btn"
+              title="Fast Refresh Orders & Dispatches"
+            >
+              <RefreshCw size={14} className={isRefreshing ? 'spin-icon' : ''} />
+              <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+            </button>
           </div>
         </div>
 
@@ -689,8 +707,8 @@ export default function OrdersHub() {
           </div>
         )}
 
-        {/* Orders List */}
-        {!isMounted || authLoading || (loading && user) ? (
+        {/* Orders List: Instant render if cached, only show spinner if zero orders and initially loading */}
+        {!isMounted || (orders.length === 0 && (authLoading || (loading && user))) ? (
           <div className="orders-loading-state">
             <div className="spinner"></div>
             <p>Loading your procurement orders & dispatch records...</p>
@@ -1324,6 +1342,50 @@ export default function OrdersHub() {
           background: #1E253D;
           border-color: #1E253D;
           color: #ffffff;
+        }
+
+        .toolbar-actions {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .hub-refresh-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: #ffffff;
+          border: 1px solid #cbd5e1;
+          color: #1e293b;
+          padding: 8px 14px;
+          border-radius: 8px;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.18s ease;
+          white-space: nowrap;
+        }
+
+        .hub-refresh-btn:hover:not(:disabled) {
+          background: #f8fafc;
+          border-color: #F8B50E;
+          color: #d97706;
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .hub-refresh-btn:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+        }
+
+        :global(.spin-icon) {
+          animation: spinIcon 0.7s linear infinite;
+        }
+
+        @keyframes spinIcon {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
 
         .search-wrap {
