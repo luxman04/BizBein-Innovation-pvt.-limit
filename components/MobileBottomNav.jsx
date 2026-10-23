@@ -32,17 +32,34 @@ export default function MobileBottomNav({
     pathname.startsWith('/products/') &&
     pathname.split('/').filter(Boolean).length >= 3;
 
+  const isCatalogActive =
+    pathname === '/' ||
+    pathname === '/#machinery-catalog' ||
+    (pathname && pathname.startsWith('/products'));
+
+  const isContactActive = pathname === '/contact';
+
+  const isAccountActive =
+    pathname === '/orders' ||
+    pathname === '/login' ||
+    pathname === '/register' ||
+    pathname === '/signup' ||
+    (pathname && pathname.startsWith('/account'));
+
   if (isProductDetailPage) {
     return null;
   }
 
   return (
     <nav className="mobile-bottom-nav" aria-label="Mobile Quick Actions">
-      <Link href="/#machinery-catalog" className="bottom-nav-item">
+      <Link
+        href="/#machinery-catalog"
+        className={`bottom-nav-item ${isCatalogActive ? 'active' : ''}`}
+      >
         <span className="item-icon-box">
           <Home size={20} />
         </span>
-        <span>Catalog</span>
+        <span className="bottom-nav-label">Catalog</span>
       </Link>
 
       <a
@@ -53,7 +70,7 @@ export default function MobileBottomNav({
         <span className="item-icon-box">
           <Phone size={20} />
         </span>
-        <span>Call Desk</span>
+        <span className="bottom-nav-label">Call Desk</span>
       </a>
 
       <button
@@ -66,32 +83,37 @@ export default function MobileBottomNav({
           <ShoppingCart size={20} />
           {mounted && displayCartCount > 0 && <span className="bottom-badge">{displayCartCount}</span>}
         </span>
-        <span>Inquiry</span>
+        <span className="bottom-nav-label">Inquiry</span>
       </button>
 
       <Link
         href="/contact"
-        className="bottom-nav-item"
+        className={`bottom-nav-item ${isContactActive ? 'active' : ''}`}
         aria-label="View Plant Location and Contact Page"
       >
         <span className="item-icon-box">
           <MapPin size={20} />
         </span>
-        <span>Contact</span>
+        <span className="bottom-nav-label">Contact</span>
       </Link>
 
       <Link
         href={mounted && currentUser ? "/orders" : "/login"}
-        className={`bottom-nav-item bottom-nav-account ${mounted && currentUser ? 'logged-in' : ''}`}
+        className={`bottom-nav-item bottom-nav-account ${mounted && currentUser ? 'logged-in' : ''} ${isAccountActive ? 'active' : ''}`}
         aria-label={mounted && currentUser ? `My Account (${currentUser.name})` : "Sign In to Account"}
         title={mounted && currentUser ? currentUser.name : "Sign In"}
         suppressHydrationWarning
       >
         <span className="item-icon-box">
-          <User size={20} />
-          {mounted && currentUser && <span className="account-avatar-dot" />}
+          {mounted && currentUser ? (
+            <span className="nav-avatar-circle">
+              {currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U'}
+            </span>
+          ) : (
+            <User size={20} />
+          )}
         </span>
-        <span>{mounted && currentUser ? 'Account' : 'Sign In'}</span>
+        <span className="bottom-nav-label">{mounted && currentUser ? 'Account' : 'Sign In'}</span>
       </Link>
 
       <style jsx>{`
@@ -113,6 +135,7 @@ export default function MobileBottomNav({
         }
 
         .bottom-nav-item {
+          position: relative;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -133,7 +156,22 @@ export default function MobileBottomNav({
           -webkit-tap-highlight-color: transparent;
         }
 
-        .bottom-nav-item span {
+        .bottom-nav-item.active {
+          color: #d97706;
+        }
+
+        .bottom-nav-item.active::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 20%;
+          right: 20%;
+          height: 3px;
+          background: #F8B50E;
+          border-radius: 0 0 3px 3px;
+        }
+
+        .bottom-nav-label {
           display: block;
           width: 100%;
           text-align: center;
@@ -146,8 +184,12 @@ export default function MobileBottomNav({
           color: inherit;
         }
 
-        .bottom-nav-item:active,
-        .bottom-nav-item.active {
+        .bottom-nav-item.active .bottom-nav-label {
+          color: #d97706;
+          font-weight: 700;
+        }
+
+        .bottom-nav-item:active {
           color: #d97706;
         }
 
@@ -164,6 +206,21 @@ export default function MobileBottomNav({
           height: 22px;
           color: inherit;
           transition: transform 0.15s ease;
+        }
+
+        .nav-avatar-circle {
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          background: #F8B50E;
+          color: #0f172a;
+          font-size: 11px;
+          font-weight: 800;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          line-height: 1;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
         }
 
         .bottom-badge {
@@ -184,22 +241,11 @@ export default function MobileBottomNav({
           line-height: 1;
         }
 
-        .account-avatar-dot {
-          position: absolute;
-          top: -1px;
-          right: -2px;
-          width: 7px;
-          height: 7px;
-          border-radius: 50%;
-          background: #10b981;
-          border: 1.5px solid #ffffff;
-        }
-
         .bottom-nav-account.logged-in {
           color: #0f172a;
         }
 
-        .bottom-nav-account.logged-in span {
+        .bottom-nav-account.logged-in .bottom-nav-label {
           font-weight: 600;
         }
 

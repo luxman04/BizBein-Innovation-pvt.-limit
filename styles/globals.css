@@ -789,7 +789,7 @@ a.dropdown-link:hover {
   color: #d97706 !important;
 }
 
-.mobile-bottom-nav .bottom-nav-item span {
+.mobile-bottom-nav .bottom-nav-label {
   display: block !important;
   width: 100% !important;
   text-align: center !important;
@@ -811,6 +811,21 @@ a.dropdown-link:hover {
   height: 24px !important;
 }
 
+.mobile-bottom-nav .nav-avatar-circle {
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 50% !important;
+  background: #F8B50E !important;
+  color: #0f172a !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
+}
+
 .mobile-bottom-nav .bottom-badge {
   position: absolute !important;
   top: -3px !important;
@@ -829,19 +844,12 @@ a.dropdown-link:hover {
   line-height: 1 !important;
 }
 
-.mobile-bottom-nav .account-avatar-dot {
-  position: absolute !important;
-  top: -1px !important;
-  right: -2px !important;
-  width: 7px !important;
-  height: 7px !important;
-  border-radius: 50% !important;
-  background: #10b981 !important;
-  border: 1.5px solid #ffffff !important;
-}
-
 .mobile-bottom-nav .bottom-nav-account.logged-in {
   color: #0f172a !important;
+}
+
+.mobile-bottom-nav .bottom-nav-account.logged-in .bottom-nav-label {
+  font-weight: 600 !important;
 }
 
 

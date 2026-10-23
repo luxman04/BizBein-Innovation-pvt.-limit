@@ -1455,37 +1455,68 @@ export default function Header({
           }
         }
 
-        @media (max-width: 640px) {
-          .top-bar {
-            min-height: 48px;
-            height: 48px;
-            font-size: 13.5px;
+        @media (max-width: 768px) {
+          .top-link-secondary {
+            display: none !important;
+          }
+          .top-bar-right {
+            display: none !important;
           }
           .top-bar-container {
-            min-height: 48px;
-            padding: 0 12px;
+            justify-content: center !important;
+            padding: 0 12px !important;
+            overflow-x: hidden !important;
+          }
+          .top-bar-left {
+            width: 100% !important;
+            justify-content: center !important;
+            gap: 16px !important;
+            flex-wrap: nowrap !important;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .top-bar {
+            min-height: 38px;
+            height: 38px;
+            font-size: 12.5px;
+          }
+          .top-bar-container {
+            min-height: 38px;
+            padding: 0 10px;
             gap: 12px;
-            overflow-x: auto;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            -webkit-overflow-scrolling: touch;
-            justify-content: flex-start;
+            overflow-x: hidden;
+            justify-content: center;
           }
           .top-bar-container::-webkit-scrollbar {
             display: none;
           }
           .top-bar-left {
             gap: 12px;
+            justify-content: center;
           }
           .top-bar-right {
-            gap: 10px;
-            margin-left: auto;
+            display: none !important;
           }
-          .top-link,
-          .top-btn-link,
-          .user-login-btn,
-          .user-profile-link {
-            font-size: 13.5px;
+          .top-link {
+            font-size: 12px;
+            gap: 6px;
+          }
+          .top-icon {
+            width: 14px;
+            height: 14px;
+            min-width: 14px;
+            min-height: 14px;
+          }
+        }
+
+        @media (max-width: 400px) {
+          .top-bar-left {
+            gap: 8px;
+          }
+          .top-link {
+            font-size: 11px;
+            gap: 4px;
           }
         }
 
