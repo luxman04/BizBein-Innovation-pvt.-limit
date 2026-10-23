@@ -442,6 +442,15 @@ export default function AdminProductsPage() {
         throw new Error(result.error || 'Failed to save product.');
       }
 
+      // Sync directly to Cloud Firestore from authenticated administrator browser session
+      try {
+        const { saveProductToFirestore } = await import('../../../lib/firestore-products');
+        const productToSave = result.product || { ...payload, id: activeProduct?.id || payload.id };
+        await saveProductToFirestore(productToSave);
+      } catch (fsErr) {
+        console.warn('[Admin Products] Client-side Firestore sync note:', fsErr.message);
+      }
+
       showToast(modalMode === 'add' ? `Product "${payload.name}" created successfully!` : `Product "${payload.name}" updated!`);
       handleCloseModal();
       fetchProducts();
@@ -466,6 +475,15 @@ export default function AdminProductsPage() {
       if (!res.ok) {
         throw new Error(data.error || 'Failed to delete product.');
       }
+
+      // Sync deletion directly to Cloud Firestore
+      try {
+        const { deleteProductFromFirestore } = await import('../../../lib/firestore-products');
+        await deleteProductFromFirestore(product.id);
+      } catch (fsErr) {
+        console.warn('[Admin Products] Client-side Firestore delete note:', fsErr.message);
+      }
+
       showToast(`Product "${product.name}" was removed.`);
       fetchProducts();
       if (refreshProducts) refreshProducts();

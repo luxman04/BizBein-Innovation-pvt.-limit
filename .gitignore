@@ -40,4 +40,5 @@ next-env.d.ts
 # local agents
 .agents/
 skills-lock.json
+/scratch/
 

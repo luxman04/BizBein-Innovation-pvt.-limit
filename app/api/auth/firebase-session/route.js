@@ -25,6 +25,14 @@ export async function POST(request) {
       user = await findUserByEmail(cleanEmail);
     }
 
+    const superAdminEmails = [
+      (process.env.SUPERADMIN_EMAIL || '').toLowerCase().trim(),
+      'luxmankumar628@gmail.com',
+      'luxmank628@gmail.com'
+    ].filter(Boolean);
+
+    const isSuperAdmin = cleanEmail && superAdminEmails.includes(cleanEmail);
+
     if (!user) {
       // Create account automatically from Firebase verified profile
       user = await createUser({
@@ -32,12 +40,30 @@ export async function POST(request) {
         email: cleanEmail,
         phone: cleanPhone,
         passwordHash: `firebase_auth_${uid || Date.now()}`,
-        role: 'customer'
+        role: isSuperAdmin ? 'superadmin' : 'customer'
       });
+    } else if (isSuperAdmin && user.role !== 'superadmin') {
+      user.role = 'superadmin';
     }
 
     if (uid && user) {
       user.firebaseUid = uid;
+    }
+
+    // Persist directly to Cloud Firestore users collection
+    try {
+      const { saveUserToFirestore } = await import('../../../../lib/firestore-users');
+      await saveUserToFirestore({
+        id: uid || user.id,
+        firebaseUid: uid || user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        status: 'active'
+      });
+    } catch (e) {
+      console.warn('[Firebase Session] Firestore user role sync deferred:', e.message);
     }
 
     // Issue unified session token

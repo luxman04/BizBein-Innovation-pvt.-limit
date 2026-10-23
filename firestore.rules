@@ -2,38 +2,95 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+
     // =========================================================================
-    // ORDERS COLLECTION SECURITY RULES
+    // HELPER FUNCTIONS: AUTHENTICATION & ACCESS CONTROL
     // Project: bizbein-innovations
     // =========================================================================
+
+    // Verify caller has an active Firebase Auth token
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Master / Super Administrator verification:
+    // Bound directly to the configured superadmin email identities and root UID
+    function isMasterAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email in ['luxmankumar628@gmail.com', 'luxmank628@gmail.com'] ||
+        request.auth.uid == 'usr_superadmin_root'
+      );
+    }
+
+    // Secondary Administrator verification:
+    // Master admin OR user document in 'users' collection has role 'admin' or 'superadmin'
+    function isAdmin() {
+      return isMasterAdmin() || (
+        isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin']
+      );
+    }
+
+    // Verify document ownership by matching caller UID to record owner field
+    function isOwner(userId) {
+      return isAuthenticated() && (
+        request.auth.uid == userId ||
+        (resource != null && (resource.data.uid == request.auth.uid || resource.data.userId == request.auth.uid))
+      );
+    }
+
+    // =========================================================================
+    // 1. PRODUCTS COLLECTION SECURITY RULES
+    // =========================================================================
+    match /products/{productId} {
+      // READ: Public storefront equipment catalog (accessible to all visitors)
+      allow read: if true;
+
+      // WRITE: Only verified administrators and master admin can create, update, or remove equipment
+      allow create, update, delete: if isAdmin();
+    }
+
+    // =========================================================================
+    // 2. USERS & ADMIN ROLES COLLECTION SECURITY RULES
+    // =========================================================================
+    match /users/{userId} {
+      // READ: Users can read their own profile; administrators can view all users
+      allow read: if isOwner(userId) || isAdmin();
+
+      // CREATE: Authenticated users can create their own profile upon registration; admins can create accounts
+      allow create: if isAuthenticated() && (
+        request.auth.uid == userId ||
+        isAdmin()
+      );
+
+      // UPDATE:
+      // - Master admin can change any field, including roles
+      // - Secondary admins can update profiles
+      // - Individual users can update their profile but CANNOT modify or escalate their 'role'
+      allow update: if isMasterAdmin() || (
+        isAuthenticated() && (
+          (request.auth.uid == userId && (!('role' in request.resource.data) || request.resource.data.role == resource.data.role)) ||
+          isAdmin()
+        )
+      );
+
+      // DELETE: Only Master Administrator can purge accounts
+      allow delete: if isMasterAdmin();
+    }
+
+    // =========================================================================
+    // 3. ORDERS COLLECTION SECURITY RULES
+    // =========================================================================
     match /orders/{orderId} {
-      
-      // Helper: Verify caller is authenticated via Firebase Auth
-      function isAuthenticated() {
-        return request.auth != null;
-      }
-      
-      // Helper: Verify document ownership
-      function isOwner() {
-        return isAuthenticated() && (
-          resource.data.uid == request.auth.uid ||
-          resource.data.userId == request.auth.uid
-        );
-      }
-      
-      // Helper: Validate order creation schema, ownership, and integrity
+
       function isValidOrderCreation() {
         let incoming = request.resource.data;
         return isAuthenticated() &&
-          // 1. Mandatory ownership: Bound to caller's Firebase UID
+          // Mandatory ownership: Bound to caller's Firebase UID
           (incoming.uid == request.auth.uid || incoming.userId == request.auth.uid) &&
-          
-          // 2. Document ID match and format
           incoming.orderId is string &&
           incoming.orderId == orderId &&
-          
-          // 3. Structured product array validation
           incoming.productIds is list &&
           incoming.productIds.size() > 0 &&
           incoming.productNames is list &&
@@ -42,27 +99,26 @@ service cloud.firestore {
           incoming.quantities.size() == incoming.productIds.size() &&
           incoming.prices is list &&
           incoming.prices.size() == incoming.productIds.size() &&
-          
-          // 4. Financial verification
           incoming.totalAmount is number &&
           incoming.totalAmount > 0 &&
-          
-          // 5. Sensitive field protection: Client cannot forge 'Paid' or 'Delivered'
           (incoming.orderStatus == 'Confirmed' || incoming.orderStatus == 'In Production') &&
           (incoming.paymentStatus == 'Pending' || incoming.paymentStatus == 'Pending Verification');
       }
 
-      // 1. READ: Users can query and read ONLY their own orders
-      allow read: if isOwner();
-      
-      // 2. CREATE: Authenticated users can create orders strictly matching their UID and validated schema
+      // READ: Customers can view their own orders; administrators can view all orders
+      allow read: if isOwner(resource.data.uid) || isAdmin();
+
+      // CREATE: Authenticated users can create orders matching their verified UID
       allow create: if isValidOrderCreation();
-      
-      // 3. UPDATE & DELETE: Client-side tampering or deletion of placed orders is forbidden
-      allow update, delete: if false;
+
+      // UPDATE: Administrators can update fulfillment status, tracking, and notes
+      allow update: if isAdmin();
+
+      // DELETE: Only Master Administrator can archive/delete orders
+      allow delete: if isMasterAdmin();
     }
 
-    // Default deny-all fallback for any other collections
+    // Default deny-all fallback for any unspecified paths
     match /{document=**} {
       allow read, write: if false;
     }

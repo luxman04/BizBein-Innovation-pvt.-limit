@@ -77,6 +77,18 @@ export function StoreProvider({ children }) {
 
   useEffect(() => {
     refreshProducts();
+    let unsubscribe = null;
+    import('../lib/firestore-products').then(({ subscribeToProducts }) => {
+      unsubscribe = subscribeToProducts((fsProducts) => {
+        if (Array.isArray(fsProducts) && fsProducts.length > 0) {
+          setProducts(fsProducts);
+        }
+      });
+    }).catch(() => {});
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [refreshProducts]);
 
   // Cart State
@@ -195,12 +207,17 @@ export function StoreProvider({ children }) {
               }
 
               // Direct user representation fallback if backend sync was delayed
+              const isSuperAdminEmail = fbUser.email && [
+                'luxmankumar628@gmail.com',
+                'luxmank628@gmail.com'
+              ].includes(fbUser.email.toLowerCase().trim());
+
               setUser({
                 id: fbUser.uid,
                 name: fbUser.displayName || fbUser.email?.split('@')[0] || 'User',
                 email: fbUser.email,
                 phone: fbUser.phoneNumber || '',
-                role: 'customer'
+                role: isSuperAdminEmail ? 'superadmin' : 'customer'
               });
               setAuthLoading(false);
             } else {

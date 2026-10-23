@@ -99,6 +99,15 @@ export default function AdminAccessControlPage() {
       setUsers((prev) =>
         prev.map((u) => (u.id === targetUser.id ? { ...u, role: newRole } : u))
       );
+
+      // Direct client-side sync to Cloud Firestore users collection
+      try {
+        const { updateUserRoleInFirestore } = await import('../../../lib/firestore-users');
+        await updateUserRoleInFirestore(targetUser.id, newRole);
+      } catch (fsErr) {
+        console.warn('[Admin Access Control] Firestore role sync note:', fsErr.message);
+      }
+
       if (showToast) {
         showToast(data.message || `Privileges updated successfully.`, 'success');
       }
@@ -132,6 +141,14 @@ export default function AdminAccessControlPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to create administrator.');
+
+      // Direct client-side sync to Cloud Firestore
+      try {
+        const { saveUserToFirestore } = await import('../../../lib/firestore-users');
+        await saveUserToFirestore(data.admin);
+      } catch (fsErr) {
+        console.warn('[Admin Access Control] Firestore create admin note:', fsErr.message);
+      }
 
       setUsers((prev) => [data.admin, ...prev]);
       setIsAddModalOpen(false);
