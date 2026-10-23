@@ -25,31 +25,8 @@ export default function OrderDetailPage() {
   const router = useRouter();
   const orderId = params?.id;
 
-  const [order, setOrder] = useState(() => {
-    if (typeof window !== 'undefined' && orderId) {
-      try {
-        const cached = sessionStorage.getItem('bizbein_orders_cache');
-        if (cached) {
-          const list = JSON.parse(cached);
-          const match = Array.isArray(list) ? list.find((o) => o.orderId === orderId) : null;
-          if (match) return match;
-        }
-      } catch (e) {}
-    }
-    return null;
-  });
-  const [loading, setLoading] = useState(() => {
-    if (typeof window !== 'undefined' && orderId) {
-      try {
-        const cached = sessionStorage.getItem('bizbein_orders_cache');
-        if (cached) {
-          const list = JSON.parse(cached);
-          if (Array.isArray(list) && list.some((o) => o.orderId === orderId)) return false;
-        }
-      } catch (e) {}
-    }
-    return true;
-  });
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -57,39 +34,32 @@ export default function OrderDetailPage() {
 
     async function loadOrder() {
       try {
+        setLoading(true);
         setError('');
 
-        // Parallel query to backend API and Cloud Firestore
-        const apiPromise = fetch(`/api/orders/${orderId}`)
-          .then((res) => (res.ok ? res.json() : null))
-          .then((d) => d?.order || null)
-          .catch(() => null);
-
-        const firestorePromise = (async () => {
-          try {
-            const { getOrderFromFirestore } = await import('../../../lib/firestore-orders');
-            return await getOrderFromFirestore(orderId);
-          } catch (e) {
-            return null;
+        // 1. Fetch from local backend API
+        const res = await fetch(`/api/orders/${orderId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.order) {
+            setOrder(data.order);
+            setLoading(false);
+            return;
           }
-        })();
+        }
 
-        const [apiOrder, firestoreOrder] = await Promise.all([apiPromise, firestorePromise]);
-        const found = firestoreOrder || apiOrder;
-
-        if (found) {
-          setOrder(found);
+        // 2. Fallback to Cloud Firestore
+        const { getOrderFromFirestore } = await import('../../../lib/firestore-orders');
+        const firestoreOrder = await getOrderFromFirestore(orderId);
+        if (firestoreOrder) {
+          setOrder(firestoreOrder);
           setLoading(false);
           return;
         }
 
-        if (!order) {
-          throw new Error('Order could not be located in our records.');
-        }
+        throw new Error('Order could not be located in our records.');
       } catch (err) {
-        if (!order) {
-          setError(err.message || 'Failed to retrieve order details.');
-        }
+        setError(err.message || 'Failed to retrieve order details.');
       } finally {
         setLoading(false);
       }

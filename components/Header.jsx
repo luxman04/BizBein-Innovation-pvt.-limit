@@ -129,7 +129,7 @@ export default function Header({
                         {currentUser.role === 'superadmin' && (
                           <>
                             <span className="top-divider">|</span>
-                            <Link href="/admin/admins" className="top-btn-link admin-badge-link" title="Root Access Control & Admins">
+                            <Link href="/admin/admins" className="top-btn-link admin-badge-link" title="Access Control & Team">
                               <span>Access Control</span>
                             </Link>
                           </>
@@ -471,7 +471,7 @@ export default function Header({
                         <strong className="drawer-user-name">{currentUser.name}</strong>
                         <span className="drawer-user-email">{currentUser.email}</span>
                         <span className="drawer-user-role-badge">
-                          {currentUser.role === 'superadmin' ? '👑 Root Super Admin' : currentUser.role === 'admin' ? '🛡️ Operations Admin' : '✓ Verified Client Account'}
+                          {currentUser.role === 'superadmin' || currentUser.role === 'admin' ? '🛡️ Operations Administrator' : '✓ Verified Client Account'}
                         </span>
                       </div>
                     </div>

@@ -157,12 +157,12 @@ export function StoreProvider({ children }) {
           await ensureAuthPersistence();
           const { onAuthStateChanged } = await import('firebase/auth');
 
-          // Ultra-fast session check: prevents UI lag while restoring authenticated session
+          // Liveness timer: Prevent UI hanging indefinitely on "Restoring authenticated session..."
           const safetyTimer = setTimeout(() => {
             if (!isCancelled) {
               setAuthLoading(false);
             }
-          }, 250);
+          }, 1500);
 
           unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
             clearTimeout(safetyTimer);

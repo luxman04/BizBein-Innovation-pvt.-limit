@@ -1,5 +1,6 @@
 'use client';
 
+// BizBein Industrial Machinery Admin - 5-Slot E-Commerce Product Imagery Studio
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -23,7 +24,9 @@ import {
   Sparkles,
   Save,
   Tag,
-  Lock
+  Lock,
+  Upload,
+  RotateCcw
 } from 'lucide-react';
 
 const AVAILABLE_BADGES = [
@@ -36,6 +39,23 @@ const AVAILABLE_BADGES = [
   { label: 'High Speed', value: 'High Speed' },
   { label: 'Low Noise', value: 'Low Noise' },
   { label: 'Cold Storage', value: 'Cold Storage' }
+];
+
+const PRESET_CATALOG_IMAGES = [
+  { label: 'Modular Belt Conveyor', url: '/prod-modular-belt.jpg' },
+  { label: 'Roller Conveyor Line', url: '/prod-roller-conveyor.jpg' },
+  { label: 'Industrial Air Curtain', url: '/prod-air-curtain.jpg' },
+  { label: 'Continuous Inkjet Printer', url: '/prod-inkjet-printer.jpg' },
+  { label: 'Vertical Band Sealer', url: '/prod-vertical-band-sealer.jpg' },
+  { label: 'Industrial Gear Motor', url: '/prod-gear-motor.jpg' },
+  { label: 'Packaging Machinery', url: '/bizbein-packaging.png' },
+  { label: 'Automated Machinery', url: '/cat-packaging.jpg' },
+  { label: 'Industrial Heavy Equipment', url: '/cat-industrial-equipment.jpg' },
+  { label: 'Sensors & Laser Systems', url: '/cat-sensors.jpg' },
+  { label: 'Forklift & Hydraulic Stacker', url: '/cat-forklift.jpg' },
+  { label: 'PVC Strip Curtains', url: '/cat-pvc-curtains.jpg' },
+  { label: 'Conveyor Drive System', url: '/cat-conveyor-modular.jpg' },
+  { label: 'Belt Conveyor Unit', url: '/cat-conveyor.jpg' }
 ];
 
 export default function AdminProductsPage() {
@@ -61,6 +81,7 @@ export default function AdminProductsPage() {
   };
 
   // Form State
+  const [activeSlot, setActiveSlot] = useState(0); // 0 = Main Product Image, 1..4 = Additional Images
   const [formData, setFormData] = useState({
     name: '',
     categoryId: 'conveyor-systems',
@@ -68,6 +89,7 @@ export default function AdminProductsPage() {
     price: '',
     priceDisplay: '',
     image: '/prod-modular-belt.jpg',
+    additionalImages: ['', '', '', ''],
     unit: 'Per Section',
     badge: '',
     rating: '4.9',
@@ -114,7 +136,8 @@ export default function AdminProductsPage() {
       brand: 'BizBein',
       price: '',
       priceDisplay: '',
-      image: getCategoryImage(defaultCat), // locked to category image
+      image: getCategoryImage(defaultCat),
+      additionalImages: ['', '', '', ''],
       unit: 'Per Section',
       badge: '',
       rating: '4.9',
@@ -125,6 +148,7 @@ export default function AdminProductsPage() {
         { label: 'Warranty', value: '1 Year Industrial Warranty' }
       ]
     });
+    setActiveSlot(0);
     setFormError('');
     setModalMode('add');
     setActiveProduct(null);
@@ -132,13 +156,25 @@ export default function AdminProductsPage() {
 
   // Open Edit Modal
   const handleOpenEdit = (product) => {
+    let extras = ['', '', '', ''];
+    if (Array.isArray(product.additionalImages) && product.additionalImages.length > 0) {
+      for (let i = 0; i < 4; i++) {
+        extras[i] = product.additionalImages[i] || '';
+      }
+    } else if (Array.isArray(product.images) && product.images.length > 1) {
+      for (let i = 0; i < 4; i++) {
+        extras[i] = product.images[i + 1] || '';
+      }
+    }
+
     setFormData({
       name: product.name || '',
       categoryId: product.categoryId || 'conveyor-systems',
       brand: product.brand || 'BizBein',
       price: product.price !== undefined ? product.price.toString() : '',
       priceDisplay: product.priceDisplay || '',
-      image: product.image || getCategoryImage(product.categoryId), // locked, non-editable
+      image: product.image || (Array.isArray(product.images) && product.images[0]) || getCategoryImage(product.categoryId),
+      additionalImages: extras,
       unit: product.unit || 'Per Unit',
       badge: product.badge || '',
       rating: product.rating !== undefined ? product.rating.toString() : '4.9',
@@ -146,6 +182,7 @@ export default function AdminProductsPage() {
       description: product.description || '',
       specs: Array.isArray(product.specs) ? [...product.specs] : []
     });
+    setActiveSlot(0);
     setFormError('');
     setModalMode('edit');
     setActiveProduct(product);
@@ -155,15 +192,113 @@ export default function AdminProductsPage() {
     setFormData((prev) => ({
       ...prev,
       categoryId: newCatId,
-      // In add mode, auto-update image to reflect category; in edit mode, keep product's fixed image
-      image: modalMode === 'add' ? getCategoryImage(newCatId) : prev.image
+      image: modalMode === 'add' && !prev.image ? getCategoryImage(newCatId) : prev.image
     }));
   };
 
   const handleCloseModal = () => {
     setModalMode(null);
     setActiveProduct(null);
+    setActiveSlot(0);
     setFormError('');
+  };
+
+  // Slot helpers for up to 5 images (Slot 0 = Main Image, Slots 1-4 = Additional Images)
+  const getSlotImage = (slotIdx) => {
+    if (slotIdx === 0) {
+      return formData.image || getCategoryImage(formData.categoryId);
+    }
+    return (formData.additionalImages && formData.additionalImages[slotIdx - 1]) || '';
+  };
+
+  const setSlotImage = (slotIdx, newUrl) => {
+    if (slotIdx === 0) {
+      setFormData((prev) => ({ ...prev, image: newUrl }));
+    } else {
+      setFormData((prev) => {
+        const nextExtras = [...(prev.additionalImages || ['', '', '', ''])];
+        nextExtras[slotIdx - 1] = newUrl;
+        return { ...prev, additionalImages: nextExtras };
+      });
+    }
+  };
+
+  const clearSlotImage = (slotIdx) => {
+    if (slotIdx === 0) {
+      setFormData((prev) => ({ ...prev, image: getCategoryImage(prev.categoryId) }));
+    } else {
+      setFormData((prev) => {
+        const nextExtras = [...(prev.additionalImages || ['', '', '', ''])];
+        nextExtras[slotIdx - 1] = '';
+        return { ...prev, additionalImages: nextExtras };
+      });
+    }
+  };
+
+  const handleImageFileUpload = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setFormError('Uploaded image exceeds 5MB limit. Please select a smaller photo or compress it.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target.result;
+      setSlotImage(activeSlot, dataUrl);
+      setFormError('');
+    };
+    reader.onerror = () => {
+      setFormError('Failed to read image file.');
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleMultipleFilesUpload = async (e) => {
+    const files = Array.from(e.target.files || []).slice(0, 5);
+    if (files.length === 0) return;
+
+    const oversized = files.some((f) => f.size > 5 * 1024 * 1024);
+    if (oversized) {
+      setFormError('One or more selected files exceed the 5MB size limit.');
+      return;
+    }
+
+    const readPromises = files.map((file) => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => resolve(ev.target.result);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+      });
+    });
+
+    const results = await Promise.all(readPromises);
+    const validResults = results.filter(Boolean);
+
+    if (validResults.length === 0) {
+      setFormError('Failed to read image files.');
+      return;
+    }
+
+    setFormData((prev) => {
+      const nextExtras = [...(prev.additionalImages || ['', '', '', ''])];
+      const mainImage = validResults[0] || prev.image;
+      for (let i = 1; i < validResults.length && i < 5; i++) {
+        nextExtras[i - 1] = validResults[i];
+      }
+      return {
+        ...prev,
+        image: mainImage,
+        additionalImages: nextExtras
+      };
+    });
+    setFormError('');
+    setActiveSlot(0);
+    e.target.value = '';
   };
 
   // Spec row helpers
@@ -207,6 +342,12 @@ export default function AdminProductsPage() {
 
     setIsSubmitting(true);
     try {
+      const validAdditional = Array.isArray(formData.additionalImages)
+        ? formData.additionalImages.map((s) => (typeof s === 'string' ? s.trim() : '')).filter(Boolean).slice(0, 4)
+        : [];
+      const mainImg = formData.image && formData.image.trim() ? formData.image.trim() : getCategoryImage(formData.categoryId);
+      const allImages = [mainImg, ...validAdditional].slice(0, 5);
+
       const payload = {
         name: formData.name.trim(),
         categoryId: formData.categoryId,
@@ -219,7 +360,9 @@ export default function AdminProductsPage() {
         reviews: parseInt(formData.reviews, 10) || 1,
         description: formData.description.trim(),
         specs: formData.specs.filter((s) => s.label.trim() && s.value.trim()),
-        ...(formData.image ? { image: formData.image.trim() } : {})
+        image: mainImg,
+        additionalImages: validAdditional,
+        images: allImages
       };
 
       let res;
@@ -320,7 +463,7 @@ export default function AdminProductsPage() {
               <span>Operations Management Portal</span>
             </div>
             <h1 className="admin-title">Catalog Machinery & Products Desk</h1>
-            <p className="admin-subtitle">Add new machinery, rewrite product titles, and update commercial specifications (Images locked)</p>
+            <p className="admin-subtitle">Add new machinery, configure up to 5 gallery images (1 main + 4 thumbnails), and update commercial specifications</p>
           </div>
 
           <div className="header-actions">
@@ -436,6 +579,14 @@ export default function AdminProductsPage() {
                               e.currentTarget.src = '/prod-modular-belt.jpg';
                             }}
                           />
+                          {((p.additionalImages && p.additionalImages.length > 0) || (p.images && p.images.length > 1)) && (
+                            <span
+                              className="gallery-count-badge"
+                              title={`${1 + (p.additionalImages ? p.additionalImages.length : p.images.length - 1)} images in product gallery`}
+                            >
+                              {1 + (p.additionalImages ? p.additionalImages.length : p.images.length - 1)}
+                            </span>
+                          )}
                         </div>
                       </td>
 
@@ -481,7 +632,7 @@ export default function AdminProductsPage() {
                             type="button"
                             onClick={() => handleOpenEdit(p)}
                             className="btn-action edit"
-                            title="Rewrite Title, Pricing & Specifications (Image Locked)"
+                            title="Edit Product Details, Pricing & Imagery"
                           >
                             <Edit3 size={15} />
                             <span>Edit</span>
@@ -592,37 +743,197 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              {/* Locked Product Imagery (Admin cannot change image) */}
-              <div className="form-group">
-                <div className="locked-image-label-row">
-                  <label>Product Imagery</label>
-                  <span className="locked-badge">
-                    <Lock size={12} />
-                    <span>Locked (Admin cannot change image)</span>
-                  </span>
-                </div>
-                <div className="locked-image-display">
-                  <div className="locked-image-preview">
-                    <img
-                      src={formData.image || getCategoryImage(formData.categoryId)}
-                      alt="Catalog equipment preview"
-                      onError={(e) => {
-                        e.currentTarget.src = '/prod-modular-belt.jpg';
-                      }}
-                    />
-                  </div>
-                  <div className="locked-image-details">
-                    <span className="locked-image-status">
-                      {modalMode === 'add'
-                        ? 'Assigned automatically from Machinery Category'
-                        : 'Fixed catalog equipment imagery'}
+              {/* Product Imagery Management: Standard E-Commerce Product Gallery (Max 5 Images) */}
+              <div className="form-group product-imagery-group">
+                <div className="image-control-header">
+                  <div className="gallery-header-left">
+                    <label>Product Imagery Gallery (Max 5 Images) *</label>
+                    <span className="gallery-counter-pill">
+                      {[getSlotImage(0), ...formData.additionalImages].filter(Boolean).length} / 5 Active
                     </span>
-                    <p className="locked-image-note">
-                      To preserve factory catalog specifications, product images cannot be modified or uploaded by the administrator.
-                    </p>
-                    <code className="locked-image-asset">
-                      Asset: {formData.image || getCategoryImage(formData.categoryId)}
-                    </code>
+                  </div>
+                  <div className="gallery-header-right">
+                    <label className="btn-batch-upload" title="Select up to 5 photos from your device at once">
+                      <Upload size={13} />
+                      <span>Upload All 5 Photos at Once</span>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleMultipleFilesUpload}
+                        style={{ display: 'none' }}
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="ecommerce-gallery-studio">
+                  {/* Left Column: Vertical Thumbnails Strip (Standard E-Commerce Gallery) */}
+                  <div className="gallery-thumbs-strip" aria-label="5-Slot Product Gallery Navigation">
+                    <span className="strip-title">
+                      Thumbnails ({[getSlotImage(0), ...formData.additionalImages].filter(Boolean).length}/5)
+                    </span>
+                    <div className="strip-slots-list">
+                      {[0, 1, 2, 3, 4].map((slotIdx) => {
+                        const isMain = slotIdx === 0;
+                        const imgUrl = getSlotImage(slotIdx);
+                        const isActive = activeSlot === slotIdx;
+                        const hasImage = Boolean(imgUrl && String(imgUrl).trim());
+
+                        return (
+                          <button
+                            key={slotIdx}
+                            type="button"
+                            className={`gallery-thumb-slot ${isActive ? 'active' : ''} ${hasImage ? 'has-img' : 'is-empty'} ${isMain ? 'is-main-slot' : ''}`}
+                            onClick={() => setActiveSlot(slotIdx)}
+                            title={isMain ? 'Main Primary Product Photo (Catalog Cover)' : `Additional Image #${slotIdx} (Thumbnail)`}
+                          >
+                            {hasImage ? (
+                              <div className="slot-img-wrap">
+                                <img
+                                  src={imgUrl}
+                                  alt={isMain ? 'Main Product Photo' : `Product Thumbnail ${slotIdx}`}
+                                  onError={(e) => {
+                                    e.currentTarget.src = '/prod-modular-belt.jpg';
+                                  }}
+                                />
+                                <span className={`slot-tag ${isMain ? 'tag-main' : 'tag-sub'}`}>
+                                  {isMain ? 'MAIN' : `#${slotIdx + 1}`}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="slot-empty-wrap">
+                                <Plus size={14} className="slot-plus-icon" />
+                                <span className="slot-empty-text">{isMain ? 'Main' : `+Img ${slotIdx + 1}`}</span>
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="strip-hint">Click thumbnail to edit</p>
+                  </div>
+
+                  {/* Right Column: Active Slot Stage Preview & Controls */}
+                  <div className="gallery-stage-column">
+                    <div className="stage-preview-header">
+                      <div className="stage-title-wrap">
+                        <span className={`slot-badge ${activeSlot === 0 ? 'slot-badge-main' : 'slot-badge-sub'}`}>
+                          {activeSlot === 0
+                            ? '★ Primary Product Photo (Main Cover)'
+                            : `📷 Additional Thumbnail #${activeSlot} (Slot ${activeSlot + 1} of 5)`}
+                        </span>
+                        <span className="slot-sub-info">
+                          {activeSlot === 0
+                            ? 'Primary photo shown in catalog cards and live product stage'
+                            : 'Displayed as a small thumbnail beside the main photo in the gallery'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="stage-large-display">
+                      <div className="stage-img-canvas">
+                        {formData.badge && (
+                          <div className={`stage-corner-badge badge-${formData.badgeType || 'bestseller'}`}>
+                            {formData.badge}
+                          </div>
+                        )}
+                        {getSlotImage(activeSlot) ? (
+                          <img
+                            src={getSlotImage(activeSlot)}
+                            alt="Active product view"
+                            className="stage-featured-img"
+                            onError={(e) => {
+                              e.currentTarget.src = '/prod-modular-belt.jpg';
+                            }}
+                          />
+                        ) : (
+                          <label className="stage-placeholder-box clickable-upload" title="Click to choose a photo for this slot">
+                            <ImageIcon size={32} className="placeholder-icon" />
+                            <strong>Empty Photo Slot #{activeSlot + 1}</strong>
+                            <p>Click here or click "Upload Photo" below to select an image</p>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleImageFileUpload}
+                              style={{ display: 'none' }}
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Slot URL & Upload Controls */}
+                    <div className="stage-controls-card">
+                      <div className="stage-input-row">
+                        <input
+                          type="text"
+                          value={activeSlot === 0 ? formData.image : (formData.additionalImages[activeSlot - 1] || '')}
+                          onChange={(e) => setSlotImage(activeSlot, e.target.value)}
+                          placeholder={
+                            activeSlot === 0
+                              ? 'Main image URL (e.g. /prod-roller-conveyor.jpg or https://...)'
+                              : `Additional Image #${activeSlot} URL or choose file...`
+                          }
+                          className="image-url-input"
+                        />
+
+                        <label className="btn-upload-file" title="Upload image from computer or phone">
+                          <Upload size={14} />
+                          <span>Upload Photo</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageFileUpload}
+                            style={{ display: 'none' }}
+                          />
+                        </label>
+
+                        {activeSlot === 0 ? (
+                          <button
+                            type="button"
+                            className="btn-reset-image"
+                            onClick={() => clearSlotImage(0)}
+                            title="Reset to category standard image"
+                          >
+                            <RotateCcw size={13} />
+                            <span>Default</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn-remove-slot"
+                            onClick={() => clearSlotImage(activeSlot)}
+                            title="Clear this additional image slot"
+                            disabled={!getSlotImage(activeSlot)}
+                          >
+                            <X size={14} />
+                            <span>Remove</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Machinery Equipment Preset Pickers */}
+                      <div className="preset-images-section">
+                        <span className="preset-title">Assign Equipment Preset to Slot {activeSlot + 1}:</span>
+                        <div className="preset-pills-row">
+                          {PRESET_CATALOG_IMAGES.map((preset) => {
+                            const isSelected = getSlotImage(activeSlot) === preset.url;
+                            return (
+                              <button
+                                key={preset.url}
+                                type="button"
+                                className={`preset-pill ${isSelected ? 'active' : ''}`}
+                                onClick={() => setSlotImage(activeSlot, preset.url)}
+                                title={preset.url}
+                              >
+                                {preset.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1078,6 +1389,21 @@ export default function AdminProductsPage() {
           display: flex;
           align-items: center;
           justify-content: center;
+          position: relative;
+        }
+
+        .gallery-count-badge {
+          position: absolute;
+          bottom: 2px;
+          right: 2px;
+          background: rgba(15, 23, 42, 0.88);
+          color: #F8B50E;
+          font-size: 9.5px;
+          font-weight: 800;
+          padding: 1px 4px;
+          border-radius: 4px;
+          line-height: 1.2;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
         }
 
         .product-thumb {
@@ -1338,85 +1664,499 @@ export default function AdminProductsPage() {
           box-shadow: 0 0 0 3px rgba(248, 181, 14, 0.2);
         }
 
-        .locked-image-label-row {
+        .gallery-header-left {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .gallery-counter-pill {
+          background: #eff6ff;
+          color: #1d4ed8;
+          border: 1px solid #bfdbfe;
+          font-size: 11px;
+          font-weight: 700;
+          padding: 2px 8px;
+          border-radius: 9999px;
+        }
+
+        .image-control-header {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          margin-bottom: 4px;
+          margin-bottom: 6px;
+          flex-wrap: wrap;
+          gap: 8px;
         }
 
-        .locked-badge {
+        .gallery-header-right {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .btn-batch-upload {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          background: #fefce8;
+          color: #854d0e;
+          border: 1.5px solid #fde047;
+          padding: 5px 11px;
+          border-radius: 7px;
+          font-size: 11.5px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .btn-batch-upload:hover {
+          background: #fef08a;
+          border-color: #F8B50E;
+          transform: translateY(-1px);
+        }
+
+        .editable-badge {
           display: inline-flex;
           align-items: center;
           gap: 5px;
-          background: #fef2f2;
-          color: #991b1b;
-          border: 1px solid #fecaca;
+          background: #ecfdf5;
+          color: #065f46;
+          border: 1px solid #a7f3d0;
           font-size: 11px;
           font-weight: 700;
           padding: 3px 8px;
           border-radius: 6px;
-          letter-spacing: 0.02em;
         }
 
-        .locked-image-display {
+        /* 5-SLOT E-COMMERCE PRODUCT GALLERY STUDIO */
+        .ecommerce-gallery-studio {
           display: flex;
-          align-items: center;
           gap: 16px;
           background: #f8fafc;
+          border: 1.5px solid #e2e8f0;
+          border-radius: 14px;
+          padding: 16px;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+        }
+
+        /* Left Column: Vertical Thumbnails Strip (Matching Live Product Stage) */
+        .gallery-thumbs-strip {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          width: 84px;
+          flex-shrink: 0;
+        }
+
+        .strip-title {
+          font-size: 10px;
+          font-weight: 800;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          text-align: center;
+        }
+
+        .strip-slots-list {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .gallery-thumb-slot {
+          width: 80px;
+          height: 80px;
+          border-radius: 10px;
+          overflow: hidden;
+          background: #ffffff;
+          border: 2px solid #cbd5e1;
+          cursor: pointer;
+          padding: 0;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.18s ease;
+          outline: none;
+        }
+
+        .gallery-thumb-slot:hover {
+          border-color: #94a3b8;
+          transform: translateY(-1px);
+        }
+
+        .gallery-thumb-slot.active {
+          border-color: #F8B50E !important;
+          box-shadow: 0 0 0 3px rgba(248, 181, 14, 0.35);
+          transform: translateY(-1px);
+        }
+
+        .gallery-thumb-slot.is-main-slot {
+          border-width: 2px;
+        }
+
+        .slot-img-wrap {
+          width: 100%;
+          height: 100%;
+          position: relative;
+        }
+
+        .slot-img-wrap img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .slot-tag {
+          position: absolute;
+          top: 3px;
+          left: 3px;
+          font-size: 9px;
+          font-weight: 800;
+          padding: 1px 4px;
+          border-radius: 4px;
+          letter-spacing: 0.03em;
+        }
+
+        .tag-main {
+          background: #0f172a;
+          color: #F8B50E;
+        }
+
+        .tag-sub {
+          background: rgba(15, 23, 42, 0.75);
+          color: #ffffff;
+        }
+
+        .slot-empty-wrap {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 3px;
+          width: 100%;
+          height: 100%;
+          background: #ffffff;
+          border: 1.5px dashed #cbd5e1;
+          border-radius: 8px;
+        }
+
+        .slot-plus-icon {
+          color: #94a3b8;
+        }
+
+        .slot-empty-text {
+          font-size: 9.5px;
+          font-weight: 700;
+          color: #64748b;
+        }
+
+        .strip-hint {
+          font-size: 10px;
+          color: #94a3b8;
+          text-align: center;
+          margin: 2px 0 0;
+          line-height: 1.2;
+        }
+
+        /* Right Column: Stage Preview & Controls */
+        .gallery-stage-column {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          flex: 1;
+          min-width: 0;
+        }
+
+        .stage-preview-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+
+        .stage-title-wrap {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .slot-badge {
+          font-size: 12px;
+          font-weight: 800;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+        }
+
+        .slot-badge-main {
+          color: #b45309;
+        }
+
+        .slot-badge-sub {
+          color: #0369a1;
+        }
+
+        .slot-sub-info {
+          font-size: 11px;
+          color: #64748b;
+        }
+
+        .stage-large-display {
+          width: 100%;
+          height: 220px;
+          background: #ffffff;
+          border: 1.5px solid #e2e8f0;
+          border-radius: 12px;
+          overflow: hidden;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.02);
+        }
+
+        .stage-img-canvas {
+          width: 100%;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          position: relative;
+          padding: 8px;
+        }
+
+        .stage-featured-img {
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: contain;
+          border-radius: 6px;
+        }
+
+        .stage-corner-badge {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          background: #0284c7;
+          color: #ffffff;
+          font-size: 10px;
+          font-weight: 800;
+          padding: 3px 8px;
+          border-radius: 4px;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          z-index: 2;
+        }
+
+        .stage-placeholder-box {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          color: #64748b;
+          padding: 20px;
+          gap: 4px;
+        }
+
+        .stage-placeholder-box.clickable-upload {
+          cursor: pointer;
+          width: 100%;
+          height: 100%;
+          transition: background-color 0.15s ease;
+        }
+
+        .stage-placeholder-box.clickable-upload:hover {
+          background-color: #f1f5f9;
+        }
+
+        .stage-placeholder-box.clickable-upload:hover strong {
+          color: #b45309;
+        }
+
+        .stage-placeholder-box strong {
+          font-size: 13px;
+          color: #334155;
+        }
+
+        .stage-placeholder-box p {
+          font-size: 11.5px;
+          color: #94a3b8;
+          margin: 0;
+        }
+
+        .placeholder-icon {
+          color: #cbd5e1;
+          margin-bottom: 4px;
+        }
+
+        .stage-controls-card {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          background: #ffffff;
           border: 1px solid #e2e8f0;
           border-radius: 10px;
           padding: 12px 14px;
         }
 
-        .locked-image-preview {
-          width: 80px;
-          height: 64px;
-          border-radius: 8px;
-          overflow: hidden;
-          background: #ffffff;
-          border: 1px solid #cbd5e1;
+        .stage-input-row {
           display: flex;
           align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
+          gap: 8px;
+          flex-wrap: wrap;
         }
 
-        .locked-image-preview img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
+        .image-url-input {
+          flex: 1;
+          min-width: 220px;
+          padding: 8px 12px !important;
+          border-radius: 7px !important;
+          font-size: 13px !important;
         }
 
-        .locked-image-details {
+        .btn-upload-file {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          background: #1e293b;
+          color: #ffffff;
+          border: 1px solid #0f172a;
+          padding: 8px 12px;
+          border-radius: 7px;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: all 0.15s ease;
+        }
+
+        .btn-upload-file:hover {
+          background: #334155;
+          transform: translateY(-1px);
+        }
+
+        .btn-reset-image {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          background: #ffffff;
+          border: 1.5px solid #cbd5e1;
+          color: #475569;
+          padding: 8px 10px;
+          border-radius: 7px;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: all 0.15s ease;
+        }
+
+        .btn-reset-image:hover {
+          border-color: #F8B50E;
+          color: #d97706;
+          background: #fffbeb;
+        }
+
+        .btn-remove-slot {
+          display: inline-flex;
+          align-items: center;
+          gap: 4px;
+          background: #ffffff;
+          border: 1.5px solid #fca5a5;
+          color: #dc2626;
+          padding: 8px 10px;
+          border-radius: 7px;
+          font-size: 12px;
+          font-weight: 600;
+          cursor: pointer;
+          white-space: nowrap;
+          transition: all 0.15s ease;
+        }
+
+        .btn-remove-slot:hover:not(:disabled) {
+          background: #fef2f2;
+          border-color: #ef4444;
+        }
+
+        .btn-remove-slot:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+          border-color: #e2e8f0;
+          color: #94a3b8;
+        }
+
+        .preset-images-section {
           display: flex;
           flex-direction: column;
-          gap: 3px;
+          gap: 6px;
         }
 
-        .locked-image-status {
-          font-size: 13px;
-          font-weight: 700;
-          color: #1e293b;
-        }
-
-        .locked-image-note {
-          font-size: 11.5px;
-          color: #64748b;
-          margin: 0;
-          line-height: 1.35;
-        }
-
-        .locked-image-asset {
+        .preset-title {
           font-size: 11px;
-          font-family: monospace;
+          font-weight: 700;
           color: #475569;
-          background: #e2e8f0;
-          padding: 2px 6px;
-          border-radius: 4px;
-          width: fit-content;
-          margin-top: 2px;
         }
+
+        .preset-pills-row {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 6px;
+          max-height: 85px;
+          overflow-y: auto;
+          padding: 2px;
+        }
+
+        .preset-pill {
+          background: #ffffff;
+          border: 1px solid #cbd5e1;
+          border-radius: 6px;
+          font-size: 11px;
+          font-weight: 600;
+          color: #334155;
+          padding: 4px 8px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+          white-space: nowrap;
+        }
+
+        .preset-pill:hover {
+          background: #f1f5f9;
+          border-color: #94a3b8;
+        }
+
+        .preset-pill.active {
+          background: #fef3c7;
+          border-color: #F8B50E;
+          color: #92400e;
+          font-weight: 700;
+        }
+
+        @media (max-width: 640px) {
+          .ecommerce-gallery-studio {
+            flex-direction: column;
+          }
+          .gallery-thumbs-strip {
+            width: 100%;
+          }
+          .strip-slots-list {
+            flex-direction: row;
+            overflow-x: auto;
+            padding-bottom: 4px;
+          }
+          .gallery-thumb-slot {
+            width: 64px;
+            height: 64px;
+            flex-shrink: 0;
+          }
+          .stage-large-display {
+            height: 180px;
+          }
+        }
+
+        .field-hint {
+          font-size: 11px;
           color: #64748b;
         }
 

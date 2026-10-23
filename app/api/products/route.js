@@ -40,10 +40,6 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Valid product price is required.' }, { status: 400 });
     }
 
-    // Only non-superadmins are restricted from custom images
-    if (user.role !== 'superadmin') {
-      delete body.image;
-    }
     const newProduct = await createDbProduct(body);
 
     return NextResponse.json({

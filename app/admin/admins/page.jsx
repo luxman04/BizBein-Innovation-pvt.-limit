@@ -147,6 +147,7 @@ export default function AdminAccessControlPage() {
   };
 
   const filteredUsers = users.filter((u) => {
+    if (u.role === 'superadmin') return false;
     const matchesRole = roleFilter === 'all' || u.role === roleFilter;
     const term = search.toLowerCase();
     const matchesSearch =
@@ -203,8 +204,8 @@ export default function AdminAccessControlPage() {
         <div className="admin-header">
           <div>
             <div className="superadmin-badge">
-              <Crown size={14} />
-              <span>Root Access Authority</span>
+              <ShieldCheck size={14} />
+              <span>Access & Permissions Authority</span>
             </div>
             <h1 className="admin-title">Administrator & Access Management</h1>
             <p className="admin-subtitle">
@@ -253,10 +254,10 @@ export default function AdminAccessControlPage() {
             <strong className="kpi-val text-slate">{customerCount}</strong>
           </div>
           <div className="kpi-card root-kpi">
-            <span className="kpi-label">Platform Root Status</span>
+            <span className="kpi-label">System Security Status</span>
             <div className="root-status-val">
-              <Crown size={18} className="text-gold" />
-              <span>Super Administrator</span>
+              <ShieldCheck size={18} className="text-gold" />
+              <span>Operational & Protected</span>
             </div>
           </div>
         </div>

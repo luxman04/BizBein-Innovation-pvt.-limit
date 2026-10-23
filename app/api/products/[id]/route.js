@@ -31,11 +31,6 @@ export async function PATCH(request, { params }) {
     const { id } = await Promise.resolve(params);
     const body = await request.json();
     
-    // Non-superadmins cannot modify images
-    if (user.role !== 'superadmin') {
-      delete body.image;
-    }
-
     const updated = await updateDbProduct(id, body);
 
     return NextResponse.json({
